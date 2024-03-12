@@ -1,5 +1,5 @@
 """ 
-INPUT: 
+INPUT: FASTA or CSV file with sequences
 Calculating: 
 - Tajima's D 
 - Pi-Estimator score
