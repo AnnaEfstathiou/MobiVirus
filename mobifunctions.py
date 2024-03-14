@@ -377,7 +377,7 @@ def plot_map(plots_directory, coords, tt, ts, mv, ss, un):
 
 def do_plots(plots_directory, coords_t, tt, t_s, mv, ss, un):
     
-    ## Make plots according to the following conditions:  ##
+    ## Make plots according to the following conditions:   ##
     ## if its the 0th generation of the simulation,        ##
     ## if the number of generation can be devided by 1000, ##
     ## if the "Super Strain" disappears.                   ##
