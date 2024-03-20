@@ -307,12 +307,10 @@ while sum(coords_t[:,2])!=0: # activate lines 236, 240
     ## If the number of the susceptable individuals is less than a certain % (percentage_susceptibility) of the population, stop the simulation! ##
     if percentage_susceptibility:
         if sum(coords_t[:, 6]==1) < percentage_susceptibility * n:
-            print(f"The simulation ended because the {percentage_susceptibility*100}% of the population is susceptable to the virus.")
+            print(f"The simulation ended because less than {percentage_susceptibility*100}% of the population is susceptable to the virus.")
             break
     
 
-
-        
     # Calculate the time that an event will happen
     t_s += np.random.exponential(scale=(1/(rt_i+rt_m))) #The scale is 1/rate, because of how the exponential function is defined! t_s is the time when an event will happen
     
@@ -352,9 +350,9 @@ while sum(coords_t[:,2])!=0: # activate lines 236, 240
 
         if percentage_susceptibility:
             # For individuals with a mutation label = 1 (Normal Spreaders)
-            normal_indx = uninfection_idx[coords_t[uninfection_idx, 5] == 1] # find the indexes of the normal spreders
-            coords_t[normal_indx, 5] = 0  # Change the label of mutation back to 0
-            coords_t[normal_indx, 6] = 1  # Change the susceptibility label back to 1
+            normal_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 1] # find the indexes of the normal spreders
+            coords_t[normal_idx, 5] = 0  # Change the label of mutation back to 0
+            coords_t[normal_idx, 6] = 1  # Change the susceptibility label back to 1
 
             # For individuals with a mutation label of 2 (Super Spreaders)
             super_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 2] # find the indexes of the super spreders
@@ -595,7 +593,7 @@ save_data(samples, genomes, coords_2, coords_t, tt, g, all_inf, unin, hah, ss, n
 
 #coords_t = pd.DataFrame(data=coords_t.T, index=("x","y", "label", "probability of movement", "probability of infection", "mutation", "susceptibility")).T
 #coords_t.to_csv('/Users/katiagim/Desktop/MobiVirus/attempt_2/'+'final_data'+'.csv',header=True, index=False)
-
+print("Loops:", tt)
 ## Time for the whole code to run ##
 end=time.time()-initial
 print("Running the simulation time (minutes):", end/60)   
