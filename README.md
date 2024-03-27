@@ -1,14 +1,25 @@
-# MobiVirus
+# MobiVirus Simulator
 
 ## Table of contents
 
-- Abstract
+- [Abstract](## Abstract)
 - Requirements
 - Detailed Description
     - Main code 
     - Optional arguments
     - Output
 - Statistical calculations
+
+## Abstract
+
+## Requirements
+
+## Detailed Description
+### Main code 
+### Optional arguments
+### Output
+
+## Statistical calculations
 
 ## Description of the operating mode
 The MobiVirus Simulator works using three files:
