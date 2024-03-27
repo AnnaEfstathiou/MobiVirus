@@ -15,14 +15,18 @@ The MobiVirus Simulator simulates a virus infecting individuals in a population 
 
 ## Requirements
 The MobiVirus Simulator works with the use of 3 files:
-1. Main code where the simulation runs: `MobiVirus_Simulator.py`
-2. Python file containing the functions used in the simulation: mobifunctions.py
-3. INI File containing the initial conditions of the simulation: parameters.ini
-All files should be in the same directory in order to run the simulation. Your chosen directory must be added in the INI file.
+1. `MobiVirus_Simulator.py`: Main code where the simulation runs.
+2. `mobifunctions.py`: Python script containing the functions used in the simulation.
+3. `parameters.ini`: INI File containing the initial conditions of the simulation.
+In order to run the simulation, all files must be in the same directory. The chosen directory must, also, be added in the INI file.
 
 ## Detailed Description
+
 ### Main code 
+The simulation starts with each individual located at a single position in two-dimensional space and with a predefined number of infected individuals in the population carrying the viral genome. At each simulated iteration one of two events can occur: movement or infection. If movement is chosen, then it involves a single individual whose x and y coordinates in space change. If infection is chosen then it is decided who will be the infecting individual and which individuals will he infect by tranfering his viral genome (infection is based on the distance between individuals).Alongside the events occur uninfections in which, depending on the time of recovery, some infected individuals are selected to become healthy.
+
 ### Optional arguments
+
 ### Output
 
 ## Statistical calculations
