@@ -13,6 +13,11 @@
 ## Abstract
 
 ## Requirements
+The MobiVirus Simulator works with the use of 3 files:
+1. Main code where the simulation runs: MobiVirus_Simulator.py
+2. Python file containing the functions used in the simulation: mobifunctions.py
+3. INI File containing the initial conditions of the simulation: parameters.ini
+All files should be in the same directory in order to run the simulation. Your chosen directory must be added in the INI file.
 
 ## Detailed Description
 ### Main code 
@@ -21,13 +26,8 @@
 
 ## Statistical calculations
 
-## Description of the operating mode
-The MobiVirus Simulator works using three files:
-1. Main code where the simulation runs: MobiVirus_Simulator.py
-2. Python file containing the functions used in the simulation: mobifunctions.py
-3. Ini File containing the initial conditions of the simulation: parameters.ini
 
-All files should be in the same directory in order to run the simulation. Your chosen directory must also be added in the "directory=" parameter both in Movement_inbox.py and in myfunctions.py
+
 
 ## Main Code partitions
 The main code is run through three partitions. The partitioning was done for better control of the initialization before running the actual simulation. In order to avoid errors, it is best to run the partitions separately, but they can also be run as one. 
