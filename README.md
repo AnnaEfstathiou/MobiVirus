@@ -15,7 +15,7 @@ The MobiVirus Simulator simulates a virus infecting individuals in a population 
 
 ## Requirements
 The MobiVirus Simulator works with the use of 3 files:
-1. Main code where the simulation runs: MobiVirus_Simulator.py
+1. Main code where the simulation runs: `MobiVirus_Simulator.py`
 2. Python file containing the functions used in the simulation: mobifunctions.py
 3. INI File containing the initial conditions of the simulation: parameters.ini
 All files should be in the same directory in order to run the simulation. Your chosen directory must be added in the INI file.
