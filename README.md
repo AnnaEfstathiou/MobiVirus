@@ -2,13 +2,13 @@
 
 ## Table of contents
 
-- [Abstract](## Abstract)
-- Requirements
-- Detailed Description
-    - Main code 
-    - Optional arguments
-    - Output
-- Statistical calculations
+- [Abstract](##Abstract)
+- [Requirements](##Requirements)
+- [Detailed Description](##Detailed_Description)
+    - [Main code](##Main_code)
+    - [Optional arguments](##Optional_arguments)
+    - [Output](#Output)
+- [Statistical calculations](##Statistical_calculations)
 
 ## Abstract
 
