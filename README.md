@@ -2,15 +2,16 @@
 
 ## Table of contents
 
-- [Abstract](##Abstract)
-- [Requirements](##Requirements)
-- [Detailed Description](##Detailed_Description)
-    - [Main code](##Main_code)
-    - [Optional arguments](##Optional_arguments)
+- [Abstract](#Abstract)
+- [Requirements](#Requirements)
+- [Detailed Description](#Detailed_Description)
+    - [Main code](#Main_code)
+    - [Optional arguments](#Optional_arguments)
     - [Output](#Output)
-- [Statistical calculations](##Statistical_calculations)
+- [Statistical calculations](#Statistical_calculations)
 
 ## Abstract
+The MobiVirus Simulator simulates a virus infecting individuals in a population as they move around in two-dimensional space.
 
 ## Requirements
 The MobiVirus Simulator works with the use of 3 files:
