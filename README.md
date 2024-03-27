@@ -1,5 +1,15 @@
 # MobiVirus
 
+## Table of contents
+
+- Abstract
+- Requirements
+- Detailed Description
+    - Main code 
+    - Optional arguments
+    - Output
+- Statistical calculations
+
 ## Description of the operating mode
 The MobiVirus Simulator works using three files:
 1. Main code where the simulation runs: MobiVirus_Simulator.py
