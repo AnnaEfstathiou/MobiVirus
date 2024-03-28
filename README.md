@@ -29,8 +29,10 @@ The simulation starts with each individual located at a single position in two-d
 
 ### Output
 The output directory contains 2 subdirectories: the genomes folder and the samples folder.
-- The "Genomes" directory contains
-- Optional Output - Plots: plots to visualize the positions and the health status of the individuals
+- The "genomes" directory contains multiple genome tables in CSV format. Ever table shows the genome of every infected individual in the sample. It has rows equal to the number of individuals and columns equal to the positions of the genome. Healthy individuals have nan values in the row that corresponds to their genome. 
+- The "samples" directory contains tables with information on infections. These tables keep the numbers of infected individuals in total, together with the number of individuals with each mutation (if there are more than one type) every time (in simulation time) that an infection happens. In addition, it contains tables with information on the position of the individuals in space (coordinates). These include the positions, together with labels on the health status of each individual, the mutation of the virus that they carry (if they are infected and if there are more than one type of mutation), and their susceptibility. 
+- Optional Output: The "plots" directory contains scatter plots to visualize the positions and the health status of the individuals. 
+The samples of the simulation are taken every few generations (defined in the INI file).
 The collected data at the end of the simulation will be saved in the directory that is indicated in the INI file.
 
 ## Statistical calculations
