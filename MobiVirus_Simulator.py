@@ -25,6 +25,14 @@ initial=time.time()
 func_time = time.time()-initial
 
 """
+========================================
+IMPORTING THE NECESSARY PYTHON FUNCTIONS
+========================================
+"""
+
+from mobifunctions import coords_func, label, genome, mutation, infectivity, probs, movement, ini_distm, new_dist, ind_probi, plot_map_normal, plot_map_normal_super, sample_data_normal, sample_data_normal_super, do_plots_normal, do_plots_normal_super, save_data_normal, save_data_normal_super
+
+"""
 ===================
 PARSE THE .INI FILE
 ===================
@@ -43,71 +51,6 @@ if not os.path.exists(file_path):
 # File exists, proceed with parsing
 config = ConfigParser()
 config.read(file_path)
-
-
-"""
-===============
-PARSE ARGUMENTS
-===============
-""" 
-
-parser = argparse.ArgumentParser(description='Creating other possible senarios (e.g. super strain), break arguments, visualization options. All the arguments are optional!')
-## string parsers (for break scenarions)
-parser.add_argument('-ratio', '--ratio_super_vs_normal', type=str, help='Ratio of number of Super Strain individuals/number of Normal Strain individuals.')
-parser.add_argument('-per_inf', '--percentage_infected', type=str, help='Percentage of infected individuals in the population.')
-parser.add_argument('-max_inf', '--max_infections', type=str, help='Maximum infections (if the infection are more, stop).')
-parser.add_argument('-sus', '--percentage_susceptibility', type=str, help='Minimum susceptible individuals (if the susceptible individuals are less, stop).')
-## action parsers
-parser.add_argument('-s', '--super_strain', action="store_true", help='Create a super strain with higher infectivity that the normal one.')
-parser.add_argument('-vis_data', '--visualize_data', action="store_true", help='Visualize the data table as a dataframe in the console.')
-parser.add_argument('-g0', '--initial_genomes', action="store_true", help='Save the initial genomes of the sample in a csv.')
-parser.add_argument('-plots', '--scatter_plots', action="store_true", help='Create scatter plots of the coordinates of the individuals.')
-args = parser.parse_args()
-
-"""
--------------------------
-Validate string arguments
--------------------------
-"""
-
-if args.ratio_super_vs_normal:
-    ratio_super_vs_normal = float(args.ratio_super_vs_normal)
-    if not 0 <= ratio_super_vs_normal <= 1:
-        raise ValueError("The ratio of number of Super Strain individuals/number of Normal Strain individuals must be between 0 and 1!")
-else:
-    ratio_super_vs_normal = None
-
-if args.percentage_infected:
-    percentage_infected = float(args.percentage_infected)
-    if not 0 <= percentage_infected <= 1:
-        raise ValueError("The percentage of infected individuals in the population must be between 0 and 1!")
-else:
-    percentage_infected = None
-
-if args.max_infections:
-    max_infections = int(args.max_infections)
-    if not max_infections >= 1:
-        raise ValueError("The number of maximum infections must be a positive integer!")
-else:
-    max_infections = None
-
-if args.percentage_susceptibility:
-    percentage_susceptibility = float(args.percentage_susceptibility)
-    if not 0 <= percentage_susceptibility <= 1:
-        raise ValueError("The percentage of susceptable individuals in the population must be between 0 and 1!")   
-else:
-    percentage_susceptibility = None
-#%%
-"""
-========================================
-IMPORTING THE NECESSARY PYTHON FUNCTIONS
-========================================
-"""
-
-from mobifunctions import coords_func, label, genome, mutation, infectivity, probs, movement, ini_distm, new_dist, ind_probi, plot_map_normal, plot_map_normal_super, sample_data_normal, sample_data_normal_super, do_plots_normal, do_plots_normal_super, save_data_normal, save_data_normal_super
-
-#%%
-
 
 """ 
 ========================
@@ -166,6 +109,59 @@ sample_times = config.getint('Initial_Parameters', 'sample_times')  # Generation
 # in_per = config.getfloat('Break parameters', 'in_per')              # Percentage of infected people (break argument)
 # l_in = config.getfloat('Break parameters', 'l_in')                  # Limit of infection (break argument) 
 
+"""
+===============
+PARSE ARGUMENTS
+===============
+""" 
+
+parser = argparse.ArgumentParser(description='Creating other possible senarios (e.g. super strain), break arguments, visualization options. All the arguments are optional!')
+## string parsers (for break scenarions)
+parser.add_argument('-ratio', '--ratio_super_vs_normal', type=str, help='Ratio of number of Super Strain individuals/number of Normal Strain individuals.')
+parser.add_argument('-per_inf', '--percentage_infected', type=str, help='Percentage of infected individuals in the population.')
+parser.add_argument('-max_inf', '--max_infections', type=str, help='Maximum infections (if the infection are more, stop).')
+parser.add_argument('-sus', '--percentage_susceptibility', type=str, help='Minimum susceptible individuals (if the susceptible individuals are less, stop).')
+## action parsers
+parser.add_argument('-s', '--super_strain', action="store_true", help='Create a super strain with higher infectivity that the normal one.')
+parser.add_argument('-vis_data', '--visualize_data', action="store_true", help='Visualize the data table as a dataframe in the console.')
+parser.add_argument('-g0', '--initial_genomes', action="store_true", help='Save the initial genomes of the sample in a csv.')
+parser.add_argument('-plots', '--scatter_plots', action="store_true", help='Create scatter plots of the coordinates of the individuals.')
+args = parser.parse_args()
+
+"""
+-------------------------
+Validate string arguments
+-------------------------
+"""
+
+if args.ratio_super_vs_normal:
+    ratio_super_vs_normal = float(args.ratio_super_vs_normal)
+    if not 0 <= ratio_super_vs_normal <= 1:
+        raise ValueError("The ratio of number of Super Strain individuals/number of Normal Strain individuals must be between 0 and 1!")
+else:
+    ratio_super_vs_normal = None
+
+if args.percentage_infected:
+    percentage_infected = float(args.percentage_infected)
+    if not 0 <= percentage_infected <= 1:
+        raise ValueError("The percentage of infected individuals in the population must be between 0 and 1!")
+else:
+    percentage_infected = None
+
+if args.max_infections:
+    max_infections = int(args.max_infections)
+    if not max_infections >= 1 or max_infections > n:
+        raise ValueError("The number of maximum infections must be a positive integer and less than the total number of individuals!")
+else:
+    max_infections = None
+
+if args.percentage_susceptibility:
+    percentage_susceptibility = float(args.percentage_susceptibility)
+    if not 0 <= percentage_susceptibility <= 1:
+        raise ValueError("The percentage of susceptable individuals in the population must be between 0 and 1!")   
+else:
+    percentage_susceptibility = None
+
 # OPTIONAL: if the strains are devided into normal and super
 if args.super_strain:
     ri_s = config.getfloat('Initial_Parameters', 'ri_s')            # Rate of infection from super/strain 2
@@ -175,6 +171,8 @@ else:
     ri_s = ri_n                                                     # Rate of infection for normal strains equal to the rate of infection for super strains
     L = [ri_n, ri_s]                                                # Infection rates in order to divide the infected population in different strains
                                                                     # BUT since there is only one strain, 
+
+#%%
 
 """
 =================================
@@ -332,9 +330,14 @@ while sum(coords_t[:,2])!=0: # activate lines 236, 240
     
     ## If the total infections are more than a certain number (max_infections), stop the simulation! ##
     if max_infections: # Maximum infections
-        if (ss + ns) > max_infections:
-            print(f"The simulation ended because {max_infections} infections happended, totally, in the population.")
-            break
+        if args.super_strain:
+            if (ss + ns) > max_infections:
+                print(f"The simulation ended because {max_infections} infections happended, totally, in the population.")
+                break
+        else:
+            if ns > max_infections:
+                print(f"The simulation ended because {max_infections} infections happended, totally, in the population.")
+                break
     
     ## If the number of the susceptable individuals is less than a certain % (percentage_susceptibility) of the population, stop the simulation! ##
     if percentage_susceptibility:
