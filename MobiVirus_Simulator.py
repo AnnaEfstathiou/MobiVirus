@@ -338,12 +338,17 @@ while sum(coords_t[:,2])!=0: # activate lines 236, 240
             if ns > max_infections:
                 print(f"The simulation ended because {max_infections} infections happended, totally, in the population.")
                 break
-    
-    ## If the number of the susceptable individuals is less than a certain % (percentage_susceptibility) of the population, stop the simulation! ##
-    if percentage_susceptibility:
-        if sum(coords_t[:, 6]==1) < percentage_susceptibility * n:
-            print(f"The simulation ended because less than {percentage_susceptibility*100}% of the population is susceptable to the virus.")
-            break
+
+    # If there is a super strain in the population 
+    if args.super_strain:    
+        ## If the number of the susceptable individuals is less than a certain % (percentage_susceptibility) of the population, stop the simulation! ##
+        if percentage_susceptibility:
+            if sum(coords_t[:, 6]==1) < percentage_susceptibility * n:
+                print(f"The simulation ended because less than {percentage_susceptibility*100}% of the population is susceptable to the virus.")
+                break
+    else:
+        if percentage_susceptibility:
+            raise ValueError("In order to stop the simulation when the set number of individuals are susceptible to the virus the super strain must exist. Use the appropriate argument to create the super strain.")
     
 
     # Calculate the time that an event will happen
