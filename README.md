@@ -20,18 +20,20 @@ The MobiVirus Simulator works with the use of 3 files:
 3. `parameters.ini`: INI file containing the initial conditions of the simulation.
 In order to run the simulation, all files must be in the same directory. The chosen directory must, also, be added in the INI file.
 
-All the required packages are mentioned in the `requirements.txt`
+All the required packages are mentioned in the `requirements.txt` file.
 ## Detailed Description
 
 ### Main code 
 The simulation starts with each individual located at a single position in a two-dimensional space and with a predefined number of infected individuals in the population carrying the viral genome. At each simulated iteration one of two events can occur: movement or infection. If movement is chosen, then it involves a single individual whose x and y coordinates in space change. If infection is chosen then it is decided who will be the infecting individual and who (can be more than one individual) will they infect by tranfering their viral genome (infection is based on the distance between individuals).Alongside the events occur uninfections in which, depending on the recovery time, some infected individuals are selected to become healthy. The simulation stops when everyone in the population is healthy.
+Note that the viral genome consists of 0 and 1. Potitions with value 1 represent potitions that a mutation has happened.  
 
 ### Optional arguments
 The code contains various optional arguments that may be claimed through the command line.
 Action arguments:
-- super_strain: Creates a 2nd strain in the simulation that has a different infectivity rate than the normal strain. The different strain has a specific number of important genome positions in the beginning. Both the infectivity rate and the important genome positions are defines in the INI file. 
+- super_strain: Create a 2nd strain in the simulation that has a different infectivity rate than the normal strain. The different strain has a specific number of important genome positions in the beginning. Both the infectivity rate and the important genome positions are defines in the INI file. 
 If the flag is not used then the n_i parameter (number of important genome positions) in the INI file should be equal to 0.
-# If there is no Super Strain mutation, n_i = 0
+- initial_genomes: Save the initial viral genomes. Healthy individuals have a viral genome that consists of 0. The number of non-zero genomes is equal to the ii parameter (initial number of infected individuals) in the INI file.
+- scatter_plots:
 
 ### Output
 The output directory contains 2 subdirectories: the genomes folder and the samples folder.
