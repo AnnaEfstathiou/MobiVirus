@@ -365,9 +365,7 @@ while sum(coords_t[:,2])!=0: # activate lines 236, 240
         uninfection_idx = np.where(t_i == t_im)[0]  # Find indices where t_i equals t_im    
 
         ## Optional: Prints the index of people that get uninfected (from their line in the coords data table), AKA those that their time of infection is the "oldest" ##
-        
-        print("It's un-infection time!") 
-        print("These people get un-infected: %a" %list(uninfection_idx)) 
+        print("It's un-infection time! These people get un-infected: " + ", ".join(map(str, [int(x) for x in uninfection_idx])))
         
         # Create a table with the individuals that get uninfected 
                                                                   
@@ -594,9 +592,10 @@ while sum(coords_t[:,2])!=0: # activate lines 236, 240
         ## If so, it means no new infections occurred, and "Nobody got infected" is printed. Otherwise, the indices of the newly infected individuals are printed as "These got infected:" using the hah data collected during the loop ##
         ia= np.sum(coords_t[:,2])
         if ib>=ia:
-            print("Nobody got infected")
+            print("Nobody got infected.")
         else:
-            print("These got infected: %a" %(hah[-int(ia-ib):,1]))
+            # The array hah[-int(ia-ib):,1] contains all the indices of the newly infected individuals 
+            print("These individuals got infected: " + ", ".join(map(str, [int(x) for x in hah[-int(ia-ib):,1]])))
             
         ## Optional: print the number of infected individuals in each strain ##       
         # print("Super spreaders:",sum(coords_t[:, 5]==2) )
@@ -650,7 +649,7 @@ else:    ## Save the data from the simulation in the correct directory ##
 print("Loops:", tt)
 ## Time for the whole code to run ##
 end=time.time()-initial
-print("Running the simulation time (minutes):", end/60)   
+print("Total simulation time (minutes):", end/60)   
 
 ## Create a gif from all the plots of positions in order to visualise the movement (takes a lot of time) ##
 #create_gif("/Users/katiagim/Desktop/MobiVirus/attempt_2/figs/")
