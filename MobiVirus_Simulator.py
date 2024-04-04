@@ -122,7 +122,7 @@ parser.add_argument('-per_inf', '--percentage_infected', type=str, help='Percent
 parser.add_argument('-max_inf', '--max_infections', type=str, help='Maximum infections (if the infection are more, stop).')
 parser.add_argument('-sus', '--percentage_susceptibility', type=str, help='Minimum susceptible individuals (if the susceptible individuals are less, stop).')
 ## action parsers
-parser.add_argument('-s', '--super_strain', action="store_true", help='Create a super strain with higher infectivity that the normal one.')
+parser.add_argument('-s', '--super_strain', action="store_true", help='Create a super strain with different (e.g. higher) infectivity that the normal one.')
 parser.add_argument('-vis_data', '--visualize_data', action="store_true", help='Visualize the data table as a dataframe in the console.')
 parser.add_argument('-g0', '--initial_genomes', action="store_true", help='Save the initial genomes of the sample in a csv.')
 parser.add_argument('-plots', '--scatter_plots', action="store_true", help='Create scatter plots of the coordinates of the individuals.')

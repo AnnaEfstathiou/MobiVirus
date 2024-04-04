@@ -4,11 +4,11 @@
 
 - [Abstract](#Abstract)
 - [Requirements](#Requirements)
-- [Detailed Description](#Detailed_Description)
-    - [Main code](#Main_code)
-    - [Optional arguments](#Optional_arguments)
+- [Detailed_Description](#Detailed_Description)
+    - [Main_code](#Main_code)
+    - [Optional_arguments](#Optional_arguments)
     - [Output](#Output)
-- [Statistical calculations](#Statistical_calculations)
+- [Statistical_calculations](#Statistical_calculations)
 
 ## Abstract
 The MobiVirus Simulator simulates a virus infecting individuals in a population as they move around in a two-dimensional space.
@@ -19,13 +19,17 @@ The MobiVirus Simulator works with the use of 3 files:
 2. `mobifunctions.py`: Python script containing the functions used in the simulation.
 3. `parameters.ini`: INI file containing the initial conditions of the simulation.
 In order to run the simulation, all files must be in the same directory. The chosen directory must, also, be added in the INI file.
-
+** All the required packages are mentioned in the `requirements.txt`/
 ## Detailed Description
 
 ### Main code 
 The simulation starts with each individual located at a single position in a two-dimensional space and with a predefined number of infected individuals in the population carrying the viral genome. At each simulated iteration one of two events can occur: movement or infection. If movement is chosen, then it involves a single individual whose x and y coordinates in space change. If infection is chosen then it is decided who will be the infecting individual and who (can be more than one individual) will they infect by tranfering their viral genome (infection is based on the distance between individuals).Alongside the events occur uninfections in which, depending on the recovery time, some infected individuals are selected to become healthy. The simulation stops when everyone in the population is healthy.
 
 ### Optional arguments
+The code contains various optional arguments that may be claimed through the command line.
+Action arguments:
+- super_strain: Creates a 2nd strain in the simulation that has a different infectivity rate than the normal strain. The different strain has a specific number of important genome positions in the beginning. Both the infectivity rate and the important genome positions are defines in the INI file. If the flag is not used then the n_i parameter )(number of important genome positions) in the INI file should be equal to 0.
+# If there is no Super Strain mutation, n_i = 0
 
 ### Output
 The output directory contains 2 subdirectories: the genomes folder and the samples folder.
