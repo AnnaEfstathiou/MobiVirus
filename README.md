@@ -6,7 +6,7 @@
 - [Requirements](#Requirements)
 - [Detailed Description](#Detailed_Description)
     - [Main code](#Main_code)
-    - [Optional arguments](#Optional_arguments)
+    - [Optional arguments](#Optional arguments)
     - [Output](#Output)
 - [Statistical calculations](#Statistical_calculations)
 
