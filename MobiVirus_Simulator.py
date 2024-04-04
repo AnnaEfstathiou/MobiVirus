@@ -51,13 +51,14 @@ PARSE ARGUMENTS
 ===============
 """ 
 
-parser = argparse.ArgumentParser(description='Optional break arguments, visualization optional arguments.')
+parser = argparse.ArgumentParser(description='Creating other possible senarios (e.g. super strain), break arguments, visualization options. All the arguments are optional!')
 ## string parsers (for break scenarions)
 parser.add_argument('-ratio', '--ratio_super_vs_normal', type=str, help='Ratio of number of Super Strain individuals/number of Normal Strain individuals.')
 parser.add_argument('-per_inf', '--percentage_infected', type=str, help='Percentage of infected individuals in the population.')
 parser.add_argument('-max_inf', '--max_infections', type=str, help='Maximum infections (if the infection are more, stop).')
 parser.add_argument('-sus', '--percentage_susceptibility', type=str, help='Minimum susceptible individuals (if the susceptible individuals are less, stop).')
 ## action parsers
+parser.add_argument('-s', '--super_strain', action="store_true", help='Create a super strain with higher infectivity that the normal one.')
 parser.add_argument('-vis_data', '--visualize_data', action="store_true", help='Visualize the data table as a dataframe in the console.')
 parser.add_argument('-g0', '--initial_genomes', action="store_true", help='Save the initial genomes of the sample in a csv.')
 parser.add_argument('-plots', '--scatter_plots', action="store_true", help='Create scatter plots of the coordinates of the individuals.')
@@ -103,7 +104,7 @@ IMPORTING THE NECESSARY PYTHON FUNCTIONS
 ========================================
 """
 
-from mobifunctions import coords_func, label, genome, mutation, infectivity, probs, movement, ini_distm, new_dist, ind_probi, plot_map, sample_data, do_plots, save_data
+from mobifunctions import coords_func, label, genome, mutation, infectivity, probs, movement, ini_distm, new_dist, ind_probi, plot_map_normal, plot_map_normal_super, sample_data_normal, sample_data_normal_super, do_plots_normal, do_plots_normal_super, save_data_normal, save_data_normal_super
 
 #%%
 
@@ -146,18 +147,17 @@ The columns in Coords_(2 or t)
 """
 r_m = config.getfloat('Initial_Parameters', 'r_m')                  # Mutation rate for each position in genome
 n_i = config.getint('Initial_Parameters', 'n_i')                    # Important genome positions for the ss mutation
+                                                                    # If there are no super strains, n_i = 0
 n = config.getint('Initial_Parameters', 'n')                        # Number of individuals in the simulation
 l = config.getint('Initial_Parameters', 'l')                        # Length of genome
 bound_l = config.getfloat('Initial_Parameters', 'bound_l')          # Lower bound for the plot
 bound_h = config.getfloat('Initial_Parameters', 'bound_h')          # Upper bound for the plot
 ii = config.getint('Initial_Parameters', 'ii')                      # Number of infected individuals
 ri_n = config.getfloat('Initial_Parameters', 'ri_n')                # Rate of infection from normal/strain 1
-ri_s = config.getfloat('Initial_Parameters', 'ri_s')                # Rate of infection from super/strain 2
 rm_i = config.getfloat('Initial_Parameters', 'rm_i')                # Rate of movement for infected ind.
 rm_h = config.getfloat('Initial_Parameters', 'rm_h')                # Rate of movement for healthy ind.
 rec_t = config.getfloat('Initial_Parameters', 'rec_t')              # Recovery time in simulation time
 label_i = label(n,ii)                                               # Divide the people in infected and not infected
-L = [ri_n, ri_s]                                                    # Infection rates in order to divide the infected population in different strains
 std_x = config.getfloat('Initial_Parameters', 'std_x')              # Standard deviation of x coordinate
 std_y = config.getfloat('Initial_Parameters', 'std_y')              # Standard deviation of y coordinate
 rim = config.getfloat('Initial_Parameters', 'rim')                  # Relative infection mobility
@@ -165,6 +165,16 @@ sample_times = config.getint('Initial_Parameters', 'sample_times')  # Generation
 # s_n = config.getfloat('Break parameters', 's_n')                    # Ratio of #Super Strain ind/#Normal Strain ind (break argument)
 # in_per = config.getfloat('Break parameters', 'in_per')              # Percentage of infected people (break argument)
 # l_in = config.getfloat('Break parameters', 'l_in')                  # Limit of infection (break argument) 
+
+# OPTIONAL: if the strains are devided into normal and super
+if args.super_strain:
+    ri_s = config.getfloat('Initial_Parameters', 'ri_s')            # Rate of infection from super/strain 2
+    L = [ri_n, ri_s]                                                # Infection rates in order to divide the infected population in different strains
+else:
+    # Only normal strains
+    ri_s = ri_n                                                     # Rate of infection for normal strains equal to the rate of infection for super strains
+    L = [ri_n, ri_s]                                                # Infection rates in order to divide the infected population in different strains
+                                                                    # BUT since there is only one strain, 
 
 """
 =================================
@@ -206,11 +216,15 @@ mut = np.zeros(n)                                                               
 sus = np.ones(n)                                                                # Initialization of susceptibility rate array
 for i in range(n):
     probi[i] = np.where(coords_2[:,2][i]==1, random.choice(L), probi[i])        # Randomly assign infected individuals with each strain
-    mut[i] = np.where(probi[i]==ri_s, 2, mut[i])                                # For those with Super Strain, they are labeled as mutation 2
-    mut[i] = np.where(probi[i]==ri_n, 1, mut[i])                                # For those with Normal Strain, they are labeled as mutation 1
+                                                                                # If there is only one strain (normal) all the individuals will have that one
     g.iloc[i] = np.where(coords_2[:,2][i]==1, np.zeros((1,l)), g.iloc[i])       # For the infected individuals, there is a row in g with the genome that they carry
-    g.loc[i,0] = np.where(mut[i]==2, 1, g.loc[i,0])                             # For the infected with mutation 2 (Super Strain), they have the value 1 in the first position of their genome
     sus[i] = np.where(coords_2[:,2][i]==1, 0, sus[i])                           # For the healthy individuals, they have a Susceptibility to the virus
+    if args.super_strain:
+        mut[i] = np.where(probi[i]==ri_s, 2, mut[i])                            # For those with Super Strain, they are labeled as mutation 2
+        mut[i] = np.where(probi[i]==ri_n, 1, mut[i])                            # For those with Normal Strain, they are labeled as mutation 1
+        g.loc[i,0] = np.where(mut[i]==2, 1, g.loc[i,0])                         # For the infected with mutation 2 (Super Strain), they have the value 1 in the first position of their genome    
+    else:
+        mut[i] = np.where(probi[i]==ri_n, 1, mut[i])                            # For those with Normal Strain, they are labeled as mutation 1
 
 coords_2 = np.concatenate([coords_2, probm, np.column_stack(probi).T, np.column_stack(mut).T, np.column_stack(sus).T], axis=1) # Gather all the information in the final array table of info
 
@@ -249,21 +263,31 @@ for i in range(n):
 t_im = np.min(t_i)                                      # The minimum of the list of the specific times that individuals got infected
 t_un = []                                               # Uninfection time
 mv = 0                                                  # Count for the movements
-ss = sum(coords_t[:, 5]==2)                             # Number of Super-spreaders
+if args.super_strain:
+    ss = sum(coords_t[:, 5]==2)                             # Number of Super-spreaders
 ns = sum(coords_t[:, 5]==1)                             # Number of Normal-spreades
 un = 0                                                  # Total number of uninfections
 hah = np.zeros((1, 4))                                  # Empty array that will be the array of who infected who
 unin = []                                               # List that keeps who got uninfected 
-all_inf = np.zeros((1,4))                               # List with the number of Total infected, Super spreaders, Normal spreaders and Infextion times for each generation
+if args.super_strain:
+    all_inf = np.zeros((1,4))                           # List with the number of Total infected, Super spreaders, Normal spreaders and Infextion times for each generation
+else:
+    all_inf = np.zeros((1,3))                           # List with the number of Total infected, Normal spreaders and Infextion times for each generation
 #equ=[]                                                 # Times when infected individuals are ~equal to uninfected 
 
 #%%
+
 
 """
 ======================
 RUNNING THE SIMULATION
 ======================
 """
+
+if args.super_strain:
+    print(f"The simulation contains 2 types of strains, a normal strain with {ri_n} rate of infection and a super strain with {ri_s} rate of infection.")
+else:
+    print(f"The simulation contains one type of strain, a normal strain with {ri_n} rate of infection.")
 
 # Run the simulation until everyone becomes uninfected 
 while sum(coords_t[:,2])!=0: # activate lines 236, 240
@@ -276,7 +300,10 @@ while sum(coords_t[:,2])!=0: # activate lines 236, 240
     
     # OPTIONAL: Print some plots during the run
     if args.scatter_plots:
-        do_plots(plots, coords_t, tt, t_s, mv, ss, un) 
+        if args.super_strain:
+            do_plots_normal_super(plots, coords_t, tt, t_s, mv, ss, un) 
+        else: 
+            do_plots_normal(plots, coords_t, tt, t_s, mv, un)
 
     """
     ---------------
@@ -286,11 +313,16 @@ while sum(coords_t[:,2])!=0: # activate lines 236, 240
     
     ## OPTIONAL ##
 
-    ## If the number of individuals with Normal Strain are less than a certain % (ratio_super_vs_normal) of the individuals with Super Strain, stop the simulation! ##
-    if ratio_super_vs_normal: # Ratio of # Super Strain ind / # Normal Strain ind
-        if sum(coords_t[:, 5]==1) < ratio_super_vs_normal * sum(coords_t[:, 5]==2): 
-            print(f"The simulation ended because individuals with Normal Strain are less than {ratio_super_vs_normal*100}% of the individuals with Super Strain.") 
-            break
+    # If there is a super strain in the population 
+    if args.super_strain:
+        ## If the number of individuals with Normal Strain are less than a certain % (ratio_super_vs_normal) of the individuals with Super Strain, stop the simulation! ##
+        if ratio_super_vs_normal: # Ratio of # Super Strain ind / # Normal Strain ind
+            if sum(coords_t[:, 5]==1) < ratio_super_vs_normal * sum(coords_t[:, 5]==2): 
+                print(f"The simulation ended because individuals with Normal Strain are less than {ratio_super_vs_normal*100}% of the individuals with Super Strain.") 
+                break
+    else:
+        if ratio_super_vs_normal:
+           raise ValueError("In order to calculate the ratio of super vs normal strains in the population, the super strain must exist. Use the appropriate argument to create the super strain.")
 
     ## If the number of the infected individuals is more than a certain % (percentage_infected) of the population, stop the simulation! ##
     if percentage_infected: # Percentage of infected individuals in the population
@@ -348,16 +380,20 @@ while sum(coords_t[:,2])!=0: # activate lines 236, 240
         coords_t[uninfection_idx,3] = rm_h # Change the rate of movement back to the one for uninfected individuals
         coords_t[uninfection_idx,4] = 0    # Change the rate of infection back to 0
 
-        if percentage_susceptibility:
-            # For individuals with a mutation label = 1 (Normal Spreaders)
-            normal_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 1] # find the indexes of the normal spreders
-            coords_t[normal_idx, 5] = 0  # Change the label of mutation back to 0
-            coords_t[normal_idx, 6] = 1  # Change the susceptibility label back to 1
+        if args.super_strain:
+            if percentage_susceptibility:
+                # For individuals with a mutation label = 1 (Normal Spreaders)
+                normal_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 1] # find the indexes of the normal spreders
+                coords_t[normal_idx, 5] = 0  # Change the label of mutation back to 0
+                coords_t[normal_idx, 6] = 1  # Change the susceptibility label back to 1
 
-            # For individuals with a mutation label of 2 (Super Spreaders)
-            super_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 2] # find the indexes of the super spreders
-            coords_t[super_idx, 5] = 0  # hange the label of mutation back to 0
-                                        # For those with mutation label 2, no change at the susceptibility label
+                # For individuals with a mutation label of 2 (Super Spreaders)
+                super_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 2] # find the indexes of the super spreders
+                coords_t[super_idx, 5] = 0  # hange the label of mutation back to 0
+                                            # For those with mutation label 2, no change at the susceptibility label
+            else:
+                coords_t[uninfection_idx, 5] = 0  # Change the label of mutation back to 0
+                coords_t[uninfection_idx, 6] = 1  # Change the susceptibility label back to 1 to all unifected individuals 
         else:
             coords_t[uninfection_idx, 5] = 0  # Change the label of mutation back to 0
             coords_t[uninfection_idx, 6] = 1  # Change the susceptibility label back to 1 to all unifected individuals
@@ -531,10 +567,14 @@ while sum(coords_t[:,2])!=0: # activate lines 236, 240
                 coords_t[j,4] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), infectivity(coords_t[c, 4], g.iloc[j], n_i, ri_s), coords_t[j, 4]) 
                 
                 ## Add the mutation label depending on the strain of the infection + the mutation produced ##
-                coords_t[j,5] = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_s), 2, np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_n), 1, coords_t[j,5]))
+                if args.super_strain:
+                    coords_t[j,5] = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_s), 2, np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_n), 1, coords_t[j,5]))
+                else:
+                    coords_t[j, 5] = np.where((s4 <= ipi[j]) & (coords_t[j, 6] == 1) & (coords_t[j, 4] == ri_n), 1, coords_t[j, 5])
 
-                ## Update the counters to track the number of Super Strain infections and Normal Strain infections ##
-                ss = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_s), ss+1, ss) #Count the super infections
+                ## Update the counters to track the number of Super Strain infections (if are existed) and Normal Strain infections ##
+                if args.super_strain:
+                    ss = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_s), ss+1, ss) #Count the super infections
                 ns = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_n), ns+1, ns) #Count the normal infections
                 
                 ## Update the event time of infection for the infected individual in the list t_i ##
@@ -571,11 +611,19 @@ while sum(coords_t[:,2])!=0: # activate lines 236, 240
         ## Remove the lines in the genome table that correspond to the genomes of recovered individuals ##
         g.iloc[coords_t[:, 2] == 0] = np.zeros((1, l)) 
         
-        ## Collect the data for the number of Total infected, Super spreaders, Normal spreaders and infection time for each generation ##
-        all_inf = np.concatenate([all_inf, np.column_stack(np.array((sum(coords_t[:,2]), sum(coords_t[:,5]==2), sum(coords_t[:,5]==1), float(t_s)), dtype=float))], axis=0)    
-    
-    ## Save a sample of data from the simulation, according to the conditions of the sample_data() function##
-    sample_data(samples, genomes, g, tt, coords_t, all_inf, sample_times)
+        if args.super_strain:
+            ## Collect the data for the number of Total infected, Super spreaders, Normal spreaders and infection time for each generation ##
+            all_inf = np.concatenate([all_inf, np.column_stack(np.array((sum(coords_t[:,2]), sum(coords_t[:,5]==2), sum(coords_t[:,5]==1), float(t_s)), dtype=float))], axis=0)    
+        else:
+            ## Collect the data for the number of Total infected, Normal spreaders and infection time for each generation ##
+            all_inf = np.concatenate([all_inf, np.column_stack(np.array((sum(coords_t[:,2]), sum(coords_t[:,5]==1), float(t_s)), dtype=float))], axis=0)    
+
+    if args.super_strain:
+        ## Save a sample of data from the simulation, according to the conditions of the sample_data() function##
+        sample_data_normal_super(samples, genomes, g, tt, coords_t, all_inf, sample_times)
+    else:
+        ## Save a sample of data from the simulation, according to the conditions of the sample_data() function##
+        sample_data_normal(samples, genomes, g, tt, coords_t, all_inf, sample_times)
     
     ## Time to run the simulation loop ##
     loop_t = time.time()-time_bfloop 
@@ -586,10 +634,16 @@ while sum(coords_t[:,2])!=0: # activate lines 236, 240
     
 ## OPTIONAL: Plot a visual map with the final positions of the sample ##
 if args.scatter_plots:
-    plot_map(plots, coords_t, tt, t_s, mv, ss, un)
+    if args.super_strain:
+        plot_map_normal_super(plots, coords_t, tt, t_s, mv, ss, un)
+    else:
+        plot_map_normal(plots, coords_t, tt, t_s, mv, un)
 
-## Save the data from the simulation in the correct directory ##
-save_data(samples, genomes, coords_2, coords_t, tt, g, all_inf, unin, hah, ss, ns, mv, t_un)
+if args.super_strain:
+    ## Save the data from the simulation in the correct directory ##
+    save_data_normal_super(samples, genomes, coords_2, coords_t, tt, g, all_inf, unin, hah, ss, ns, mv, t_un)
+else:    ## Save the data from the simulation in the correct directory ##
+    save_data_normal(samples, genomes, coords_2, coords_t, tt, g, all_inf, unin, hah, ns, mv, t_un)
 
 #coords_t = pd.DataFrame(data=coords_t.T, index=("x","y", "label", "probability of movement", "probability of infection", "mutation", "susceptibility")).T
 #coords_t.to_csv('/Users/katiagim/Desktop/MobiVirus/attempt_2/'+'final_data'+'.csv',header=True, index=False)
