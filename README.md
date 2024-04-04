@@ -19,7 +19,8 @@ The MobiVirus Simulator works with the use of 3 files:
 2. `mobifunctions.py`: Python script containing the functions used in the simulation.
 3. `parameters.ini`: INI file containing the initial conditions of the simulation.
 In order to run the simulation, all files must be in the same directory. The chosen directory must, also, be added in the INI file.
-* All the required packages are mentioned in the `requirements.txt`
+
+All the required packages are mentioned in the `requirements.txt`
 ## Detailed Description
 
 ### Main code 
@@ -28,7 +29,8 @@ The simulation starts with each individual located at a single position in a two
 ### Optional arguments
 The code contains various optional arguments that may be claimed through the command line.
 Action arguments:
-- super_strain: Creates a 2nd strain in the simulation that has a different infectivity rate than the normal strain. The different strain has a specific number of important genome positions in the beginning. Both the infectivity rate and the important genome positions are defines in the INI file. If the flag is not used then the n_i parameter (number of important genome positions) in the INI file should be equal to 0.
+- super_strain: Creates a 2nd strain in the simulation that has a different infectivity rate than the normal strain. The different strain has a specific number of important genome positions in the beginning. Both the infectivity rate and the important genome positions are defines in the INI file. 
+If the flag is not used then the n_i parameter (number of important genome positions) in the INI file should be equal to 0.
 # If there is no Super Strain mutation, n_i = 0
 
 ### Output
