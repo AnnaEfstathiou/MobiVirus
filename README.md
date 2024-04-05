@@ -4,7 +4,7 @@
 
 - [Abstract](#Abstract)
 - [Requirements](#Requirements)
-- [Detailed_Description](#Detailed_Description)
+- [Detailed Description](#Detailed-Description)
     - [Main_code](#Main_code)
     - [Optional_arguments](#Optional_arguments)
     - [Output](#Output)
