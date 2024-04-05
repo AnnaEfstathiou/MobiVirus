@@ -166,11 +166,15 @@ else:
 if args.super_strain:
     ri_s = config.getfloat('Initial_Parameters', 'ri_s')            # Rate of infection from super/strain 2
     L = [ri_n, ri_s]                                                # Infection rates in order to divide the infected population in different strains
+    if n_i == 0 or n_i > l:
+        raise ValueError("The number of important genome positions (n_i) in the INI file must be postitive intiger, smaller than the genome length, when the super strain is present!")
 else:
     # Only normal strains
     ri_s = ri_n                                                     # Rate of infection for normal strains equal to the rate of infection for super strains
     L = [ri_n, ri_s]                                                # Infection rates in order to divide the infected population in different strains
-                                                                    # BUT since there is only one strain, 
+                                                                    # BUT since there is only one strain the individuals are not gonna be separated
+    if n_i != 0:
+        raise ValueError("The number of important genome positions (n_i) in the INI file must be equal to 0 when there is only one normal strain!")
 
 #%%
 
