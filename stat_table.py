@@ -64,7 +64,8 @@ def main(directory):
 
     # convert the collected results into a pandas DataFrame
     df = pd.DataFrame(results).T  # transpose so that each row represents a file
-    
+    df = df.sort_index() # sort the dataframe based on the index 
+
     # print the DataFrame to stdout
     print(df)
     ## OPTIONAL
