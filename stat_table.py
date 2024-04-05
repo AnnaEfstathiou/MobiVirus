@@ -71,7 +71,7 @@ def main(directory):
     ## OPTIONAL
     if args.store_dataframe:
         # save the DataFrame to a CSV file 
-        df.to_csv("statistics_summary.csv")
+        df.to_csv("summary_statistics.csv")
 
 if __name__ == "__main__":
 
