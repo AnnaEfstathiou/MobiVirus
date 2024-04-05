@@ -150,8 +150,8 @@ else:
 
 if args.max_infections:
     max_infections = int(args.max_infections)
-    if not max_infections >= 1 or max_infections > n:
-        raise ValueError("The number of maximum infections must be a positive integer and less than the total number of individuals!")
+    if not max_infections >= 1:
+        raise ValueError("The number of maximum infections must be a positive integer!")
 else:
     max_infections = None
 

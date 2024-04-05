@@ -478,7 +478,8 @@ def save_data_normal(samples_directory, genomes_directory, coords_2, coords_t, t
 
 def sample_data_normal_super(samples_directory, genomes_directory, g, tt, coords_t, all_inf, sample_times):
 
-    if tt==0 or tt%sample_times==0 or sum(coords_t[:,5]==1)==0:
+    # if tt==0 or tt%sample_times==0 or sum(coords_t[:,5]==1)==0:
+    if tt==0 or tt%sample_times==0:
         
         all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time'])
         all_inf.to_csv(samples_directory+'/all_inf_'+str(tt)+'.csv', header=True, index=False)

@@ -39,7 +39,7 @@ If the flag is not used then the n_i parameter (number of important genome posit
 
 String arguments - optional conditions under which the simulation stops:
 - **percentage_infected**: The simulation stops if the percentage of infected individuals in the population reach a certain number. This number must be a float between 0 and 1.
-- **max_infections**: The simulation stops if the infection are more than a certain number. This integer must not exceed the number of individuals in the population.
+- **max_infections**: The simulation stops if the infection are more than a certain number. This number must be a positive integer.
 - **percentage_susceptibility**: The simulation stops if the susceptible, to the virus, individuals are less than a certain number. This number must be a float between 0 and 1. This argument is valid only when the super strain is present in the simulation. This is because it creates an imbalance between the susceptibility of the individuals regarding to the strain they have been infected with. In more detain, if an individual is infected with the normal strain, then when they get healthy they are again susceptible to the virus. In contrast, the healthy individuals, who had previously the super strain are no longer susceptible to any viral strain.
 - **ratio_super_vs_normal**: The simulation stops if the number of individuals carrying the normal strain are less than a certain percentage of the individuals with the super strain. This number must be a float between 0 and 1. This argument is valid only when the super strain is present in the simulation.
 
