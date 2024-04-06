@@ -1,12 +1,14 @@
 import os
 import subprocess
 import pandas as pd
+import matplotlib.pyplot as plt
 import argparse
 
 def run_stats_script(file_path, stats_script_path='calc_stats.py'):
 
     """
     Runs the stats.py script for a csv file and captures its output.
+    
     INPUT
     - file_path (str): The path to the csv file for which to run the stats.py script.
     - stats_script_path (str): The path to the calc_stats.py script.
@@ -37,6 +39,49 @@ def run_stats_script(file_path, stats_script_path='calc_stats.py'):
             stats[key.strip()] = value.strip()
     return stats
 
+def plot_summary_statistics(csv_file):
+
+    """
+    Plot the summary statistics.
+    1st plot: Tajima's D, Pi-Estimator score, Watterson-Estimator score
+    2nd plot: number of unique sequences represented as a ratio (e.g 415/559 = 0.742)
+    3rd plot: haplotype diversity score
+
+    INPUT
+    - csv_file: The path to the csv file for which to run the stats.py script.
+    """
+    
+    # read the CSV file
+    csv_df = pd.read_csv(csv_file, index_col=0)  # adjust the index_col parameter as needed
+
+    # convert 'Number of unique sequences' column to ratio 
+    # assume the 'Number of unique sequences' column is formatted as '415/537'
+    csv_df['Unique Sequences Ratio'] = csv_df['Number of unique sequences'].apply(lambda x: eval(x.replace('/', '/')))
+
+    fig, ax = plt.subplots(3, 1, figsize=(12, 18))
+
+    # Tajima's D score, Pi-Estimator score, and Watterson-Estimator score in the first plot
+    csv_df[["Tajima's D score", "Pi-Estimator score", "Watterson-Estimator score"]].plot(ax=ax[0], marker='o')
+    ax[0].set_title("Tajima's D, Pi-Estimator, and Watterson-Estimator Scores")
+    ax[0].set_ylabel('Scores')
+    ax[0].grid(True)
+
+    # Number of unique sequences ratio in the second plot
+    csv_df["Unique Sequences Ratio"].plot(ax=ax[1], marker='o', color='purple')
+    ax[1].set_title("Unique Sequences Ratio")
+    ax[1].set_ylabel('Ratio')
+    ax[1].grid(True)
+
+    # Haplotype diversity in the third plot
+    csv_df["Haplotype diversity"].plot(ax=ax[2], marker='o', color='brown')
+    ax[2].set_title("Haplotype Diversity")
+    ax[2].set_ylabel('Diversity')
+    ax[2].grid(True)
+
+    #plt.tight_layout()
+    plt.tight_layout(pad=4.0)
+    plt.show()
+    plt.close(fig) 
 
 def main(directory):
 
@@ -49,7 +94,13 @@ def main(directory):
     OUTPUT
     - standard output: DataFrame
     - (OPTIONAL) statistics_summary.csv: saved CSV file with all the statistics for the files in the directory
+    - (OPTIONAL) plot the scores stored in the statistics_summary.csv
     """
+    # ## ERROR HANDLING ##
+    # # in order to plot the summary statistics, the dataframe must be saved into a CSV file
+    if not args.store_dataframe:
+        if args.plot_statistics:
+            raise ValueError("Store the DataFrame with the summary statistics as a CSV file in order to plot those values! In order to do that use the 'store' flag along with the 'plots' one")
 
     results = {}
     # iterate over all files in the specified directory
@@ -65,13 +116,18 @@ def main(directory):
     # convert the collected results into a pandas DataFrame
     df = pd.DataFrame(results).T  # transpose so that each row represents a file
     df = df.sort_index() # sort the dataframe based on the index 
-
+    
     # print the DataFrame to stdout
     print(df)
-    ## OPTIONAL
+    
     if args.store_dataframe:
         # save the DataFrame to a CSV file 
         df.to_csv("summary_statistics.csv")
+        if args.plot_statistics:
+            plot_summary_statistics("summary_statistics.csv")
+    # else:
+        # if args.plot_statistics:
+            # raise ValueError("Store the DataFrame with the summary statistics as a CSV file in order to plot those values! In order to do that use the 'store' flag along with the 'plots' one")
 
 if __name__ == "__main__":
 
@@ -79,6 +135,7 @@ if __name__ == "__main__":
     # arguments for directory path
     parser.add_argument('directory', type=str, help='Directory containing CSV or FASTA files with genomes to process.')
     parser.add_argument('-store', '--store_dataframe', action="store_true", help='Store the DataFrame in a CSV file')
+    parser.add_argument('-plots', '--plot_statistics', action="store_true", help='Plot')
     args = parser.parse_args()
     
     # call main function with the specified directory
