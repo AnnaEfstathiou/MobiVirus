@@ -18,7 +18,7 @@ def run_stats_script(file_path, stats_script_path='calc_stats.py'):
 
     # check if stats.py exists at the provided path
     if not os.path.exists(stats_script_path):
-        raise FileNotFoundError(f"The stats.py script was not found at the specified path: {stats_script_path}")
+        raise FileNotFoundError(f"The calc_stats.py script was not found at the specified path: {stats_script_path}")
     
     # construct the command to execute stats.py with the given file path
     command = f'python3 "{stats_script_path}" "{file_path}"'
@@ -56,7 +56,8 @@ def plot_summary_statistics(csv_file):
 
     # convert 'Number of unique sequences' column to ratio 
     # assume the 'Number of unique sequences' column is formatted as '415/537'
-    csv_df['Unique Sequences Ratio'] = csv_df['Number of unique sequences'].apply(lambda x: eval(x.replace('/', '/')))
+    # if 'Number of unique sequences' column is formatted as '0/0' then is set equal to 0 
+    csv_df['Unique Sequences Ratio'] = csv_df['Number of unique sequences'].apply(lambda x: 0 if x == '0/0' else eval(x))
 
     fig, ax = plt.subplots(3, 1, figsize=(12, 18))
 
@@ -110,8 +111,10 @@ def main(directory):
             file_path = os.path.join(directory, filename)
             # run statistical analysis on the file and capture the results
             stats = run_stats_script(file_path)
-            # store the results in the dictionary using the filename as the key
-            results[filename] = stats
+            # Only store non-empty results
+            if stats:  # This checks if stats is not empty
+                # store the results in the dictionary using the filename as the key
+                results[filename] = stats
 
     # convert the collected results into a pandas DataFrame
     df = pd.DataFrame(results).T  # transpose so that each row represents a file
@@ -125,10 +128,7 @@ def main(directory):
         df.to_csv("summary_statistics.csv")
         if args.plot_statistics:
             plot_summary_statistics("summary_statistics.csv")
-    # else:
-        # if args.plot_statistics:
-            # raise ValueError("Store the DataFrame with the summary statistics as a CSV file in order to plot those values! In order to do that use the 'store' flag along with the 'plots' one")
-
+   
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Process multiple genome CSV or FASTA files to compute the following statistics: Tajima's D score, Pi-Estimator score, Watterson-Estimator score, number of unique sequences and haplotype diversity.")

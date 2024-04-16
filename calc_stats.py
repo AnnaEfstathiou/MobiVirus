@@ -19,44 +19,27 @@ def csv_to_fasta(csv_file, output_fasta_file):
 
     """ Function to convert a CSV file to a FASTA file """
 
-    df = pd.read_csv(csv_file) # Read the CSV file into a DataFrame
+    df = pd.read_csv(csv_file) # read the CSV file into a DataFrame
     with open(output_fasta_file, 'w') as fasta_file:
-        for index, row in df.iterrows(): # Iterate through each row in the DataFrame          
-            header = f'>{index + 1}' # Create the FASTA header using the row index
-            sequence = ''.join([str(int(val)) if val.is_integer() else str(val) for val in row.values]) # Concatenate the values in the row to form the sequence
-            fasta_file.write(f'{header}\n{sequence}\n') # Write the header and sequence to the FASTA file
+        for index, row in df.iterrows(): # iterate through each row in the DataFrame          
+            header = f'>{index + 1}' # create the FASTA header using the row index
+            sequence = ''.join([str(int(val)) if val.is_integer() else str(val) for val in row.values]) # concatenate the values in the row to form the sequence
+            fasta_file.write(f'{header}\n{sequence}\n') # write the header and sequence to the FASTA file
 
 
 def preprocess_fasta(input_fasta, output_fasta):
 
     """ Preprocesses the FASTA file to remove lines where all positions are 0. """
 
-    # Open input and output files
+    # open input and output files
     with open(input_fasta, "r") as input_handle, open(output_fasta, "w") as output_handle:
-        # Parse the input FASTA file
+        # parse the input FASTA file
         for record in SeqIO.parse(input_handle, "fasta"):
-            # Check if the sequence contains only zeros
+            # check if the sequence contains only zeros
             if '1' in record.seq:
-                # Write the sequence to the output file
+                # write the sequence to the output file
                 SeqIO.write(record, output_handle, "fasta")
 
-
-def run_tajimas_d(fasta_file_path):
-
-    """ Function to run Tajima's D on a FASTA file """
-
-    safe_fasta_file_path = f"'{fasta_file_path}'" # Ensure the file path is safely quoted to prevent shell interpretation issues
-    tajimas_D_command = f'tajimas_d -f {safe_fasta_file_path} -p -t -w' # Construct the command to run Tajima's D
-    # subprocess.run(tajimas_D_command, shell=True, check=True) # Execute the command in the shell
-    result = subprocess.run(tajimas_D_command, shell=True, capture_output=True, text=True) # Execute the command in the shell and capture output
-    # Parsing the results to create a dict
-    parsed_result = {}
-    lines = result.stdout.split('\n')
-    for line in lines:
-        if line.strip(): # ignoring empty lines
-            key, value = line.split(':')
-            parsed_result[key.strip()] = value.strip()
-    return parsed_result
 
 def read_fasta(file_path):
 
@@ -72,6 +55,25 @@ def read_fasta(file_path):
             else:
                 sequences[current_sequence] += line.strip()
     return sequences
+
+
+def run_tajimas_d(fasta_file_path):
+
+    """ Function to run Tajima's D on a FASTA file """
+
+    safe_fasta_file_path = f"'{fasta_file_path}'" # ensure the file path is safely quoted to prevent shell interpretation issues
+    tajimas_D_command = f'tajimas_d -f {safe_fasta_file_path} -p -t -w' # cSonstruct the command to run Tajima's D
+    # subprocess.run(tajimas_D_command, shell=True, check=True) # Execute the command in the shell
+    result = subprocess.run(tajimas_D_command, shell=True, capture_output=True, text=True) # Execute the command in the shell and capture output
+    # Parsing the results to create a dict
+    parsed_result = {}
+    lines = result.stdout.split('\n')
+    for line in lines:
+        if line.strip(): # ignoring empty lines
+            key, value = line.split(':')
+            parsed_result[key.strip()] = value.strip()
+    return parsed_result
+
 
 def count_haplotypes(sequences):
 
@@ -141,8 +143,8 @@ if __name__ == "__main__":
     input_file = args.input_file
 
     statistical_results, unique_count, haplotype_diversity, num_seqs = run_statistics_for_file(input_file)  # Get both results and file path
+    print(f"Number of unique sequences: {unique_count}/{num_seqs}")
+    print("Haplotype diversity:", haplotype_diversity)
     print("Tajima's D score:", statistical_results["Tajima's D score"])
     print("Pi-Estimator score:", statistical_results["Pi-Estimator score"])
     print("Watterson-Estimator score:", statistical_results["Watterson-Estimator score"])
-    print(f"Number of unique sequences: {unique_count}/{num_seqs}")
-    print("Haplotype diversity:", haplotype_diversity)
