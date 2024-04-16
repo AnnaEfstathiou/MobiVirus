@@ -84,7 +84,7 @@ def plot_summary_statistics(csv_file):
     plt.show()
     plt.close(fig) 
 
-def main(directory):
+def main(directory, output_file):
 
     """
     Main function to process multiple CSV files in the specified directory,
@@ -127,18 +127,19 @@ def main(directory):
     
     if args.store_dataframe:
         # save the DataFrame to a CSV file 
-        df.to_csv("summary_statistics.csv")
+        df.to_csv(output_file)
         if args.plot_statistics:
-            plot_summary_statistics("summary_statistics.csv")
+            plot_summary_statistics(output_file)
    
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Process multiple genome CSV or FASTA files to compute the following statistics: Tajima's D score, Pi-Estimator score, Watterson-Estimator score, number of unique sequences and haplotype diversity.")
     parser.add_argument('directory', type=str, help='Directory containing CSV or FASTA files with genomes to process.')
-    parser.add_argument('-store', '--store_dataframe', action="store_true", help='Store the DataFrame in a CSV file')
-    parser.add_argument('-plots', '--plot_statistics', action="store_true", help='Plot')
+    parser.add_argument('-n', '--output_filename', type=str, default='summary_statistics.csv', help='Output filename for the stored CSV file')
+    parser.add_argument('-s', '--store_dataframe', action="store_true", help='Store the DataFrame in a CSV file')
+    parser.add_argument('-p', '--plot_statistics', action="store_true", help='Plot')
     args = parser.parse_args()
     
     # call main function with the specified directory
-    main(args.directory)
+    main(args.directory, args.output_filename)
     
