@@ -97,8 +97,8 @@ def main(directory):
     - (OPTIONAL) statistics_summary.csv: saved CSV file with all the statistics for the files in the directory
     - (OPTIONAL) plot the scores stored in the statistics_summary.csv
     """
-    # ## ERROR HANDLING ##
-    # # in order to plot the summary statistics, the dataframe must be saved into a CSV file
+    ## ERROR HANDLING ##
+    # in order to plot the summary statistics, the dataframe must be saved into a CSV file
     if not args.store_dataframe:
         if args.plot_statistics:
             raise ValueError("Store the DataFrame with the summary statistics as a CSV file in order to plot those values! In order to do that use the 'store' flag along with the 'plots' one")
@@ -111,8 +111,10 @@ def main(directory):
             file_path = os.path.join(directory, filename)
             # run statistical analysis on the file and capture the results
             stats = run_stats_script(file_path)
-            # Only store non-empty results
-            if stats:  # This checks if stats is not empty
+            # only store non-empty results 
+            # theoretically there are no empty results...the number of unique sequences and the haplotype diversity will always be calculated 
+            # the Tajima's D, Pi-Estimator score & Watterson-Estimator score might not be calculated if the number of sequences are less than 4
+            if stats:  
                 # store the results in the dictionary using the filename as the key
                 results[filename] = stats
 
@@ -132,7 +134,6 @@ def main(directory):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Process multiple genome CSV or FASTA files to compute the following statistics: Tajima's D score, Pi-Estimator score, Watterson-Estimator score, number of unique sequences and haplotype diversity.")
-    # arguments for directory path
     parser.add_argument('directory', type=str, help='Directory containing CSV or FASTA files with genomes to process.')
     parser.add_argument('-store', '--store_dataframe', action="store_true", help='Store the DataFrame in a CSV file')
     parser.add_argument('-plots', '--plot_statistics', action="store_true", help='Plot')
