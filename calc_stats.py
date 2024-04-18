@@ -108,8 +108,7 @@ def run_statistics_for_file(file_path):
         unique_count = count_haplotypes(sequences) # calculate the number of unique sequences
         haplotype_diversity = calculate_haplotype_diversity(sequences) # calculates the diversity of haplotypes
         
-        rm_command = f'rm "{preprocessed_file_path}"' # construct the command to delete the generated FASTA file
-        subprocess.run(rm_command, shell=True, check=True) # execute the command in the shell
+        os.remove(preprocessed_file_path) # delete the generated FASTA file
 
     elif file_extension.lower() == '.fasta' or file_extension.lower() == '.fa': # check if the input file is a FASTA file
    
@@ -121,8 +120,7 @@ def run_statistics_for_file(file_path):
         unique_count = count_haplotypes(sequences) # calculate the number of unique sequences
         haplotype_diversity = calculate_haplotype_diversity(sequences) # calculates the diversity of haplotypes
 
-        rm_command = f'rm "{preprocessed_file_path}"' # construct the command to delete the generated FASTA file
-        subprocess.run(rm_command, shell=True, check=True) # execute the command in the shell
+        os.remove(preprocessed_file_path) # delete the generated FASTA file
     
     else:
         raise ValueError('The input file must be either a CSV or a FASTA file.')
@@ -137,7 +135,7 @@ if __name__ == "__main__":
     input_file = args.input_file
 
     statistical_results, unique_count, haplotype_diversity, num_seqs = run_statistics_for_file(input_file)  
-    print(f"Number of unique sequences: {unique_count}/{num_seqs}")
+    print(f"Number of unique sequences: {unique_count}/{num_seqs} ({unique_count/num_seqs:.4f})")
     print("Haplotype diversity:", haplotype_diversity)
     print("Tajima's D score:", statistical_results["Tajima's D score"])
     print("Pi-Estimator score:", statistical_results["Pi-Estimator score"])
