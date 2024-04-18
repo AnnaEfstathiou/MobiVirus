@@ -14,7 +14,20 @@ from collections import Counter
 import subprocess
 from Bio import SeqIO
 import os
+from _tajimas_d import *
 
+
+# def csv_to_fasta_and_preprocess(csv_file, output_fasta_file):
+
+#     """ Convert a CSV file directly to a preprocessed FASTA file, excluding all-zero sequences. """
+    
+#     df = pd.read_csv(csv_file) # read the csv file as 
+#     with open(output_fasta_file, 'w') as fasta_file:
+#         for index, row in df.iterrows():
+#             sequence = ''.join([str(int(val)) if val.is_integer() else str(val) for val in row.values])
+#             if '1' in sequence:  # check if the sequence contains at least one position with 1
+#                 header = f'>{index + 1}'
+#                 fasta_file.write(f'{header}\n{sequence}\n')
 
 def csv_to_fasta_and_preprocess(csv_file, output_fasta_file):
 
@@ -24,9 +37,11 @@ def csv_to_fasta_and_preprocess(csv_file, output_fasta_file):
     with open(output_fasta_file, 'w') as fasta_file:
         for index, row in df.iterrows():
             sequence = ''.join([str(int(val)) if val.is_integer() else str(val) for val in row.values])
-            if '1' in sequence:  # check if the sequence contains at least one position with 1
-                header = f'>{index + 1}'
-                fasta_file.write(f'{header}\n{sequence}\n')
+            # if '1' in sequence:  # check if the sequence contains at least one position with 1
+            #     header = f'>{index + 1}'
+            #     fasta_file.write(f'{header}\n{sequence}\n')
+            header = f'>{index + 1}'
+            fasta_file.write(f'{header}\n{sequence}\n')
 
 
 def preprocess_fasta(input_fasta, output_fasta):
@@ -137,6 +152,7 @@ if __name__ == "__main__":
     statistical_results, unique_count, haplotype_diversity, num_seqs = run_statistics_for_file(input_file)  
     print(f"Number of unique sequences: {unique_count}/{num_seqs} ({unique_count/num_seqs:.4f})")
     print("Haplotype diversity:", haplotype_diversity)
-    print("Tajima's D score:", statistical_results["Tajima's D score"])
     print("Pi-Estimator score:", statistical_results["Pi-Estimator score"])
     print("Watterson-Estimator score:", statistical_results["Watterson-Estimator score"])
+    print("Tajima's D score:", statistical_results["Tajima's D score"])
+

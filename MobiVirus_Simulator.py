@@ -620,7 +620,9 @@ while sum(coords_t[:,2])!=0: # activate lines 236, 240
         rt_i = sum(coords_t[:,4])
         
         ## Remove the lines in the genome table that correspond to the genomes of recovered individuals ##
-        g.iloc[coords_t[:, 2] == 0] = np.zeros((1, l)) 
+        # g.iloc[coords_t[:, 2] == 0] = np.zeros((1, l)) 
+        n_rows = sum(coords_t[:, 2] == 0)  # This calculates how many rows meet the condition
+        g.iloc[coords_t[:, 2] == 0] = np.nan * np.ones((n_rows, l))
         
         if args.super_strain:
             ## Collect the data for the number of Total infected, Super spreaders, Normal spreaders and infection time for each generation ##
