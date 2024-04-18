@@ -1,5 +1,5 @@
 """ 
-INPUT: FASTA or CSV file with sequences
+INPUT: FASTA or CSV file with binary sequences
 Calculating: 
 - Tajima's D 
 - Pi-Estimator score
@@ -15,16 +15,18 @@ import subprocess
 from Bio import SeqIO
 import os
 
-def csv_to_fasta(csv_file, output_fasta_file):
 
-    """ Function to convert a CSV file to a FASTA file """
+def csv_to_fasta_and_preprocess(csv_file, output_fasta_file):
 
-    df = pd.read_csv(csv_file) # read the CSV file into a DataFrame
+    """ Convert a CSV file directly to a preprocessed FASTA file, excluding all-zero sequences. """
+    
+    df = pd.read_csv(csv_file) # read the csv file as 
     with open(output_fasta_file, 'w') as fasta_file:
-        for index, row in df.iterrows(): # iterate through each row in the DataFrame          
-            header = f'>{index + 1}' # create the FASTA header using the row index
-            sequence = ''.join([str(int(val)) if val.is_integer() else str(val) for val in row.values]) # concatenate the values in the row to form the sequence
-            fasta_file.write(f'{header}\n{sequence}\n') # write the header and sequence to the FASTA file
+        for index, row in df.iterrows():
+            sequence = ''.join([str(int(val)) if val.is_integer() else str(val) for val in row.values])
+            if '1' in sequence:  # check if the sequence contains at least one position with 1
+                header = f'>{index + 1}'
+                fasta_file.write(f'{header}\n{sequence}\n')
 
 
 def preprocess_fasta(input_fasta, output_fasta):
@@ -35,7 +37,7 @@ def preprocess_fasta(input_fasta, output_fasta):
     with open(input_fasta, "r") as input_handle, open(output_fasta, "w") as output_handle:
         # parse the input FASTA file
         for record in SeqIO.parse(input_handle, "fasta"):
-            # check if the sequence contains only zeros
+            # check if the sequence contains at least one position with 1
             if '1' in record.seq:
                 # write the sequence to the output file
                 SeqIO.write(record, output_handle, "fasta")
@@ -98,18 +100,15 @@ def run_statistics_for_file(file_path):
 
     if file_extension.lower() == '.csv': # check if the input file is a CSV file
 
-        output_fasta_file_path = file_path.rsplit('.', 1)[0] + '.fa' # generate the output FASTA file path by replacing the extension
-        csv_to_fasta(file_path, output_fasta_file_path) # convert the CSV file to a FASTA file
-
         preprocessed_file_path = file_path.rsplit('.', 1)[0] + '_processed.fa' # generate the processed FASTA file path by replacing the extension
-        preprocess_fasta(output_fasta_file_path, preprocessed_file_path) # remove lines where all positions are 0
+        csv_to_fasta_and_preprocess(file_path, preprocessed_file_path) # remove lines where all positions are 0
 
         statistical_results = run_tajimas_d(preprocessed_file_path) # Tajima's D, Pi-Estimator score, Watterson-Estimator score
         sequences = read_fasta(preprocessed_file_path)
         unique_count = count_haplotypes(sequences) # calculate the number of unique sequences
         haplotype_diversity = calculate_haplotype_diversity(sequences) # calculates the diversity of haplotypes
         
-        rm_command = f'rm "{output_fasta_file_path}" "{preprocessed_file_path}"' # construct the command to delete the generated FASTA file
+        rm_command = f'rm "{preprocessed_file_path}"' # construct the command to delete the generated FASTA file
         subprocess.run(rm_command, shell=True, check=True) # execute the command in the shell
 
     elif file_extension.lower() == '.fasta' or file_extension.lower() == '.fa': # check if the input file is a FASTA file

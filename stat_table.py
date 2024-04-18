@@ -1,43 +1,56 @@
 import os
-import subprocess
 import pandas as pd
 import matplotlib.pyplot as plt
 import argparse
+import re
+from calc_stats import run_statistics_for_file  
 
-def run_stats_script(file_path, stats_script_path='calc_stats.py'):
+def calc_stats_for_dir(directory):
 
     """
-    Runs the stats.py script for a csv file and captures its output.
-    
+    Process multiple CSV or FASTA files from the specified directory,
+    run statistical analysis on each, and compile results into a DataFrame.
+
     INPUT
-    - file_path (str): The path to the csv file for which to run the stats.py script.
-    - stats_script_path (str): The path to the calc_stats.py script.
+    - directory (str): Directory containing the CSV or FASTA files to process.
     OUTPUT
-    - stats: A dictionary containing parsed statistical results from stats.py output.
+    - stats_df: DataFrame with the statistics.
     """
 
-    # check if stats.py exists at the provided path
-    if not os.path.exists(stats_script_path):
-        raise FileNotFoundError(f"The calc_stats.py script was not found at the specified path: {stats_script_path}")
-    
-    # construct the command to execute stats.py with the given file path
-    command = f'python3 "{stats_script_path}" "{file_path}"'
-    # run the command and capture stdout (standard output)
-    result = subprocess.run(command, shell=True, capture_output=True, text=True)
-    output = result.stdout
+    results = {}
+    for filename in os.listdir(directory):
+        if filename.endswith('.csv') or filename.endswith('.fasta') or filename.endswith('.fa'):
+            file_path = os.path.join(directory, filename)
+            statistical_results, unique_count, haplotype_diversity, num_seqs  = run_statistics_for_file(file_path)  # direct function call from calc_stats.py script
+            if num_seqs != 0:
+                num_unique_seqs = unique_count / num_seqs
+            else:
+                num_unique_seqs = 0 # set to 0 to avoid devision by 0 when the file is empty (num_seqs=0)
 
-    stats = {}
-    # iterate through each line of the captured output
-    for line in output.split('\n'):
-        if line.startswith("Tajima's D score:") or \
-           line.startswith("Pi-Estimator score:") or \
-           line.startswith("Watterson-Estimator score:") or \
-           line.startswith("Number of unique sequences:") or \
-           line.startswith("Haplotype diversity:"):
-            # split the line into key and value parts and strip whitespace
-            key, value = line.split(':', 1)
-            stats[key.strip()] = value.strip()
-    return stats
+            # prepare a structured entry for each file
+            entry = {
+                'Tajima\'s D': statistical_results.get("Tajima's D score", float('nan')),
+                'Pi-Estimator Score': statistical_results.get('Pi-Estimator score', float('nan')),
+                'Watterson-Estimator Score': statistical_results.get('Watterson-Estimator score', float('nan')),
+                'Number of unique sequences': f"{num_unique_seqs:.1f} ({unique_count}/{num_seqs})",
+                'Haplotype Diversity': haplotype_diversity}
+
+            # only store non-empty results 
+            # theoretically there are no empty results...the number of unique sequences and the haplotype diversity will always be calculated 
+            # the Tajima's D, Pi-Estimator score & Watterson-Estimator score might not be calculated if the sequences are few
+            if any(entry.values()):  
+                results[filename] = entry
+    
+    stats_df = pd.DataFrame.from_dict(results, orient='index')
+    # extract numbers from the filenames and sort accordingly
+    # the csv named as: 'genomes_final.csv' will be the last one in the DataFrame
+    stats_df['sort_key'] = stats_df.index.map(
+        lambda x: float('inf') if x == 'genomes_final.csv' else (
+            int(re.search(r'(\d+)', x).group(1)) if re.search(r'(\d+)', x) else 0))
+    stats_df.sort_values('sort_key', inplace=True)
+    stats_df.drop(columns=['sort_key'], inplace=True)  # remove the auxiliary column after sorting ('sort_key' column)
+    
+    return stats_df
 
 def plot_summary_statistics(csv_file):
 
@@ -54,32 +67,29 @@ def plot_summary_statistics(csv_file):
     # read the CSV file
     csv_df = pd.read_csv(csv_file, index_col=0)  # adjust the index_col parameter as needed
 
-    # convert 'Number of unique sequences' column to ratio 
-    # assume the 'Number of unique sequences' column is formatted as '415/537'
-    # if 'Number of unique sequences' column is formatted as '0/0' then is set equal to 0 
-    csv_df['Unique Sequences Ratio'] = csv_df['Number of unique sequences'].apply(lambda x: 0 if x == '0/0' else eval(x))
+    # convert 'Number of unique sequences' column to just the numeric value before the parentheses
+    csv_df['Unique Sequences Value'] = csv_df['Number of unique sequences'].apply(lambda x: float(x.split(' ')[0]))
 
     fig, ax = plt.subplots(3, 1, figsize=(12, 18))
 
     # Tajima's D score, Pi-Estimator score, and Watterson-Estimator score in the first plot
-    csv_df[["Tajima's D score", "Pi-Estimator score", "Watterson-Estimator score"]].plot(ax=ax[0], marker='o')
+    csv_df[["Tajima\'s D", "Pi-Estimator Score", "Watterson-Estimator Score"]].plot(ax=ax[0], marker='o')
     ax[0].set_title("Tajima's D, Pi-Estimator, and Watterson-Estimator Scores")
-    ax[0].set_ylabel('Scores')
+    ax[0].set_ylabel('Summary Statistics')
     ax[0].grid(True)
 
-    # Number of unique sequences ratio in the second plot
-    csv_df["Unique Sequences Ratio"].plot(ax=ax[1], marker='o', color='purple')
-    ax[1].set_title("Unique Sequences Ratio")
-    ax[1].set_ylabel('Ratio')
+    # Number of unique sequences in the second plot
+    csv_df["Unique Sequences Value"].plot(ax=ax[1], marker='o', color='purple')
+    ax[1].set_title("Number of unique sequences (Ratio)")
+    ax[1].set_ylabel('Score')
     ax[1].grid(True)
 
-    # Haplotype diversity in the third plot
-    csv_df["Haplotype diversity"].plot(ax=ax[2], marker='o', color='brown')
+    # Haplotype Diversity in the third plot
+    csv_df["Haplotype Diversity"].plot(ax=ax[2], marker='o', color='brown')
     ax[2].set_title("Haplotype Diversity")
-    ax[2].set_ylabel('Diversity')
+    ax[2].set_ylabel('Score')
     ax[2].grid(True)
 
-    #plt.tight_layout()
     plt.tight_layout(pad=4.0)
     plt.show()
     plt.close(fig) 
@@ -87,40 +97,24 @@ def plot_summary_statistics(csv_file):
 def main(directory, output_file):
 
     """
-    Main function to process multiple CSV files in the specified directory,
-    run statistical analysis on each, and compile results into a DataFrame.
+    Main function to create the DataFrame with the statistics.
 
     INPUT
     - directory (str): Directory containing the CSV files to process.
+    - output_file (str): Name of the stored CSV file with the statistics (default name: statistics_summary.csv).
     OUTPUT
     - standard output: DataFrame
-    - (OPTIONAL) statistics_summary.csv: saved CSV file with all the statistics for the files in the directory
-    - (OPTIONAL) plot the scores stored in the statistics_summary.csv
+    - (OPTIONAL) saved CSV file with all the summary statistics for the files in the given directory.
+    - (OPTIONAL) plot the scores stored in the saved CSV file with all the summary statistics.
     """
+
     ## ERROR HANDLING ##
     # in order to plot the summary statistics, the dataframe must be saved into a CSV file
     if not args.store_dataframe:
         if args.plot_statistics:
             raise ValueError("Store the DataFrame with the summary statistics as a CSV file in order to plot those values! In order to do that use the 'store' flag along with the 'plots' one")
 
-    results = {}
-    # iterate over all files in the specified directory
-    for filename in os.listdir(directory):
-        if filename.endswith(".csv"):
-            # construct the full path to the file
-            file_path = os.path.join(directory, filename)
-            # run statistical analysis on the file and capture the results
-            stats = run_stats_script(file_path)
-            # only store non-empty results 
-            # theoretically there are no empty results...the number of unique sequences and the haplotype diversity will always be calculated 
-            # the Tajima's D, Pi-Estimator score & Watterson-Estimator score might not be calculated if the number of sequences are less than 4
-            if stats:  
-                # store the results in the dictionary using the filename as the key
-                results[filename] = stats
-
-    # convert the collected results into a pandas DataFrame
-    df = pd.DataFrame(results).T  # transpose so that each row represents a file
-    df = df.sort_index() # sort the dataframe based on the index 
+    df = calc_stats_for_dir(directory)
     
     # print the DataFrame to stdout
     print(df)
@@ -142,4 +136,4 @@ if __name__ == "__main__":
     
     # call main function with the specified directory
     main(args.directory, args.output_filename)
-    
+     
