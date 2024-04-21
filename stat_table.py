@@ -3,10 +3,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import argparse
 import re
-from calc_stats import run_statistics_for_file  
+from calc_stats import statistics  
+
 
 def calc_stats_for_dir(directory):
-
     """
     Process multiple CSV or FASTA files from the specified directory,
     run statistical analysis on each, and compile results into a DataFrame.
@@ -21,27 +21,25 @@ def calc_stats_for_dir(directory):
     for filename in os.listdir(directory):
         if filename.endswith('.csv') or filename.endswith('.fasta') or filename.endswith('.fa'):
             file_path = os.path.join(directory, filename)
-            statistical_results, unique_count, haplotype_diversity, num_seqs  = run_statistics_for_file(file_path)  # direct function call from calc_stats.py script
-            if num_seqs != 0:
-                num_unique_seqs = unique_count / num_seqs
-            else:
-                num_unique_seqs = 0 # set to 0 to avoid devision by 0 when the file is empty (num_seqs=0)
+            try:
+                # Attempt to call statistics and process the file
+                tajimas_d_score, pi_estimator_score, watterson_estimator_score, unique_count, haplotype_diversity, num_seqs = statistics(file_path)
+                if num_seqs != 0:
+                    num_unique_seqs = unique_count / num_seqs
+                    num_unique_seqs_formatted = f"{num_unique_seqs:.2f} ({unique_count}/{num_seqs})"
+                else:
+                    num_unique_seqs_formatted = "0.0 (0/0)"
+                results[filename] = [tajimas_d_score, pi_estimator_score, watterson_estimator_score, num_unique_seqs_formatted, haplotype_diversity]
+            except ValueError as e:
+                # Handle errors by skipping the file and optionally logging the error
+                print(f"Error processing {filename}: {e}")
+                # Remove the created FASTA files that raise an error.
+                fasta_file_to_remove = os.path.splitext(file_path)[0] + "_processed.fa"
+                if os.path.exists(fasta_file_to_remove):
+                    os.remove(fasta_file_to_remove)
+                continue  # Continue processing the next file
 
-            # prepare a structured entry for each file
-            entry = {
-                'Tajima\'s D': statistical_results.get("Tajima's D score", float('nan')),
-                'Pi-Estimator Score': statistical_results.get('Pi-Estimator score', float('nan')),
-                'Watterson-Estimator Score': statistical_results.get('Watterson-Estimator score', float('nan')),
-                'Number of unique sequences': f"{num_unique_seqs:.1f} ({unique_count}/{num_seqs})",
-                'Haplotype Diversity': haplotype_diversity}
-
-            # only store non-empty results 
-            # theoretically there are no empty results...the number of unique sequences and the haplotype diversity will always be calculated 
-            # the Tajima's D, Pi-Estimator score & Watterson-Estimator score might not be calculated if the sequences are few
-            if any(entry.values()):  
-                results[filename] = entry
-    
-    stats_df = pd.DataFrame.from_dict(results, orient='index')
+    stats_df = pd.DataFrame.from_dict(results, orient='index', columns=['Tajima\'s D', 'Pi-Estimator', 'Watterson-Estimator', 'Number of unique sequences', 'Haplotype Diversity'])
     # extract numbers from the filenames and sort accordingly
     # the csv named as: 'genomes_final.csv' will be the last one in the DataFrame
     stats_df['sort_key'] = stats_df.index.map(
@@ -49,7 +47,6 @@ def calc_stats_for_dir(directory):
             int(re.search(r'(\d+)', x).group(1)) if re.search(r'(\d+)', x) else 0))
     stats_df.sort_values('sort_key', inplace=True)
     stats_df.drop(columns=['sort_key'], inplace=True)  # remove the auxiliary column after sorting ('sort_key' column)
-    
     return stats_df
 
 def plot_summary_statistics(csv_file):
