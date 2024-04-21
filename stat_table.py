@@ -3,7 +3,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import argparse
 import re
-from calc_stats import statistics  
+
+# Check if 'calc_stats.py' exists in the current directory
+if not os.path.exists('calc_stats.py'):
+    raise ImportError("calc_stats.py is not in the current directory.")
+
+from calc_stats import statistics 
 
 
 def calc_stats_for_dir(directory):
