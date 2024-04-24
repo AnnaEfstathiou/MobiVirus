@@ -52,6 +52,5 @@ The samples of the simulation are taken every few generations (defined in the IN
 The collected data at the end of the simulation will be saved in the directory that is indicated in the INI file.
 
 ## Statistical calculations
-
-
-
+The statistical calculations contain errors hence are incomplete. 
+Do not trust the scripts regarding calculations, yet!!!
