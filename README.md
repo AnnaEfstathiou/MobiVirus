@@ -53,4 +53,4 @@ The collected data at the end of the simulation will be saved in the directory t
 
 ## Statistical calculations
 The statistical calculations contain errors hence are incomplete. 
-Do not trust the scripts regarding calculations, yet!!!
+Do not trust the scripts regarding statistical calculations (`calc_stats.py`,`stat_table.py`), yet!!!
