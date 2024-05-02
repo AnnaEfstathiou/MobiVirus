@@ -37,7 +37,7 @@ def calc_stats_for_dir(directory):
                 results[filename] = [tajimas_d_score, pi_estimator_score, watterson_estimator_score, num_unique_seqs_formatted, haplotype_diversity]
             except ValueError as e:
                 # Handle errors by skipping the file and optionally logging the error
-                print(f"Error processing {filename}: {e}")
+                print(f"Error processing {filename}: {e} \n")
                 # Remove the created FASTA files that raise an error.
                 fasta_file_to_remove = os.path.splitext(file_path)[0] + "_processed.fa"
                 if os.path.exists(fasta_file_to_remove):
@@ -75,7 +75,7 @@ def plot_summary_statistics(csv_file):
     fig, ax = plt.subplots(3, 1, figsize=(12, 18))
 
     # Tajima's D score, Pi-Estimator score, and Watterson-Estimator score in the first plot
-    csv_df[["Tajima\'s D", "Pi-Estimator Score", "Watterson-Estimator Score"]].plot(ax=ax[0], marker='o')
+    csv_df[["Tajima\'s D", "Pi-Estimator", "Watterson-Estimator"]].plot(ax=ax[0], marker='o')
     ax[0].set_title("Tajima's D, Pi-Estimator, and Watterson-Estimator Scores")
     ax[0].set_ylabel('Summary Statistics')
     ax[0].grid(True)
@@ -83,7 +83,7 @@ def plot_summary_statistics(csv_file):
     # Number of unique sequences in the second plot
     csv_df["Unique Sequences Value"].plot(ax=ax[1], marker='o', color='purple')
     ax[1].set_title("Number of unique sequences (Ratio)")
-    ax[1].set_ylabel('Score')
+    ax[1].set_ylabel('Ratio')
     ax[1].grid(True)
 
     # Haplotype Diversity in the third plot

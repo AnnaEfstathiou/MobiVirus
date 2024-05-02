@@ -135,15 +135,14 @@ def tajimas_d(sequences: Dict[str, str]) -> float:
     c1 = b1 - 1 / harmonic
     c2 = b2 - ((num_seq + 2) / (harmonic * num_seq)) + (a2 / (harmonic**2))
 
+    if c1 == 0 or c2 == 0:
+        return float('nan')  # informing that calculation is not reliable
+
     e1 = c1 / harmonic
     e2 = c2 / (harmonic**2 + a2)
 
     delta_Theta = theta_pi - (seg_sites / harmonic)
-
-    if e1 == 0.0 and e2 == 0.0: # avoid devision by 0
-        tD = 0.0
-    else:
-        tD = delta_Theta / ((e1 * seg_sites + e2 * seg_sites * (seg_sites - 1)) ** 0.5)
+    tD = delta_Theta / ((e1 * seg_sites + e2 * seg_sites * (seg_sites - 1)) ** 0.5)
     return float(tD)
 
 def pi_estimator(sequences: Dict[str, str], safe=True) -> float:
