@@ -11,7 +11,7 @@ if not os.path.exists('calc_stats.py'):
 from calc_stats import statistics 
 
 
-def calc_stats_for_dir(directory):
+def calc_stats_for_dir(directory, sample_size = None):
     """
     Process multiple CSV or FASTA files from the specified directory,
     run statistical analysis on each, and compile results into a DataFrame.
@@ -28,7 +28,7 @@ def calc_stats_for_dir(directory):
             file_path = os.path.join(directory, filename)
             try:
                 # Attempt to call statistics and process the file
-                tajimas_d_score, pi_estimator_score, watterson_estimator_score, unique_count, haplotype_diversity, num_seqs = statistics(file_path)
+                tajimas_d_score, pi_estimator_score, watterson_estimator_score, unique_count, haplotype_diversity, num_seqs = statistics(file_path, sample_size)
                 if num_seqs != 0:
                     num_unique_seqs = unique_count / num_seqs
                     num_unique_seqs_formatted = f"{num_unique_seqs:.2f} ({unique_count}/{num_seqs})"
@@ -96,7 +96,7 @@ def plot_summary_statistics(csv_file):
     plt.show()
     plt.close(fig) 
 
-def main(directory, output_file):
+def main(directory, output_file, sample_size):
 
     """
     Main function to create the DataFrame with the statistics.
@@ -116,9 +116,10 @@ def main(directory, output_file):
         if args.plot_statistics:
             raise ValueError("Store the DataFrame with the summary statistics as a CSV file in order to plot those values! In order to do that use the 'store' flag along with the 'plots' one")
 
-    df = calc_stats_for_dir(directory)
+    df = calc_stats_for_dir(directory, sample_size)
     
     # print the DataFrame to stdout
+    print(f"Sample size: {sample_size}\n")
     print(df)
     
     if args.store_dataframe:
@@ -134,8 +135,9 @@ if __name__ == "__main__":
     parser.add_argument('-n', '--output_filename', type=str, default='summary_statistics.csv', help='Output filename for the stored CSV file')
     parser.add_argument('-s', '--store_dataframe', action="store_true", help='Store the DataFrame in a CSV file')
     parser.add_argument('-p', '--plot_statistics', action="store_true", help='Plot')
+    parser.add_argument('-m', '--sample_size', type=int, help='Output filename for the stored CSV file')
     args = parser.parse_args()
     
     # call main function with the specified directory
-    main(args.directory, args.output_filename)
+    main(args.directory, args.output_filename, args.sample_size)
      

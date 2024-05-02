@@ -15,6 +15,7 @@ from collections import Counter
 from typing import Dict
 from itertools import combinations
 from Bio import SeqIO
+import random
 
 
 """
@@ -197,59 +198,51 @@ MAIN FUNCTION
 -------------
 """ 
 
-def statistics(input_file):
+def statistics(input_file, sample_size = None):
     
-    file_extension = os.path.splitext(input_file)[1] # get the file extension of the input file
+    file_extension = os.path.splitext(input_file)[1]  # get the file extension of the input file
 
-    if file_extension.lower() == '.csv': # check if the input file is a CSV file
-
-        new_fasta = input_file.rsplit('.', 1)[0] + '_processed.fa' # generate the processed FASTA file path by replacing the extension
-        __csv_to_fasta(input_file, new_fasta) # convert CSV to FASTA (exclude nan sequences)
-
-        sequences = __read_fasta(new_fasta) # create a dictionary with sequences 
-
-        tajimas_d_score = tajimas_d(sequences)  # calculate Tajima's D
-        pi_estimator_score = pi_estimator(sequences) # calculate Pi estimator
-        watterson_estimator_score = watterson_estimator(sequences) # calculate Watterson estimator
-        unique_count = count_haplotypes(sequences) # calculate the number of unique sequences
-        haplotype_diversity = calculate_haplotype_diversity(sequences) # calculates the diversity of haplotypes
-        
-        os.remove(new_fasta) # delete the generated FASTA file
-
-    elif file_extension.lower() == '.fasta' or file_extension.lower() == '.fa': # check if the input file is a FASTA file
-   
-        new_fasta = input_file.rsplit('.', 1)[0] + '_processed.fa' # generate the processed FASTA file path by replacing the extension
-        __process_fasta(input_file, new_fasta) # exclude nan sequences from FASTA
-
-        sequences = __read_fasta(new_fasta) # create a dictionary with sequences 
-
-        tajimas_d_score = tajimas_d(sequences)  # calculate Tajima's D
-        pi_estimator_score = pi_estimator(sequences) # calculate Pi estimator
-        watterson_estimator_score = watterson_estimator(sequences) # calculate Watterson estimator
-        unique_count = count_haplotypes(sequences) # calculate the number of unique sequences
-        haplotype_diversity = calculate_haplotype_diversity(sequences) # calculates the diversity of haplotypes
-        
-        os.remove(new_fasta) # delete the generated FASTA file
-    
+    if file_extension.lower() == '.csv':  # check if the input file is a CSV file
+        new_fasta = input_file.rsplit('.', 1)[0] + '_processed.fa'  # generate the processed FASTA file path by replacing the extension
+        __csv_to_fasta(input_file, new_fasta)  # convert CSV to FASTA (exclude nan sequences)
+        sequences = __read_fasta(new_fasta)  # create a dictionary with sequences 
+    elif file_extension.lower() == '.fasta' or file_extension.lower() == '.fa':  # check if the input file is a FASTA file
+        new_fasta = input_file.rsplit('.', 1)[0] + '_processed.fa'  # generate the processed FASTA file path by replacing the extension
+        __process_fasta(input_file, new_fasta)  # exclude nan sequences from FASTA
+        sequences = __read_fasta(new_fasta)  # create a dictionary with sequences 
     else:
         raise ValueError('The input file must be either a CSV or a FASTA file.')
 
-    return tajimas_d_score, pi_estimator_score, watterson_estimator_score, unique_count, haplotype_diversity, len(sequences)
+    # Sampling sequences if a sample size is specified
+    if sample_size and sample_size < len(sequences):
+        # print(f"Sample size: {sample_size}")
+        # print(f"Population size: {len(sequences)}\n")
+        sampled_keys = random.sample(list(sequences.keys()), sample_size)
+        sequences = {key: sequences[key] for key in sampled_keys}
 
+    # Calculate statistics
+    tajimas_d_score = tajimas_d(sequences)
+    pi_estimator_score = pi_estimator(sequences)
+    watterson_estimator_score = watterson_estimator(sequences)
+    unique_count = count_haplotypes(sequences)
+    haplotype_diversity = calculate_haplotype_diversity(sequences)
+
+    os.remove(new_fasta)  # delete the generated FASTA file
+
+    return tajimas_d_score, pi_estimator_score, watterson_estimator_score, unique_count, haplotype_diversity, len(sequences)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process a genome CSV or FASTA file to compute the following statistics: Tajima's D score, Pi-Estimator score, Watterson-Estimator score, number of unique sequences and haplotype diversity.")
     parser.add_argument('input_file', type=str, help='The path to the input file (either CSV or FASTA).')
+    parser.add_argument('-s','--sample_size', type=int, help='Number of sequences to sample for calculations. Use all if not specified or larger than available.', default=None)
     args = parser.parse_args()
-    input_file = args.input_file
 
-    tajimas_d_score, pi_estimator_score, watterson_estimator_score, unique_count, haplotype_diversity, num_seqs  = statistics(input_file)
+    tajimas_d_score, pi_estimator_score, watterson_estimator_score, unique_count, haplotype_diversity, num_seqs  = statistics(args.input_file, args.sample_size)
     
+    print(f"Sample size: {args.sample_size}\n")
+    # print(f"Population size: {num_seqs}\n")
     print("Tajima's D score:", tajimas_d_score)
     print("Pi-Estimator score:", pi_estimator_score)
     print("Watterson-Estimator score:", watterson_estimator_score)
     print(f"Number of unique sequences: {unique_count}/{num_seqs} ({unique_count/num_seqs:.3f})")
     print("Haplotype diversity:", haplotype_diversity)
-
-
-    
