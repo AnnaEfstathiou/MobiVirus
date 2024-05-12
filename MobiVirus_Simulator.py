@@ -658,14 +658,11 @@ if args.super_strain:
 else:    ## Save the data from the simulation in the correct directory ##
     save_data_normal(samples, genomes, coords_2, coords_t, tt, g, all_inf, unin, hah, ns, mv, t_un)
 
-#coords_t = pd.DataFrame(data=coords_t.T, index=("x","y", "label", "probability of movement", "probability of infection", "mutation", "susceptibility")).T
-#coords_t.to_csv('/Users/katiagim/Desktop/MobiVirus/attempt_2/'+'final_data'+'.csv',header=True, index=False)
+# coords_t = pd.DataFrame(data=coords_t.T, index=("x","y", "label", "probability of movement", "probability of infection", "mutation", "susceptibility")).T
+# coords_t.to_csv(samples +'final_data'+'.csv',header=True, index=False)
 print("Loops:", tt)
 ## Time for the whole code to run ##
 end=time.time()-initial
 print("Total simulation time (minutes):", end/60)   
-
-## Create a gif from all the plots of positions in order to visualise the movement (takes a lot of time) ##
-#create_gif("/Users/katiagim/Desktop/MobiVirus/attempt_2/figs/")
 
 # %%
