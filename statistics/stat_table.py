@@ -28,7 +28,6 @@ def calc_stats_for_dir(directory, sample_size=None):
         if filename.endswith('.csv') or filename.endswith('.fasta') or filename.endswith('.fa'):
             file_path = os.path.join(directory, filename)
             try:
-                
                 stats = calculate_statistics(file_path, sample_size)
                 if sample_size:
                     if stats['total_sequences'] != 0:

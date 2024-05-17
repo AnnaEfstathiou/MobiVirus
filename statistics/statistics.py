@@ -9,8 +9,9 @@ Calculating:
 
 from collections import Counter
 from typing import Dict
+import numpy as np
 from itertools import combinations
-from preprocessing import __check
+from preprocessing import __check, __check_populations
 
 
 """
@@ -38,6 +39,7 @@ def __harmonic(n: int) -> float:
     """ Used in the calculation of tajimas'd and watterson estimator. """
 
     return sum(1 / i for i in range(1, n))
+
 
 
 
@@ -123,3 +125,49 @@ def calculate_haplotype_diversity(sequences):
     haplotype_frequencies = Counter(sequences.values()) # count the frequencies of each unique haplotype 
     haplotype_diversity = 1 - sum((freq / total_haplotypes) ** 2 for freq in haplotype_frequencies.values()) # calculates the haplotype diversity based on the frequencies of each haplotype.
     return haplotype_diversity
+
+def Fst(population_1, population_2):
+
+    __check_populations(population_1, population_2)
+
+    def allele_frequencies(population):
+
+        """Calculate allele frequencies for a population."""
+
+        allele_counts = np.sum(population, axis=0)
+        total_alleles = 2 * len(population)
+        return allele_counts / total_alleles
+
+    def expected_heterozygosity(allele_freq):
+
+        """Calculate expected heterozygosity for a population."""
+
+        return 1 - np.sum(allele_freq ** 2)
+
+    def observed_heterozygosity(population):
+
+        """Calculate observed heterozygosity for a population."""
+
+        heterozygous_individuals = np.any(population != population[0], axis=1)
+        return np.mean(heterozygous_individuals)
+    
+    # Convert populations to numpy arrays
+    population_1_array = np.array([list(map(int, seq)) for seq in population_1])
+    population_2_array = np.array([list(map(int, seq)) for seq in population_2])
+
+    # Calculate allele frequencies for each population
+    allele_freq_1 = allele_frequencies(population_1_array)
+    allele_freq_2 = allele_frequencies(population_2_array)
+
+    # Calculate expected heterozygosity for each population
+    He_1 = expected_heterozygosity(allele_freq_1)
+    He_2 = expected_heterozygosity(allele_freq_2)
+
+    # Calculate observed heterozygosity for each population
+    Ho_1 = observed_heterozygosity(population_1_array)
+    Ho_2 = observed_heterozygosity(population_2_array)
+
+    # Calculate Fst
+    fst = (He_1 + He_2 - (Ho_1 + Ho_2)) / (He_1 + He_2)
+
+    return fst
