@@ -468,7 +468,7 @@ def save_data_normal(samples_directory, genomes_directory, coords_2, coords_t, t
     #np.savetxt(directory+'extra_data.txt', pd.DataFrame(data=np.column_stack(np.array((ss, ns, mv),dtype=int)), columns=['Total Super spreaders', 'Total Normal spreaders', 'Total movements']), fmt=['%1d', '%1d', '%1d'], header='Total Super infections, Total Normal infections , Total movements', comments='')
 
     coords_t = pd.DataFrame(data=coords_t, columns=["x","y", "label", "rate of movement", "rate of infection", "mutation", "susceptibility"])
-    coords_t.to_csv(samples_directory+'/final_coords.csv', header=True, index=False)
+    coords_t.to_csv(samples_directory+'/coords_final.csv', header=True, index=False)
     
     coords_2 = pd.DataFrame(data=coords_2, columns=["x","y", "label", "rate of movement", "rate of infection", "mutation", "susceptibility"])
     coords_2.to_csv(samples_directory+'/initial_coords.csv', header=True, index=False)
@@ -512,7 +512,7 @@ def save_data_normal_super(samples_directory, genomes_directory, coords_2, coord
     #np.savetxt(directory+'extra_data.txt', pd.DataFrame(data=np.column_stack(np.array((ss, ns, mv),dtype=int)), columns=['Total Super spreaders', 'Total Normal spreaders', 'Total movements']), fmt=['%1d', '%1d', '%1d'], header='Total Super infections, Total Normal infections , Total movements', comments='')
 
     coords_t = pd.DataFrame(data=coords_t, columns=["x","y", "label", "rate of movement", "rate of infection", "mutation", "susceptibility"])
-    coords_t.to_csv(samples_directory+'/final_coords.csv', header=True, index=False)
+    coords_t.to_csv(samples_directory+'/coords_final.csv', header=True, index=False)
     
     coords_2 = pd.DataFrame(data=coords_2, columns=["x","y", "label", "rate of movement", "rate of infection", "mutation", "susceptibility"])
     coords_2.to_csv(samples_directory+'/initial_coords.csv', header=True, index=False)
