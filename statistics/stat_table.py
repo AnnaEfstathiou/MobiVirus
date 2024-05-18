@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import numpy as np
 import argparse
 import re
 
@@ -79,12 +80,34 @@ def calc_stats_for_dir(directory, sample_size=None):
                         stats['Fst_label']
                     ]
                 except ValueError as e:
-                    print(f"Error processing {genome_filename}: {e} \n")
-                    # Remove the created FASTA files that raise an error.
-                    fasta_file_to_remove = os.path.splitext(genome_filename)[0] + "_processed.fa"
-                    if os.path.exists(fasta_file_to_remove):
-                        os.remove(fasta_file_to_remove)
-                    continue  # Continue processing the next file
+                    fasta_file_to_remove = os.path.splitext(genome_file)[0] + "_processed.fa"
+                    if str(e) == "At least 2 sequences required!":
+                        # results[genome_file] = {
+                        #     'tajimas_d_score': np.nan,
+                        #     'pi_estimator_score': np.nan,
+                        #     'watterson_estimator_score': np.nan,
+                        #     'num_unique_seqs_formatted': np.nan,
+                        #     'haplotype_diversity': np.nan,
+                        #     'Fst_coords': np.nan,
+                        #     'Fst_label': np.nan
+                        # }
+                        results[genome_file] = [
+                            "Not enough sequences",
+                            "Not enough sequences",
+                            "Not enough sequences",
+                            "Not enough sequences",
+                            "Not enough sequences",
+                            "Not enough sequences",
+                            "Not enough sequences"
+                        ]
+                        if os.path.exists(fasta_file_to_remove):
+                            os.remove(fasta_file_to_remove)
+                    else:
+                        print(f"Error processing {genome_file}: {e} \n")
+                        if os.path.exists(fasta_file_to_remove):
+                            os.remove(fasta_file_to_remove)
+                        continue  # Continue processing the next file
+                              
     
     stats_df = pd.DataFrame.from_dict(results, orient='index', columns=['Tajima\'s D', 'Pi-Estimator', 'Watterson-Estimator', 'Number of unique sequences', 'Haplotype Diversity', 'Fst (coords)', 'Fst (label)'])
     # extract numbers from the filenames and sort accordingly
@@ -95,10 +118,8 @@ def calc_stats_for_dir(directory, sample_size=None):
     stats_df.sort_values('sort_key', inplace=True)
     stats_df.drop(columns=['sort_key'], inplace=True)  # remove the auxiliary column after sorting ('sort_key' column)
     return stats_df
-    # return stats
+
   
-
-
 def main(directory, output_file, sample_size):
 
     """
