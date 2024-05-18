@@ -52,7 +52,6 @@ def calc_stats_for_dir(directory, sample_size=None):
             
                 try:
                     stats = calculate_statistics(genome_dir+genome_file, samples_dir+coords_filename, sample_size)
-                    print(stats)
                     if sample_size:
                         if stats['total_sequences'] != 0:
                             if stats['total_sequences'] > sample_size:
@@ -114,23 +113,16 @@ def main(directory, output_file, sample_size):
     - (OPTIONAL) plot the scores stored in the saved CSV file with all the summary statistics.
     """
 
-    ## ERROR HANDLING ##
-    # in order to plot the summary statistics, the dataframe must be saved into a CSV file
-    if not args.store_dataframe:
-        if args.plot_statistics:
-            raise ValueError("Store the DataFrame with the summary statistics as a CSV file in order to plot those values! In order to do that use the 'store' flag along with the 'plots' one")
-
     statistical_df = calc_stats_for_dir(directory, sample_size)
     
     # print the DataFrame to stdout
     print(f"Sample size: {sample_size}\n")
     print(statistical_df)
     
-    # if args.store_dataframe:
-    #     # save the DataFrame to a CSV file 
-    #     statistical_df.to_csv(output_file)
-        # if args.plot_statistics:
-        #     plot_summary_statistics(output_file)
+    if args.store_dataframe:
+        # save the DataFrame to a CSV file 
+        statistical_df.to_csv(output_file)
+        
    
 if __name__ == "__main__":
 
