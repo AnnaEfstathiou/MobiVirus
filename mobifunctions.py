@@ -16,9 +16,33 @@ import sys
 from configparser import ConfigParser
 
 """
-=================================
+===============================
+CREATE A "command_log.txt" FILE
+===============================
+"""
+
+def log_command(directory, command, flags):
+
+    ## Creates a txt containing the command used for the simulation. ##
+
+    # Create the directory if it does not exist
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    # Create a log file in the results directory
+    log_file_path = os.path.join(directory, 'command_log.txt')
+
+    # Open the log file and append the command and flags information
+    with open(log_file_path, 'a') as log_file:
+        log_file.write(f"Command: {command}\n")
+        for flag, explanation in flags.items():
+            log_file.write(f"{flag}: {explanation}\n")
+        log_file.write("\n")
+
+"""
+==================================
 READ THE PARAMETERS FROM .INI FILE
-=================================
+==================================
 """
 
 # Specify the directory and file name that contains the parameters

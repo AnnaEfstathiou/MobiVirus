@@ -30,7 +30,7 @@ IMPORTING THE NECESSARY PYTHON FUNCTIONS
 ========================================
 """
 
-from mobifunctions import coords_func, label, genome, mutation, infectivity, probs, movement, ini_distm, new_dist, ind_probi, plot_map_normal, plot_map_normal_super, sample_data_normal, sample_data_normal_super, do_plots_normal, do_plots_normal_super, save_data_normal, save_data_normal_super
+from mobifunctions import log_command, coords_func, label, genome, mutation, infectivity, probs, movement, ini_distm, new_dist, ind_probi, plot_map_normal, plot_map_normal_super, sample_data_normal, sample_data_normal_super, do_plots_normal, do_plots_normal_super, save_data_normal, save_data_normal_super
 
 """
 ===================
@@ -665,4 +665,32 @@ print("Loops:", tt)
 end=time.time()-initial
 print("Total simulation time (minutes):", end/60)   
 
-# %%
+#%%
+
+#%%
+
+"""
+=============================================================
+CREATING A TXT FILE WITH THE COMMAND USED FOR THIS SIMULATION
+=============================================================
+"""
+
+# Construct the command string from sys.argv
+command = ' '.join(sys.argv)
+# Define what each flag means
+flag_explanations = {
+    '-s': 'Create a super strain with different (e.g. higher) infectivity that the normal one.',
+    '-ratio': 'Ratio of number of Super Strain individuals/number of Normal Strain individuals.',
+    '-per_inf': 'Percentage of infected individuals in the population.',
+    '-max_inf': 'Maximum infections (if the infection are more, stop).',
+    '-sus': 'Minimum susceptible individuals (if the susceptible individuals are less, stop).',
+    '-vis_data': 'Visualize the data table as a dataframe in the console.',
+    '-g0': 'Save the initial genomes of the sample in a csv.',
+    '-plots': 'Create scatter plots of the coordinates of the individuals.'
+    }
+# Filter the used flags and their explanations
+used_flags = {flag: explanation for flag, explanation in flag_explanations.items() if flag in command}
+# Log the command and flags
+log_command(results_directory, command, used_flags)
+#%%
+
