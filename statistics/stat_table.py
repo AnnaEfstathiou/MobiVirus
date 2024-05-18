@@ -82,15 +82,6 @@ def calc_stats_for_dir(directory, sample_size=None):
                 except ValueError as e:
                     fasta_file_to_remove = os.path.splitext(genome_file)[0] + "_processed.fa"
                     if str(e) == "At least 2 sequences required!":
-                        # results[genome_file] = {
-                        #     'tajimas_d_score': np.nan,
-                        #     'pi_estimator_score': np.nan,
-                        #     'watterson_estimator_score': np.nan,
-                        #     'num_unique_seqs_formatted': np.nan,
-                        #     'haplotype_diversity': np.nan,
-                        #     'Fst_coords': np.nan,
-                        #     'Fst_label': np.nan
-                        # }
                         results[genome_file] = [
                             "Not enough sequences",
                             "Not enough sequences",
@@ -119,7 +110,7 @@ def calc_stats_for_dir(directory, sample_size=None):
     stats_df.drop(columns=['sort_key'], inplace=True)  # remove the auxiliary column after sorting ('sort_key' column)
     return stats_df
 
-  
+
 def main(directory, output_file, sample_size):
 
     """
