@@ -11,7 +11,7 @@ Calculating:
 import argparse
 import os
 import random
-from preprocessing import __csv_to_fasta, __process_fasta, __read_fasta, __filtering_sequences, __pop_coords, __pop_mutation_label
+from preprocessing import __csv_to_fasta, __process_fasta, __read_fasta, __filtering_sequences, __pop_coords, __pop_mutation_label, validate_files
 from statistics import tajimas_d, pi_estimator, watterson_estimator, count_haplotypes, calculate_haplotype_diversity, Fst
 
 
@@ -59,7 +59,6 @@ def calculate_statistics(input_file, coords_file, sample_size = None):
     fst_label = Fst(pop_label_1, pop_label_2)
 
 
-
     os.remove(new_fasta)  # delete the generated FASTA file
 
     # return tajimas_d_score, pi_estimator_score, watterson_estimator_score, unique_count, haplotype_diversity, len(sequences)
@@ -76,13 +75,15 @@ def calculate_statistics(input_file, coords_file, sample_size = None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process a genome CSV or FASTA file to compute the following statistics: Tajima's D score, Pi-Estimator score, Watterson-Estimator score, number of unique sequences and haplotype diversity.")
-    parser.add_argument('input_file', type=str, help='The path to the input file (either CSV or FASTA).')
-    parser.add_argument('-coords','--coords_file', type=str, help='Number of sequences to sample for calculations. Use all if not specified or larger than available.', default=None)
+    parser.add_argument('genome_file', type=str, help='The path to the input file (either CSV or FASTA).')
+    parser.add_argument('-coords','--coords_file', type=str, required=True, help='Number of sequences to sample for calculations. Use all if not specified or larger than available.', default=None)
     parser.add_argument('-s','--sample_size', type=int, help='Number of sequences to sample for calculations. Use all if not specified or larger than available.', default=None)
     parser.add_argument('-p', '--population_size', action="store_true", help='See the population size, so it is easier to decide the sample size.')
     args = parser.parse_args()
 
-    results = calculate_statistics(args.input_file, args.coords_file, args.sample_size)
+    validate_files(args.genome_file, args.coords_file)
+
+    results = calculate_statistics(args.genome_file, args.coords_file, args.sample_size)
 
     if args.population_size:
         print(f"Population size of infected individuals: {results['total_sequences']}")

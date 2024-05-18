@@ -53,13 +53,16 @@ def tajimas_d(sequences: Dict[str, str]) -> float:
 
     """ Computes Tajima's D. """
 
+    
     __check(sequences)
+    
 
     seg_sites = __polymorphic_sites(sequences)
     if seg_sites == 0:
         return 0
 
-    theta_pi = pi_estimator(sequences, safe=False)
+    # theta_pi = pi_estimator(sequences, safe=False)
+    theta_pi = pi_estimator(sequences)
     num_seq = len(sequences)
     harmonic = __harmonic(num_seq)
     a2 = sum(1 / (i**2) for i in range(1, num_seq))
@@ -80,12 +83,11 @@ def tajimas_d(sequences: Dict[str, str]) -> float:
     tD = delta_Theta / ((e1 * seg_sites + e2 * seg_sites * (seg_sites - 1)) ** 0.5)
     return float(tD)
 
-def pi_estimator(sequences: Dict[str, str], safe=True) -> float:
+def pi_estimator(sequences: Dict[str, str]) -> float:
 
     """ Computes Pi estimatorn (Θπ). """
 
-    if safe:
-        __check(sequences)
+    __check(sequences)
 
     sequences_list = list(sequences.values())
     pairwise_combinations = combinations(sequences_list, 2)
@@ -96,12 +98,12 @@ def pi_estimator(sequences: Dict[str, str], safe=True) -> float:
     return sum(cs) / binomial
 
 
-def watterson_estimator(sequences: Dict[str, str], safe=True) -> float:
+def watterson_estimator(sequences: Dict[str, str]) -> float:
 
     """ Computes Watterson estimator (Θw). """
+    
+    __check(sequences)
 
-    if safe:
-        __check(sequences)
 
     seg_sites = __polymorphic_sites(sequences)
     harmonic = __harmonic(len(sequences))
@@ -128,7 +130,11 @@ def calculate_haplotype_diversity(sequences):
 
 def Fst(population_1, population_2):
 
-    __check_populations(population_1, population_2)
+    try:
+        __check_populations(population_1, population_2)
+    except ValueError as e:
+        # Return NaN if populations do not meet the criteria
+        return float('nan')
 
     def allele_frequencies(population):
 

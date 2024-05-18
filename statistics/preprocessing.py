@@ -1,3 +1,5 @@
+# import argparse
+import os
 import pandas as pd
 from typing import Dict
 from Bio import SeqIO
@@ -161,3 +163,32 @@ def __check_populations(population_1, population_2):
 
     if pop1_length != pop2_length:
         raise ValueError("Sequences in both populations must have the same length. Population 1 length: {}, Population 2 length: {}".format(pop1_length, pop2_length))
+    
+
+def validate_files(genomes_file, coords_file):
+    # Normalize paths
+    genomes_path = os.path.normpath(genomes_file)
+    coords_path = os.path.normpath(coords_file)
+    
+    # Split paths
+    genomes_parts = genomes_path.split(os.sep)
+    coords_parts = coords_path.split(os.sep)
+
+    # Find indices for /genomes/ and /samples/
+    genomes_index = genomes_parts.index('genomes')
+    coords_index = coords_parts.index('samples')
+
+    # Ensure that the directories before /genomes/ and /samples/ are the same
+    if genomes_parts[:genomes_index] != coords_parts[:coords_index]:
+        raise ValueError("The part of the path before /genomes/ and /samples/ must be the same.")
+
+    genomes_filename = genomes_parts[-1]
+    coords_filename = coords_parts[-1]
+
+    # Extract the date and number part from the filenames
+    genomes_date_num = genomes_filename.split('_')[1:3]
+    coords_date_num = coords_filename.split('_')[1:3]
+
+    # Compare the extracted parts
+    if genomes_date_num != coords_date_num:
+        raise ValueError("The input files must come from the same results_date file and have the same number.")
