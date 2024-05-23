@@ -30,7 +30,7 @@ IMPORTING THE NECESSARY PYTHON FUNCTIONS
 ========================================
 """
 
-from mobifunctions import log_command, coords_func, label, genome, mutation, rec_probi, infectivity, probs, movement, ini_distm, new_dist, ind_probi, plot_map_normal, plot_map_normal_super, sample_data_normal, sample_data_normal_super, do_plots_normal, do_plots_normal_super, save_data_normal, save_data_normal_super
+from mobifunctions import log_command, coords_func, label, genome, mutation, rec_probi, recombine_genomes,infectivity, probs, movement, ini_distm, new_dist, ind_probi, plot_map_normal, plot_map_normal_super, sample_data_normal, sample_data_normal_super, do_plots_normal, do_plots_normal_super, save_data_normal, save_data_normal_super
 
 """
 ===================
@@ -561,7 +561,7 @@ while tt <= 10:
                     ## The individual's (j) genome goes through the mutation procedure ##
                     g.iloc[j] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), mutation(g.iloc[j], r_tot), g.iloc[j])
                     
-                    ## The label of the individual (j) is updated to infected after the infection ##
+                    ## The label of the individual (j) is updated to infected (one infection) after 1st the infection ##
                     coords_t[j,2] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), 1, 0) 
                     
                     ## The  individual's (j) rate of movement is updated ##
@@ -612,13 +612,14 @@ while tt <= 10:
                         '''
                         Genetic recombination
                         '''
-                        # ## The individual's genome is passed from the infector (c) to the newly infected individual (j) ##
-                        # g.iloc[j] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), g.iloc[c], g.iloc[j]) 
+
+                        ## The individual's genome is recombined with the infector's (c) ##
+                        g.iloc[j] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), recombine_genomes(g.iloc[c], g.iloc[j], p), g.iloc[j]) 
                         
                         ## The individual's (j) genome goes through the mutation procedure ##
                         g.iloc[j] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), mutation(g.iloc[j], r_tot), g.iloc[j])
                         
-                        ## The label of the individual (j) is updated to infected after the infection ##
+                        ## The label of the individual (j) is updated to infected (two infections) after the 2nd infection ##
                         coords_t[j,2] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), 2, 1) 
                         
                         ## The  individual's (j) rate of movement is updated ##
