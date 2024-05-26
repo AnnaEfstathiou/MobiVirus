@@ -30,7 +30,8 @@ IMPORTING THE NECESSARY PYTHON FUNCTIONS
 ========================================
 """
 
-from mobifunctions import log_command, coords_func, label, genome, mutation, rec_probi, recombine_genomes,infectivity, probs, movement, ini_distm, new_dist, ind_probi, plot_map_normal, plot_map_normal_super, sample_data_normal, sample_data_normal_super, do_plots_normal, do_plots_normal_super, save_data_normal, save_data_normal_super
+from mobifunctions import log_command, coords_func, label, genome, mutation, rec_probi, recombine_genomes,infectivity, probs, movement, ini_distm, new_dist, ind_probi
+from mobifunctions import plot_map_normal, plot_map_normal_super, sample_data_normal, sample_data_normal_super, do_plots_normal, do_plots_normal_super, save_data_normal, save_data_normal_super
 
 """
 ===================
@@ -46,7 +47,7 @@ file_path = os.path.join(directory, file_name)
 # Check if the file exists
 if not os.path.exists(file_path):
     print(f"Error: {file_name} must be in the current directory.")
-    sys.exit("Exiting the program.")
+    sys.exit("Exiting the simulation.")
 
 # File exists, proceed with parsing
 config = ConfigParser()
@@ -88,14 +89,14 @@ The columns in Coords_(2 or t)
 # 6 = susceptibility
 ------------------------------
 """
-r_m = config.getfloat('Initial_Parameters', 'r_m')                  # Mutation rate for each position in genome
-n_i = config.getint('Initial_Parameters', 'n_i')                    # Important genome positions for the ss mutation
-                                                                    # If there are no super strains, n_i = 0
 n = config.getint('Initial_Parameters', 'n')                        # Number of individuals in the simulation
 l = config.getint('Initial_Parameters', 'l')                        # Length of genome
 bound_l = config.getfloat('Initial_Parameters', 'bound_l')          # Lower bound for the plot
 bound_h = config.getfloat('Initial_Parameters', 'bound_h')          # Upper bound for the plot
 ii = config.getint('Initial_Parameters', 'ii')                      # Number of infected individuals
+r_m = config.getfloat('Initial_Parameters', 'r_m')                  # Mutation rate for each position in genome
+n_i = config.getint('Initial_Parameters', 'n_i')                    # Important genome positions for the ss mutation
+                                                                    # If there are no super strains, n_i = 0
 ri_n = config.getfloat('Initial_Parameters', 'ri_n')                # Rate of infection from normal/strain 1
 rm_i = config.getfloat('Initial_Parameters', 'rm_i')                # Rate of movement for infected ind.
 rm_h = config.getfloat('Initial_Parameters', 'rm_h')                # Rate of movement for healthy ind.
@@ -103,8 +104,6 @@ inf_dist = config.getfloat('Initial_Parameters', 'inf_dist')        # Infection 
 r_rec = config.getfloat('Initial_Parameters', 'r_rec')              # Rate of recombination
 rec_t = config.getfloat('Initial_Parameters', 'rec_t')              # Recovery time in simulation time
 label_i = label(n,ii)                                               # Divide the people in infected and not infected
-# std_x = config.getfloat('Initial_Parameters', 'std_x')              # Standard deviation of x coordinate
-# std_y = config.getfloat('Initial_Parameters', 'std_y')              # Standard deviation of y coordinate
 rim = config.getfloat('Initial_Parameters', 'rim')                  # Relative infection mobility
 sample_times = config.getint('Initial_Parameters', 'sample_times')  # Generations where we take samples of our simulation's output
 
@@ -248,9 +247,7 @@ mut_all = np.column_stack(mut).T                        # Create a perpendicular
 coord_time = time.time()-func_time                      # Time to run the functions
 coords_t = coords_2.copy()                              # Create a copy of the data table, to use during the simulation
 df_i = ini_distm(coords_t)                              # Initial Distance Matrix 
-#df_ff = np.zeros((len(coords_t), len(coords_t))) 
 distm_time = time.time()-coord_time                     # Time to calculate the distance matrix
-#print("time after distance matrix:", distm_time)
 rt_m = sum(coords_t[:, 3])                              # Total rate of movement 
 rt_i = sum(coords_t[:, 4])                              # Total rate of infection 
 t_s = 0                                                 # Event time (initialization)
@@ -750,6 +747,7 @@ command = ' '.join(sys.argv)
 # Define what each flag means
 flag_explanations = {
     '-s': 'Create a super strain with different (e.g. higher) infectivity that the normal one.',
+    '-r': 'Provide the ability to recombinate genomes, if 2 infections happen.',
     '-ratio': 'Ratio of number of Super Strain individuals/number of Normal Strain individuals.',
     '-per_inf': 'Percentage of infected individuals in the population.',
     '-max_inf': 'Maximum infections (if the infection are more, stop).',
