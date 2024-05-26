@@ -53,7 +53,7 @@ file_path = os.path.join(directory, file_name)
 # Check if the file exists
 if not os.path.exists(file_path):
     print(f"Error: {file_name} must be in the current directory.")
-    sys.exit("Exiting the program.")
+    sys.exit("Exiting the simulation.")
 
 # File exists, proceed with parsing
 config = ConfigParser()
@@ -130,7 +130,7 @@ Genome Function
 ---------------
 '''
 
-def genome(n, l, r_m, n_i):
+def genome(n, l, r_m):
     
     ## Creates an empty data frame where the rows correspond to the genomes of different individuals and the columns to the genome positions ##
     ## Returns the dataframe together with the total mutation rate of a genome
@@ -144,7 +144,9 @@ def genome(n, l, r_m, n_i):
     
     g =  pd.DataFrame(index=range(n), columns=range(l))
     r_tot = r_m * l # Total rate of mutation of genome
-    #probi = sum(g[:n_i]) #Rate of infection of individual
+
+    # probi = sum(g[:n_i]) #Rate of infection of individual 
+    # (add n_i (number of important genome positions that form a specific strain (they will be in the begining of the genome)) as an argument)
     
     return g, r_tot
 
@@ -167,12 +169,11 @@ def probs(coords, rm_i, rm_h):
 
     mask = coords[:, 2] == 1.0    # for those who are infected
     probm[mask] = rm_i            # they get rm_i in the corresponding positions in probm
-    #probi[mask] = 0.5
 
     mask = coords[:, 2] != 1.0    # for those that are healthy
     probm[mask] = rm_h            # they get rm_h in the corresponding positions in probm
     
-    return np.column_stack(probm).T #np.column_stack(probi).T
+    return np.column_stack(probm).T # np.column_stack(probi).T
 
 
 '''
@@ -196,7 +197,7 @@ def infectivity(in_probi, g, n_i, ri_s):
     else:
         probi = in_probi
         
-    #probi = np.where(g[:n_i].any() == 1 , 1.5, probi)
+    # probi = np.where(g[:n_i].any() == 1 , 1.5, probi)
     
     return probi
 
@@ -218,13 +219,9 @@ def ini_distm(coords):
     for i in range(n):
         for j in range(i+1, n):
             x1, y1 = coords[i, :2]
-            #print(x1, y1)
             x2, y2 = coords[j, :2]
-            #print(x2, y2)
             df[j,i] = np.sqrt((x2-x1)**2 + (y2-y1)**2)
-            #print(df[j, i])
     
-    # return pd.DataFrame(df, index=range(n), columns=range(n))
     return df
 
 
@@ -240,7 +237,7 @@ Movement Function
 -----------------
 '''
 
-def movement(coords, bound_l, bound_h, c, std_x, std_y, rim): 
+def movement(coords, bound_l, bound_h, c, rim): 
 
     ## Calculates the new spacial coordinates of the individual that will move ##
     ## Returns the full data table but with new coordinates ##
@@ -254,13 +251,9 @@ def movement(coords, bound_l, bound_h, c, std_x, std_y, rim):
     # bound_l =  lower bound of the spacial axes
     # bound_h = higher bound of the spacial axes
     # c = the specific individual that will move
-    # std_x = standard deviation of x coordinate
-    # std_y = standard deviation of y coordinate
     # If these standard deviations are defined, we use them and not the standard deviation from all of the coordinates in the sample
     # rim = relative infected mobility. The parameter that differentiates between the mobility of a healthy individual and an infected one
     ## Individuals are not allowed to move outside the box (or space) ##
-    
-    #n = len(coords[c, :])  
     
     x_f = 0                 # new x coordinate
     y_f = 0                 # new y coordinate
@@ -317,7 +310,6 @@ def new_dist(coords, coords_f, initial_dist, c): # where c in the index of the c
 
     n = len(coords)
     df = initial_dist.copy()
-    # dff = ini_distm(coords_f) 
     for i in range(n):
         for j in range(i+1, n):
             x1, y1 = coords_f[0,:2]
@@ -332,7 +324,7 @@ Infection
 ---------
 '''
 
-def ind_probi(df, c):
+def ind_probi(df, c, inf_dist):
     
     ## Gives an array of length as many as the individuals and shape (n,1), only for the one individual that infects in that moment ##
     ## In the cells, 1 is for those who are in the "infection distance" and 0 for the others ##
@@ -342,7 +334,7 @@ def ind_probi(df, c):
     n = len(df) # the number of individuals
     ipi = np.zeros((n))
     for i in range(n):
-        ipi[i] = np.where((df[i,c]<0.4)&(df[i,c]!=0), 1, 0) # The first condition defines the infection distance
+        ipi[i] = np.where((df[i,c] < inf_dist) & (df[i,c] != 0), 1, 0) # The first condition defines the infection distance
     
     return ipi
 
@@ -351,8 +343,8 @@ def mutation(g_i, r_tot):
     
     ## Mutation of an individuals' genome ##
     
-    #g_i = genome of an individual 
-    #r_tot = total rate of mutation of genome
+    # g_i = genome of an individual 
+    # r_tot = total rate of mutation of genome
     
     p = np.random.poisson(r_tot) # Random Poisson number with lambda = r_tot to give me how many mutations will happen
     N = np.random.randint(0, len(g_i), size = p) # Positions in the genome that mutations will happen (as many as the poisson)

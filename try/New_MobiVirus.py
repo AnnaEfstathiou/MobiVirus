@@ -99,11 +99,12 @@ ii = config.getint('Initial_Parameters', 'ii')                      # Number of 
 ri_n = config.getfloat('Initial_Parameters', 'ri_n')                # Rate of infection from normal/strain 1
 rm_i = config.getfloat('Initial_Parameters', 'rm_i')                # Rate of movement for infected ind.
 rm_h = config.getfloat('Initial_Parameters', 'rm_h')                # Rate of movement for healthy ind.
+inf_dist = config.getfloat('Initial_Parameters', 'inf_dist')        # Infection distance
 r_rec = config.getfloat('Initial_Parameters', 'r_rec')              # Rate of recombination
 rec_t = config.getfloat('Initial_Parameters', 'rec_t')              # Recovery time in simulation time
 label_i = label(n,ii)                                               # Divide the people in infected and not infected
-std_x = config.getfloat('Initial_Parameters', 'std_x')              # Standard deviation of x coordinate
-std_y = config.getfloat('Initial_Parameters', 'std_y')              # Standard deviation of y coordinate
+# std_x = config.getfloat('Initial_Parameters', 'std_x')              # Standard deviation of x coordinate
+# std_y = config.getfloat('Initial_Parameters', 'std_y')              # Standard deviation of y coordinate
 rim = config.getfloat('Initial_Parameters', 'rim')                  # Relative infection mobility
 sample_times = config.getint('Initial_Parameters', 'sample_times')  # Generations where we take samples of our simulation's output
 
@@ -210,7 +211,7 @@ CREATING A DATA TABLE WITH THE INFO FOR EACH INDIVIDUAL
 """
 
 coords_2 = np.concatenate([coords_func(n, bound_l, bound_h), label_i], axis =1) # Initiate the array data table with 
-g, r_tot = genome(n, l, r_m, n_i)                                               # Initialization of genome table (as nan with shape n*l)
+g, r_tot = genome(n, l, r_m)                                                    # Initialization of genome table (as nan with shape n*l)
 probm = probs(coords_2,rm_i, rm_h)                                              # Initialization of movement rate array
 probi = np.zeros(n)                                                             # Initialization of infection rate array
 mut = np.zeros(n)                                                               # Initialization of mutations array
@@ -264,7 +265,7 @@ t_im = np.min(t_i)                                      # The minimum of the lis
 t_un = []                                               # Uninfection time
 mv = 0                                                  # Count for the movements
 if args.super_strain:
-    ss = sum(coords_t[:, 5]==2)                             # Number of Super-spreaders
+    ss = sum(coords_t[:, 5]==2)                         # Number of Super-spreaders
 ns = sum(coords_t[:, 5]==1)                             # Number of Normal-spreades
 un = 0                                                  # Total number of uninfections
 hah = np.zeros((1, 5))                                  # Empty array that will be the array of who infected who
@@ -275,6 +276,10 @@ else:
     all_inf = np.zeros((1,3))                           # List with the number of Total infected, Normal spreaders and Infextion times for each generation
 #equ=[]                                                 # Times when infected individuals are ~equal to uninfected 
 
+
+## List to stote the infector (c) and the infected (j) ##
+## This list keeps track of the infector (c) and the infected (j) to avoid that 2 infection will happen from the same infector (c). ##
+c_j = [] 
 #%%
 
 """
@@ -295,7 +300,7 @@ else:
 # while sum(coords_t[:,2]) != 0 or sum(coords_t[:,2]) != n: 
 
 # Run the simulation for i events
-while tt <= 10:
+while tt <= 100:
     
     # OPTIONAL: Print some plots during the run
     if args.scatter_plots:
@@ -312,7 +317,7 @@ while tt <= 10:
     
     ## OPTIONAL ##
 
-    # If there is a super strain in the population 
+    ## If there is a super strain in the population 
     if args.super_strain:
         ## If the number of individuals with Normal Strain are less than a certain % (ratio_super_vs_normal) of the individuals with Super Strain, stop the simulation! ##
         if ratio_super_vs_normal: # Ratio of # Super Strain ind / # Normal Strain ind
@@ -340,7 +345,7 @@ while tt <= 10:
                 print(f"The simulation ended because {max_infections} infections happended, totally, in the population.")
                 break
 
-    # If there is a super strain in the population 
+    ## If there is a super strain in the population 
     if args.super_strain:    
         ## If the number of the susceptable individuals is less than a certain % (percentage_susceptibility) of the population, stop the simulation! ##
         if percentage_susceptibility:
@@ -352,9 +357,8 @@ while tt <= 10:
             raise ValueError("In order to stop the simulation when the set number of individuals are susceptible to the virus the super strain must exist. Use the appropriate argument to create the super strain.")
     
 
-    # Calculate the time that an event will happen
+    ## Calculate the time that an event will happen ##
     t_s += np.random.exponential(scale=(1/(rt_i+rt_m))) # The scale is 1/rate, because of how the exponential function is defined! t_s is the time when an event will happen
-      
     t_ss.append(t_s) # Keep the event times in a list
     
     """
@@ -364,79 +368,72 @@ while tt <= 10:
     """
 
     # if t_s >= rec_t + t_im and coords_t[:,2].any() == 1: # If the event time is bigger than the minimum recovery time and if there are infected people,
-    #                                                    # uninfect specific individuals (according to their recovery time)
-        
+    #                                                      # uninfect specific individuals (according to their recovery time)
 
-    #     uninfection_idx = np.where(t_i == t_im)[0]  # Find indices where t_i equals t_im    
-
-    #     ## Optional: Prints the index of people that get uninfected (from their line in the coords data table), AKA those that their time of infection is the "oldest" ##
-    #     print("It's un-infection time! These people get un-infected: " + ", ".join(map(str, [int(x) for x in uninfection_idx])))
+    if t_s >= rec_t + t_im and ((coords_t[:,2] == 1).any() or (coords_t[:,2] == 2).any()): # If the event time is bigger than the minimum recovery time and if there are infected people,
+                                                                                           # uninfect specific individuals (according to their recovery time)
         
-    #     # Create a table with the individuals that get uninfected 
-                                                                  
-    #     unin = np.concatenate([unin, uninfection_idx]) 
-    #     for i in range(len(list(uninfection_idx))):
-    #         t_un.append(t_s) # Save the simulation time of uninfection   
+        uninfection_idx = np.where(t_i == t_im)[0]  # Find indices where t_i equals t_im    
+
+        ## Optional: Prints the index of people that get uninfected (from their line in the coords data table), AKA those that their time of infection is the "oldest" ##
+        print("It's un-infection time! These people get un-infected: " + ", ".join(map(str, [int(x) for x in uninfection_idx])))
+        print(t_im)
+        ## Remove all tuples from c_j that have as 2nd value the index of the individual getting uninfected ##
+        c_j = [(c, j) for c, j in c_j if j not in uninfection_idx]
+        print(c_j)
+
+        ## Create a table with the individuals that get uninfected ##                                                    
+        unin = np.concatenate([unin, uninfection_idx]) # List that keeps who got uninfected
+        for i in range(len(list(uninfection_idx))):
+            t_un.append(t_s) # Save the simulation time of uninfection   
             
-    #     un+=len(list(uninfection_idx))     # Keep count of the uninfections                                                                        
-    #     coords_t[uninfection_idx,2] = 0    # Change the infection label to uninfected (0)
-    #     coords_t[uninfection_idx,3] = rm_h # Change the rate of movement back to the one for uninfected individuals
-    #     coords_t[uninfection_idx,4] = 0    # Change the rate of infection back to 0
+        un+=len(list(uninfection_idx))     # Keep count of the uninfections                                                                        
+        coords_t[uninfection_idx,2] = 0    # Change the infection label to uninfected (0)
+        coords_t[uninfection_idx,3] = rm_h # Change the rate of movement back to the one for uninfected individuals
+        coords_t[uninfection_idx,4] = 0    # Change the rate of infection back to 0
 
-    #     if args.super_strain:
-    #         if percentage_susceptibility:
-    #             # For individuals with a mutation label = 1 (Normal Spreaders)
-    #             normal_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 1] # find the indexes of the normal spreders
-    #             coords_t[normal_idx, 5] = 0  # Change the label of mutation back to 0
-    #             coords_t[normal_idx, 6] = 1  # Change the susceptibility label back to 1
+        if args.super_strain:
+            if percentage_susceptibility:
+                # For individuals with a mutation label = 1 (Normal Spreaders)
+                normal_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 1] # find the indexes of the normal spreders
+                coords_t[normal_idx, 5] = 0  # Change the label of mutation back to 0
+                coords_t[normal_idx, 6] = 1  # Change the susceptibility label back to 1
 
-    #             # For individuals with a mutation label of 2 (Super Spreaders)
-    #             super_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 2] # find the indexes of the super spreders
-    #             coords_t[super_idx, 5] = 0  # hange the label of mutation back to 0
-    #                                         # For those with mutation label 2, no change at the susceptibility label
-    #         else:
-    #             coords_t[uninfection_idx, 5] = 0  # Change the label of mutation back to 0
-    #             coords_t[uninfection_idx, 6] = 1  # Change the susceptibility label back to 1 to all unifected individuals 
-    #     else:
-    #         coords_t[uninfection_idx, 5] = 0  # Change the label of mutation back to 0
-    #         coords_t[uninfection_idx, 6] = 1  # Change the susceptibility label back to 1 to all unifected individuals
+                # For individuals with a mutation label of 2 (Super Spreaders)
+                super_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 2] # find the indexes of the super spreders
+                coords_t[super_idx, 5] = 0  # hange the label of mutation back to 0
+                                            # For those with mutation label 2, no change at the susceptibility label
+            else:
+                coords_t[uninfection_idx, 5] = 0  # Change the label of mutation back to 0
+                coords_t[uninfection_idx, 6] = 1  # Change the susceptibility label back to 1 to all unifected individuals 
+        else:
+            coords_t[uninfection_idx, 5] = 0  # Change the label of mutation back to 0
+            coords_t[uninfection_idx, 6] = 1  # Change the susceptibility label back to 1 to all unifected individuals
 
-    #     g.iloc[uninfection_idx] = np.nan   # Remove the genome of the recovered individual, meanining make all of the positions nan again
-
-    #     ## Optional: Print the index of the uninfected individuals ##
+        g.iloc[uninfection_idx] = np.nan   # Remove the genome of the recovered individual, meanining make all of the positions nan again
         
-    #     # print(list(t_i[np.where(t_i == t_im)[0]])) 
+        ## Re-initialize the infection times for those individuals that got uninfected so that there is a new minimum ##
+        t_i[uninfection_idx] = 999999999 
         
-    #     ## Optional: Print the minimum infection time (the "oldest" one) ##
+        ## Optional: Check the minimum infection time (the "oldest" one) after ##
         
-    #     #print(t_im) 
+        # print(np.min(t_i))
         
-    #     ## Re-initialize the infection times for those individuals that got uninfected so that there is a new minimum ##
-    #     t_i[uninfection_idx] = 999999999 
+        ## New minimum infection time ##
         
-    #     ## Optional: Check the minimum infection time (the "oldest" one) after ##
-        
-    #     #print(np.min(t_i))
-        
-    #     ## Optional: Check that the individuals got uninfected ##
-        
-    #     # print(list(t_i[np.where(t_i == t_im)[0]])) 
-        
-    #     ## New minimum infection time ##
-        
-    #     t_im = np.min(t_i) 
+        t_im = np.min(t_i) 
             
-    #     ## New rate of movement ##
-    #     rt_m = sum(coords_t[:, 3]) 
+        ## New rate of movement ##
+        rt_m = sum(coords_t[:, 3]) 
         
-    #     ## New rate of infection ##
-    #     rt_i = sum(coords_t[:,4]) 
+        ## New rate of infection ##
+        rt_i = sum(coords_t[:,4]) 
             
-    #     ## Fix the event time ##
-    #     t_s = t_ss[tt-1] # t_s is the time when an event will happen
-    #     t_ss.pop(-1)
-    #     #t_ss[tt] = t_s # Keep the times of events in a list
-    #     continue
+        ## Fix the event time ##
+        t_s = t_ss[tt-1] # t_s is the time when an event will happen
+        t_ss.pop(-1)
+        #t_ss[tt] = t_s # Keep the times of events in a list
+        continue
     
     
     """
@@ -485,7 +482,7 @@ while tt <= 10:
             c = np.amin(np.where(change)) 
             
             ## Calculate the new position (in coordinates) for the selected individual ##
-            coords_f = movement(coords_t, bound_l, bound_h, c, std_x, std_y, rim)
+            coords_f = movement(coords_t, bound_l, bound_h, c, rim)
 
             ## Calculate the new distance matrix now with the updated position of the selected individual ##
             df_f = new_dist(coords_t, coords_f, df_i, c)
@@ -509,7 +506,7 @@ while tt <= 10:
         rt_i = sum(coords_t[:,4])
         
     ## In the other case, where s1 is bigger than p_m, infection will be the event happening ##
-    else:
+    else:                                       
         
         ## Calclulate the cumulative sum of the infected individuals' infection rates (but taking into account only those with non-zero infection rates) in order to make the probability axis of the infection event ##
         cum_sum = np.where(coords_t[:, 4]!= 0 , np.cumsum(coords_t[:, 4]), 0) 
@@ -536,7 +533,7 @@ while tt <= 10:
         """
         
         ## Calculate the probability of the selected individual to infect each other individual depending on the distance between them ##
-        ipi = ind_probi(df_i, c) 
+        ipi = ind_probi(df_i, c, inf_dist) 
         
         ## Get the number of infected individuals before the new infection process ##
         ib = np.sum(coords_t[:,2])
@@ -554,7 +551,9 @@ while tt <= 10:
                 ## Find those who:  1. Are not already infected     ## 
                 ##                  2. Are susceptable to the virus ##
                 if coords_t[j,2] == 0 and coords_t[j,6] == 1: 
-                                   
+
+                    print("1st INFECTION")
+
                     ## The individual's genome is passed from the infector (c) to the newly infected individual (j) ##
                     g.iloc[j] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), g.iloc[c], g.iloc[j]) 
                     
@@ -583,6 +582,7 @@ while tt <= 10:
                     
                     ## Update the event time of infection for the infected individual in the list t_i ##
                     t_i[j] = np.where(s4<=ipi[j], t_s, t_i[j]) 
+                    print("Infected at:", t_i[j],j)
                     
                     ## Update minimum infection time parameter ##
                     t_im = np.min(t_i)
@@ -590,14 +590,18 @@ while tt <= 10:
                     ## Collect the data for the infected and infector, the times of infection (1st infection) the event time and the infection rate ##
                     hah = np.concatenate([hah, np.column_stack(np.array((c, j, 1.0, float(t_s), float(coords_t[j,4])), dtype=float))], axis=0)
                     #t_un = t_im+100
-                
+
+                    c_j.append((c, j))
+                    print(c_j)
+
                     ## Explicitly continue to the next iteration (next individual) ##
                     continue  
 
                 ## Find those who:  1. Are infected once                                                                         ## 
                 ##                  2. Are susceptable to the virus                                                              ##
                 ##                  3. Their time for recovery hasn't come yet (event time < 1st infection time + recovery time) ##
-                elif coords_t[j,2] == 1 and coords_t[j,6] == 1 and t_s <= t_i[j] + rec_t:
+                ##                  4. Are not already infected (1st infection) from the currect infector (c)                    ##
+                elif coords_t[j,2] == 1 and coords_t[j,6] == 1 and t_s <= t_i[j] + rec_t and (c, j) not in c_j:
                     
                     ## Number to determine whether recombination will take place ##
                     p = rec_probi(r_rec, l)
@@ -612,6 +616,7 @@ while tt <= 10:
                         '''
                         Genetic recombination
                         '''
+                        print("2nd INFECTION")
 
                         ## The individual's genome is recombined with the infector's (c) ##
                         g.iloc[j] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), recombine_genomes(g.iloc[c], g.iloc[j], p), g.iloc[j]) 
@@ -652,6 +657,10 @@ while tt <= 10:
                         ## Collect the data for the infected and infector, the event time and the infection rate ##
                         hah = np.concatenate([hah, np.column_stack(np.array((c, j, 2.0, float(t_s), float(coords_t[j,4])), dtype=float))], axis=0)
                         #t_un = t_im+100  
+
+                        ## Store the infector (c) and infected (j) ##
+                        c_j.append((c, j))                        
+                        print(c_j)
 
                         ## Explicitly continue to the next iteration (next individual) ##
                         continue 
