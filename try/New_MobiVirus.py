@@ -255,6 +255,8 @@ tt = 0                                                  # Time variable that run
 t_ss = []                                               # Array that saves the event time for every time step in the simulation
 t_i = np.full((n,1), 999999999, dtype=float)            # Array that keeps the event time when an individual (or more) get infected 
                                                         # We initialise it with a really big value
+t_rec = np.full((n,1), 999999999, dtype=float)          # Array that keeps the event time when an individual got infected for the 2nd time (time of recombination)
+                                                        # We initialise it with a really big value
 for i in range(n):
     t_i[i] = np.where(coords_t[:,2][i]==1, 0, t_i[i])   # Add 0 as the infection time for those initially infected  
                                   
@@ -271,12 +273,9 @@ if args.super_strain:
     all_inf = np.zeros((1,4))                           # List with the number of Total infected, Super spreaders, Normal spreaders and Infextion times for each generation
 else:
     all_inf = np.zeros((1,3))                           # List with the number of Total infected, Normal spreaders and Infextion times for each generation
-#equ=[]                                                 # Times when infected individuals are ~equal to uninfected 
+c_j = []                                                # List to stote the infector (c) and the infected (j) 
+                                                        # Keeps track of the infector (c) and the infected (j) to avoid that the 2nd infection will happen from the same infector (c) 
 
-
-## List to stote the infector (c) and the infected (j) ##
-## This list keeps track of the infector (c) and the infected (j) to avoid that 2 infection will happen from the same infector (c). ##
-c_j = [] 
 #%%
 
 """
@@ -369,6 +368,7 @@ while tt <= 100:
 
     if t_s >= rec_t + t_im and ((coords_t[:,2] == 1).any() or (coords_t[:,2] == 2).any()): # If the event time is bigger than the minimum recovery time and if there are infected people,
                                                                                            # uninfect specific individuals (according to their recovery time)
+                                                                                           # the uninfection happens according to the time of the first infection (even if the second infection happens)
         
         uninfection_idx = np.where(t_i == t_im)[0]  # Find indices where t_i equals t_im    
 
@@ -564,7 +564,7 @@ while tt <= 100:
                     coords_t[j,3] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), coords_t[c,3], coords_t[j,3]) 
                     
                     ## The  individual's (j) rate of infection is updated according to their genome ##
-                    coords_t[j,4] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), infectivity(coords_t[c, 4], g.iloc[j], n_i, ri_s), coords_t[j, 4]) 
+                    coords_t[j,4] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), infectivity(coords_t[c, 4], g.iloc[j], n_i, ri_s, "middle"), coords_t[j, 4]) 
                     
                     ## Add the mutation label depending on the strain of the infection + the mutation produced ##
                     if args.super_strain:
@@ -574,8 +574,8 @@ while tt <= 100:
 
                     ## Update the counters to track the number of Super Strain infections (if are existed) and Normal Strain infections ##
                     if args.super_strain:
-                        ss = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_s), ss+1, ss) #Count the super infections
-                    ns = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_n), ns+1, ns) #Count the normal infections
+                        ss = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_s), ss+1, ss) # Count the super infections
+                    ns = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_n), ns+1, ns)     # Count the normal infections
                     
                     ## Update the event time of infection for the infected individual in the list t_i ##
                     t_i[j] = np.where(s4<=ipi[j], t_s, t_i[j]) 
@@ -586,7 +586,6 @@ while tt <= 100:
                     
                     ## Collect the data for the infected and infector, the times of infection (1st infection) the event time and the infection rate ##
                     hah = np.concatenate([hah, np.column_stack(np.array((c, j, 1.0, float(t_s), float(coords_t[j,4])), dtype=float))], axis=0)
-                    #t_un = t_im+100
 
                     c_j.append((c, j))
                     print(c_j)
@@ -628,7 +627,7 @@ while tt <= 100:
                         coords_t[j,3] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), coords_t[c,3], coords_t[j,3]) 
                         
                         ## The  individual's (j) rate of infection is updated according to their genome ##
-                        coords_t[j,4] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), infectivity(coords_t[c, 4], g.iloc[j], n_i, ri_s), coords_t[j, 4]) 
+                        coords_t[j,4] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), infectivity(coords_t[c, 4], g.iloc[j], n_i, ri_s, "middle"), coords_t[j, 4]) 
                         
                         ## Add the mutation label depending on the strain of the infection + the mutation produced ##
                         if args.super_strain:
@@ -636,24 +635,19 @@ while tt <= 100:
                         else:
                             coords_t[j, 5] = np.where((s4 <= ipi[j]) & (coords_t[j, 6] == 1) & (coords_t[j, 4] == ri_n), 1, coords_t[j, 5])
 
-                        ## Update the susceptibility label for the newly infected individual, as they are not susceptible anymore ##
-                        coords_t[j,6] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), 0, coords_t[j,6]) 
-
                         ## Update the counters to track the number of Super Strain infections (if are existed) and Normal Strain infections ##
                         if args.super_strain:
-                            ss = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_s), ss+1, ss) #Count the super infections
-                        ns = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_n), ns+1, ns) #Count the normal infections
+                            ss = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_s), ss+1, ss) # Count the super infections
+                        ns = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_n), ns+1, ns)     # Count the normal infections
                         
-                        ## Update the event time of infection for the infected individual in the list t_i ##
-                        t_i[j] = np.where(s4<=ipi[j], t_s, t_i[j]) 
+                        ## Update the susceptibility label for the newly infected individual, as they are not susceptible anymore ##
+                        coords_t[j,6] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), 0, coords_t[j,6]) 
                         
-                        ## DON'T UPDATE IT SO THEY RECOVER ACCORDING TO THE 1ST MUTATION
-                        ## Update minimum infection time parameter ##
-                        # t_im = np.min(t_i) 
-                        
+                        ## Update the event time of genetic recombination for the infected individual in the list t_rec ##
+                        t_rec[j] = np.where(s4<=ipi[j], t_s, t_rec[j]) 
+                                               
                         ## Collect the data for the infected and infector, the event time and the infection rate ##
                         hah = np.concatenate([hah, np.column_stack(np.array((c, j, 2.0, float(t_s), float(coords_t[j,4])), dtype=float))], axis=0)
-                        #t_un = t_im+100  
 
                         ## Store the infector (c) and infected (j) ##
                         c_j.append((c, j))                        

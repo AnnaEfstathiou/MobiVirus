@@ -138,15 +138,11 @@ def genome(n, l, r_m):
     # n = total number of individuals in the sample
     # l = total length of the genome
     # r_m = mutation rate of a position in the genome
-    # n_i = number of important genome positions that form a specific strain (they will be in the begining of the genome)
     
     # Default result: If the genome of an individual has a specific value in at least one of the important positions, the individual is infected by the Super Strain
     
     g =  pd.DataFrame(index=range(n), columns=range(l))
     r_tot = r_m * l # Total rate of mutation of genome
-
-    # probi = sum(g[:n_i]) #Rate of infection of individual 
-    # (add n_i (number of important genome positions that form a specific strain (they will be in the begining of the genome)) as an argument)
     
     return g, r_tot
 
@@ -182,8 +178,8 @@ Infection Rate Function
 -----------------------
 '''
 
-def infectivity(in_probi, g, n_i, ri_s):
-    
+def infectivity(in_probi, g, n_i, ri_s, position):
+
     ## Gives the specific value of the infection rate of an individual, depending on the strain of the virus ##
     ## The strain is decided by the n_i important positions in the individual's genome ##
     
@@ -191,13 +187,36 @@ def infectivity(in_probi, g, n_i, ri_s):
     # n_i = important positions in the genome
     # in_probi = infection rate of the infector
     # ri_s = infectivity rate of super strain
+    # position ('start', 'middle', or 'end') = area of the important positions in the individual's genome
     
-    if np.any(np.array(g[:n_i])==1):
-        probi = ri_s
+    if position == "start":
+
+        if np.any(np.array(g[:n_i])==1):
+            probi = ri_s
+        else:
+            probi = in_probi
+
+    elif position == "middle":
+
+        genome_length = len(g)
+        middle_start = (genome_length - n_i) // 2
+        middle_end = middle_start + n_i
+        if np.any(np.array(g[middle_start:middle_end]) == 1):
+            probi = ri_s
+        else:
+            probi = in_probi
+    
+    elif position == "end":
+
+        genome_length = len(g)
+        end_start = genome_length - n_i
+        if np.any(np.array(g[end_start:]) == 1):
+            probi = ri_s
+        else:
+            probi = in_probi
+    
     else:
-        probi = in_probi
-        
-    # probi = np.where(g[:n_i].any() == 1 , 1.5, probi)
+        raise ValueError("Invalid position value. Expected 'start', 'middle', or 'end'.")
     
     return probi
 
