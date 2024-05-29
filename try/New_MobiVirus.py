@@ -452,10 +452,10 @@ while tt <= 100:
     time_bfloop = time.time()-distm_time # Time before event-loop
     
     ## Select a random number s1 to see which of the two events will happen ##
-    ## If s1 is smaller than p_m, the event that will happen is movement ##
     s1 = np.random.random() # Random number in  [0,1]
-        
-    if s1<=p_m: 
+    
+    ## If s1 is smaller than p_m, the event that will happen is movement ##
+    if s1 <= p_m: 
         
         ## Calculate the cumulative sum of the rate of movement from all the individuals in order to create the probability axis of the movement event ##
         cum_sum = np.cumsum(coords_t[:, 3]) 
@@ -533,7 +533,7 @@ while tt <= 100:
         ipi = ind_probi(df_i, c, inf_dist) 
         
         ## Get the number of infected individuals before the new infection process ##
-        ib = np.sum(coords_t[:,2])
+        ib = len(coords_t[coords_t[:,2] != 0])
         
         ## Go through all the individuals (indexing them with j) ... ##
         for j in range(n): 
@@ -568,9 +568,9 @@ while tt <= 100:
                     
                     ## Add the mutation label depending on the strain of the infection + the mutation produced ##
                     if args.super_strain:
-                        coords_t[j,5] = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_s), 2, np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_n), 1, coords_t[j,5]))
+                        coords_t[j,5] = np.where((s4<=ipi[j]) & (coords_t[j,6]==1) & (coords_t[j,4]==ri_s), 2, np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_n), 1, coords_t[j,5]))
                     else:
-                        coords_t[j, 5] = np.where((s4 <= ipi[j]) & (coords_t[j, 6] == 1) & (coords_t[j, 4] == ri_n), 1, coords_t[j, 5])
+                        coords_t[j, 5] = np.where((s4<=ipi[j]) & (coords_t[j,6]==1) & (coords_t[j,4]==ri_n), 1, coords_t[j,5])
 
                     ## Update the counters to track the number of Super Strain infections (if are existed) and Normal Strain infections ##
                     if args.super_strain:
@@ -579,7 +579,7 @@ while tt <= 100:
                     
                     ## Update the event time of infection for the infected individual in the list t_i ##
                     t_i[j] = np.where(s4<=ipi[j], t_s, t_i[j]) 
-                    print("Infected at:", t_i[j],j)
+                    # print("Infected at:", t_i[j],j)
                     
                     ## Update minimum infection time parameter ##
                     t_im = np.min(t_i)
@@ -588,7 +588,7 @@ while tt <= 100:
                     hah = np.concatenate([hah, np.column_stack(np.array((c, j, 1.0, float(t_s), float(coords_t[j,4])), dtype=float))], axis=0)
 
                     c_j.append((c, j))
-                    print(c_j)
+                    # print(c_j)
 
                     ## Explicitly continue to the next iteration (next individual) ##
                     continue  
@@ -613,6 +613,7 @@ while tt <= 100:
                         Genetic recombination
                         '''
                         print("2nd INFECTION")
+                        # print(tt)
 
                         ## The individual's genome is recombined with the infector's (c) ##
                         g.iloc[j] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), recombine_genomes(g.iloc[c], g.iloc[j], p), g.iloc[j]) 
@@ -633,7 +634,7 @@ while tt <= 100:
                         if args.super_strain:
                             coords_t[j,5] = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_s), 2, np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_n), 1, coords_t[j,5]))
                         else:
-                            coords_t[j, 5] = np.where((s4 <= ipi[j]) & (coords_t[j, 6] == 1) & (coords_t[j, 4] == ri_n), 1, coords_t[j, 5])
+                            coords_t[j, 5] = np.where((s4<=ipi[j]) & (coords_t[j, 6]==1) & (coords_t[j,4]==ri_n), 1, coords_t[j,5])
 
                         ## Update the counters to track the number of Super Strain infections (if are existed) and Normal Strain infections ##
                         if args.super_strain:
@@ -651,7 +652,7 @@ while tt <= 100:
 
                         ## Store the infector (c) and infected (j) ##
                         c_j.append((c, j))                        
-                        print(c_j)
+                        # print(c_j)
 
                         ## Explicitly continue to the next iteration (next individual) ##
                         continue 
@@ -663,7 +664,8 @@ while tt <= 100:
 
         ## Check if the number of infected individuals before the infection event (ib) is greater than or equal to the number of infected individuals (ia) after the infection ##
         ## If so, it means no new infections occurred, and "Nobody got infected" is printed. Otherwise, the indices of the newly infected individuals are printed as "These got infected:" using the hah data collected during the loop ##
-        ia= np.sum(coords_t[:,2])
+        ia= len(coords_t[coords_t[:,2] != 0])
+
         if ib>=ia:
             print("Nobody got infected.")
         else:
@@ -681,16 +683,15 @@ while tt <= 100:
         rt_i = sum(coords_t[:,4])
         
         ## Remove the lines in the genome table that correspond to the genomes of recovered individuals ##
-        # g.iloc[coords_t[:, 2] == 0] = np.zeros((1, l)) 
         n_rows = sum(coords_t[:, 2] == 0)  # This calculates how many rows meet the condition
         g.iloc[coords_t[:, 2] == 0] = np.nan * np.ones((n_rows, l))
         
         if args.super_strain:
             ## Collect the data for the number of Total infected, Super spreaders, Normal spreaders and infection time for each generation ##
-            all_inf = np.concatenate([all_inf, np.column_stack(np.array((sum(coords_t[:,2]), sum(coords_t[:,5]==2), sum(coords_t[:,5]==1), float(t_s)), dtype=float))], axis=0)    
+            all_inf = np.concatenate([all_inf, np.column_stack(np.array((sum(coords_t[:,2] != 0), sum(coords_t[:,5]==2), sum(coords_t[:,5]==1), float(t_s)), dtype=float))], axis=0)    
         else:
             ## Collect the data for the number of Total infected, Normal spreaders and infection time for each generation ##
-            all_inf = np.concatenate([all_inf, np.column_stack(np.array((sum(coords_t[:,2]), sum(coords_t[:,5]==1), float(t_s)), dtype=float))], axis=0)    
+            all_inf = np.concatenate([all_inf, np.column_stack(np.array((sum(coords_t[:,2] != 0), sum(coords_t[:,5]==1), float(t_s)), dtype=float))], axis=0)    
 
     if args.super_strain:
         ## Save a sample of data from the simulation, according to the conditions of the sample_data() function##

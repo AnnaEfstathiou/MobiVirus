@@ -31,7 +31,7 @@ All the required packages are mentioned in the `requirements.txt` file.
 ### Main code
 
 The simulation starts with each individual located at a single position in a two-dimensional space and with a predefined number of infected individuals in the population carrying the viral genome. At each simulated iteration one of two events can occur: movement or infection. If movement is chosen, then it involves a single individual whose x and y coordinates in space change. If infection is chosen then it is decided who will be the infecting individual and who (can be more than one individual) will they infect by tranfering their viral genome (infection is based on the distance between individuals).Alongside the events occur uninfections in which, depending on the recovery time, some infected individuals are selected to become healthy. The simulation stops when everyone in the population is healthy.
-Note that the viral genome consists of 0 and 1. Potitions with value 1 represent potitions that a mutation has happened.
+Note that the viral genome consists of 0.0 and 1.0. Potitions with value 1.0 represent potitions that a mutation has happened.
 
 ### Optional arguments
 
