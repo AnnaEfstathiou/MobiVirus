@@ -275,7 +275,6 @@ else:
     all_inf = np.zeros((1,3))                           # List with the number of Total infected, Normal spreaders and Infextion times for each generation
 c_j = []                                                # List to stote the infector (c) and the infected (j) 
                                                         # Keeps track of the infector (c) and the infected (j) to avoid that the 2nd infection will happen from the same infector (c) 
-
 #%%
 
 """
@@ -290,13 +289,10 @@ else:
     print(f"The simulation contains one type of strain, a normal strain with {ri_n} rate of infection.")
 
 # Run the simulation until everyone becomes uninfected 
-# while sum(coords_t[:,2])!=0: # activate lines 236, 240
-
-# Run the simulation until everyone becomes uninfected or until everyone is infected
-# while sum(coords_t[:,2]) != 0 or sum(coords_t[:,2]) != n: 
+# while sum(coords_t[:,2])!= 0: 
 
 # Run the simulation for i events
-while tt <= 100:
+while tt <= 150:
     
     # OPTIONAL: Print some plots during the run
     if args.scatter_plots:
@@ -374,10 +370,10 @@ while tt <= 100:
 
         ## Optional: Prints the index of people that get uninfected (from their line in the coords data table), AKA those that their time of infection is the "oldest" ##
         print("It's un-infection time! These people get un-infected: " + ", ".join(map(str, [int(x) for x in uninfection_idx])))
-        print(t_im)
+        
         ## Remove all tuples from c_j that have as 2nd value the index of the individual getting uninfected ##
         c_j = [(c, j) for c, j in c_j if j not in uninfection_idx]
-        print(c_j)
+        # print(c_j)
 
         ## Create a table with the individuals that get uninfected ##                                                    
         unin = np.concatenate([unin, uninfection_idx]) # List that keeps who got uninfected
@@ -532,9 +528,12 @@ while tt <= 100:
         ## Calculate the probability of the selected individual to infect each other individual depending on the distance between them ##
         ipi = ind_probi(df_i, c, inf_dist) 
         
-        ## Get the number of infected individuals before the new infection process ##
-        ib = len(coords_t[coords_t[:,2] != 0])
+        ## Get the number of newly infected individuals (label:1) before the new infection process ##
+        ib = len(coords_t[coords_t[:,2] == 1])
         
+        ## List to store the infected individuals (label:1) that their genome 
+        unin_ind = []
+
         ## Go through all the individuals (indexing them with j) ... ##
         for j in range(n): 
 
@@ -549,7 +548,7 @@ while tt <= 100:
                 ##                  2. Are susceptable to the virus ##
                 if coords_t[j,2] == 0 and coords_t[j,6] == 1: 
 
-                    print("1st INFECTION")
+                    # print("1st INFECTION")
 
                     ## The individual's genome is passed from the infector (c) to the newly infected individual (j) ##
                     g.iloc[j] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), g.iloc[c], g.iloc[j]) 
@@ -612,9 +611,11 @@ while tt <= 100:
                         '''
                         Genetic recombination
                         '''
-                        print("2nd INFECTION")
-                        # print(tt)
 
+                        # print("2nd INFECTION")
+
+                        unin_ind.append(j)
+                        
                         ## The individual's genome is recombined with the infector's (c) ##
                         g.iloc[j] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), recombine_genomes(g.iloc[c], g.iloc[j], p), g.iloc[j]) 
                         
@@ -648,11 +649,7 @@ while tt <= 100:
                         t_rec[j] = np.where(s4<=ipi[j], t_s, t_rec[j]) 
                                                
                         ## Collect the data for the infected and infector, the event time and the infection rate ##
-                        hah = np.concatenate([hah, np.column_stack(np.array((c, j, 2.0, float(t_s), float(coords_t[j,4])), dtype=float))], axis=0)
-
-                        ## Store the infector (c) and infected (j) ##
-                        c_j.append((c, j))                        
-                        # print(c_j)
+                        hah = np.concatenate([hah, np.column_stack(np.array((c, j, 2.0, float(t_s), float(coords_t[j,4])), dtype=float))], axis=0)                      
 
                         ## Explicitly continue to the next iteration (next individual) ##
                         continue 
@@ -661,17 +658,30 @@ while tt <= 100:
                 else:
                     continue
     
+        ## Check if the number of infected individuals before the infection event (ib) is greater than or equal to the number of newly infected individuals (ia) after the infection (label:1) ##
+        ## If so, it means no new infections occurred, and "Nobody got infected" is printed. ##
+        ## Otherwise, the indices of the newly infected individuals are printed as "These got infected:" using the hah data collected during the loop ##
+        ia = len(coords_t[coords_t[:,2] == 1])
 
-        ## Check if the number of infected individuals before the infection event (ib) is greater than or equal to the number of infected individuals (ia) after the infection ##
-        ## If so, it means no new infections occurred, and "Nobody got infected" is printed. Otherwise, the indices of the newly infected individuals are printed as "These got infected:" using the hah data collected during the loop ##
-        ia= len(coords_t[coords_t[:,2] != 0])
-
-        if ib>=ia:
-            print("Nobody got infected.")
+        if ib >= ia:
+            # print("Nobody got infected.")
+            if not unin_ind:
+                # Perform the action if the list is empty
+                print("Nobody got infected.")
+            else:
+                # Print the indexes if the list is not empty
+                print("Nobody got newly infected but this individual's genome got recombined:", ", ".join(map(str, unin_ind)))
         else:
             # The array hah[-int(ia-ib):,1] contains all the indices of the newly infected individuals 
-            print("These individuals got infected: " + ", ".join(map(str, [int(x) for x in hah[-int(ia-ib):,1]])))
-            
+            # print("This/These individuals got newly infected: " + ", ".join(map(str, [int(x) for x in hah[-int(ia-ib):,1]])))
+            if not unin_ind:
+                # Perform the action if the list is empty
+                print("This/These individuals got newly infected: " + ", ".join(map(str, [int(x) for x in hah[-int(ia-ib):,1]])))
+            else:
+                # Print the indexes if the list is not empty
+                print("This/These individuals got newly infected: " + ", ".join(map(str, [int(x) for x in hah[-int(ia-ib):,1]])))
+                print("This/These individuals' genome got recombined: ", ", ".join(map(str, unin_ind)))
+                                    
         ## Optional: print the number of infected individuals in each strain ##       
         # print("Super spreaders:",sum(coords_t[:, 5]==2) )
         # print("Normal infected:", sum(coords_t[:, 5]==1))
@@ -722,12 +732,12 @@ else:    ## Save the data from the simulation in the correct directory ##
 
 # coords_t = pd.DataFrame(data=coords_t.T, index=("x","y", "label", "probability of movement", "probability of infection", "mutation", "susceptibility")).T
 # coords_t.to_csv(samples +'final_data'+'.csv',header=True, index=False)
+
 print("Loops:", tt)
 ## Time for the whole code to run ##
 end=time.time()-initial
 print("Total simulation time (minutes):", end/60)   
 
-#%%
 
 #%%
 
