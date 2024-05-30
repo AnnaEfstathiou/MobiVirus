@@ -343,7 +343,7 @@ Infection
 ---------
 '''
 
-def ind_probi(df, c, inf_dist):
+def ind_probi(df, c, inf_dist, prob_inf):
     
     ## Gives an array of length as many as the individuals and shape (n,1), only for the one individual that infects in that moment ##
     ## In the cells, 1 is for those who are in the "infection distance" and 0 for the others ##
@@ -353,7 +353,7 @@ def ind_probi(df, c, inf_dist):
     n = len(df) # the number of individuals
     ipi = np.zeros((n))
     for i in range(n):
-        ipi[i] = np.where((df[i,c] < inf_dist) & (df[i,c] != 0), 1, 0) # The first condition defines the infection distance
+        ipi[i] = np.where((df[i,c] < inf_dist) & (df[i,c] != 0), prob_inf, 0) # The first condition defines the infection distance
     
     return ipi
 

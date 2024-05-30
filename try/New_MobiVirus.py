@@ -101,9 +101,9 @@ ri_n = config.getfloat('Initial_Parameters', 'ri_n')                # Rate of in
 rm_i = config.getfloat('Initial_Parameters', 'rm_i')                # Rate of movement for infected ind.
 rm_h = config.getfloat('Initial_Parameters', 'rm_h')                # Rate of movement for healthy ind.
 inf_dist = config.getfloat('Initial_Parameters', 'inf_dist')        # Infection distance
+prob_inf = config.getfloat('Initial_Parameters', 'prob_inf')        # ??? Probability of infection ???
 r_rec = config.getfloat('Initial_Parameters', 'r_rec')              # Rate of recombination
 rec_t = config.getfloat('Initial_Parameters', 'rec_t')              # Recovery time in simulation time
-label_i = label(n,ii)                                               # Divide the people in infected and not infected
 rim = config.getfloat('Initial_Parameters', 'rim')                  # Relative infection mobility
 sample_times = config.getint('Initial_Parameters', 'sample_times')  # Generations where we take samples of our simulation's output
 
@@ -209,6 +209,7 @@ CREATING A DATA TABLE WITH THE INFO FOR EACH INDIVIDUAL
 =======================================================
 """
 
+label_i = label(n,ii)                                                           # Divide the people in infected and not infected
 coords_2 = np.concatenate([coords_func(n, bound_l, bound_h), label_i], axis =1) # Initiate the array data table with 
 g, r_tot = genome(n, l, r_m)                                                    # Initialization of genome table (as nan with shape n*l)
 probm = probs(coords_2,rm_i, rm_h)                                              # Initialization of movement rate array
@@ -292,7 +293,7 @@ else:
 # while sum(coords_t[:,2])!= 0: 
 
 # Run the simulation for i events
-while tt <= 100:
+while tt <= 5:
     
     # OPTIONAL: Print some plots during the run
     if args.scatter_plots:
@@ -488,7 +489,7 @@ while tt <= 100:
             mv += 1
             
             ## Optional: Print the event that just happened ##
-            # print("movement")
+            print("Movement of:", c)
         
         ## Update the total rate of movement ##
         rt_m = sum(coords_t[:,3]) 
@@ -522,8 +523,8 @@ while tt <= 100:
         """
         
         ## Calculate the probability of the selected individual to infect each other individual depending on the distance between them ##
-        ipi = ind_probi(df_i, c, inf_dist) 
-
+        ipi = ind_probi(df_i, c, inf_dist, prob_inf) 
+        
         ## Get the number of newly infected individuals (label:1) before the new infection process ##
         ib = len(coords_t[coords_t[:,2] == 1])
         
