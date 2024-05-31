@@ -31,7 +31,7 @@ IMPORTING THE NECESSARY PYTHON FUNCTIONS
 """
 
 from mobifunctions import log_command, coords_func, label, genome, mutation, rec_probi, recombine_genomes,infectivity, probs, movement, ini_distm, new_dist, ind_probi
-from mobifunctions import plot_map_normal, plot_map_normal_super, sample_data_normal, sample_data_normal_super, do_plots_normal, do_plots_normal_super, save_data_normal, save_data_normal_super
+from mobifunctions import plot_map, do_plots, sample_data, save_data
 
 """
 ===================
@@ -308,9 +308,9 @@ while tt <= 50:
     # OPTIONAL: Print some plots during the run
     if args.scatter_plots:
         if args.super_strain:
-            do_plots_normal_super(plots, coords_t, tt, t_s, mv, ss, un) 
+            do_plots(plots, coords_t, tt, t_s, mv, un, super_strain = True) 
         else: 
-            do_plots_normal(plots, coords_t, tt, t_s, mv, un)
+            do_plots(plots, coords_t, tt, t_s, mv, un, super_strain = False)
 
     """
     ---------------
@@ -701,10 +701,10 @@ while tt <= 50:
 
     if args.super_strain:
         ## Save a sample of data from the simulation, according to the conditions of the sample_data() function##
-        sample_data_normal_super(samples, genomes, g, tt, coords_t, all_inf, sample_times)
+        sample_data(samples, genomes, g, tt, coords_t, all_inf, sample_times, super_strain = True)
     else:
         ## Save a sample of data from the simulation, according to the conditions of the sample_data() function##
-        sample_data_normal(samples, genomes, g, tt, coords_t, all_inf, sample_times)
+        sample_data(samples, genomes, g, tt, coords_t, all_inf, sample_times, super_strain = False)
     
     ## Time to run the simulation loop ##
     loop_t = time.time()-time_bfloop 
@@ -716,15 +716,15 @@ while tt <= 50:
 ## OPTIONAL: Plot a visual map with the final positions of the sample ##
 if args.scatter_plots:
     if args.super_strain:
-        plot_map_normal_super(plots, coords_t, tt, t_s, mv, ss, un)
+        plot_map(plots, coords_t, tt, t_s, mv, ss, un, super_strain = True)
     else:
-        plot_map_normal(plots, coords_t, tt, t_s, mv, un)
+        plot_map(plots, coords_t, tt, t_s, mv, un, super_strain = False)
 
 if args.super_strain:
     ## Save the data from the simulation in the correct directory ##
-    save_data_normal_super(samples, genomes, coords_2, coords_t, tt, g, all_inf, unin, hah, ss, ns, mv, t_un)
+    save_data(samples, genomes, coords_2, coords_t, g, all_inf, unin, hah, ss, ns, mv, t_un, super_strain = True)
 else:    ## Save the data from the simulation in the correct directory ##
-    save_data_normal(samples, genomes, coords_2, coords_t, tt, g, all_inf, unin, hah, ns, mv, t_un)
+    save_data(samples, genomes, coords_2, coords_t, g, all_inf, unin, hah, 0, ns, mv, t_un, super_strain = False)
 
 # coords_t = pd.DataFrame(data=coords_t.T, index=("x","y", "label", "probability of movement", "probability of infection", "mutation", "susceptibility")).T
 # coords_t.to_csv(samples +'final_data'+'.csv',header=True, index=False)
