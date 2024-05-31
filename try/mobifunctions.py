@@ -163,13 +163,13 @@ def probs(coords, rm_i, rm_h):
     
     probm = np.zeros(len(coords)) # random rate of movement for each individual
 
-    mask = coords[:, 2] == 1.0    # for those who are infected
+    mask = coords[:, 2] != 0.0    # for those who are infected (label 1 (or 2))
     probm[mask] = rm_i            # they get rm_i in the corresponding positions in probm
 
-    mask = coords[:, 2] != 1.0    # for those that are healthy
+    mask = coords[:, 2] == 0.0    # for those that are healthy
     probm[mask] = rm_h            # they get rm_h in the corresponding positions in probm
     
-    return np.column_stack(probm).T # np.column_stack(probi).T
+    return np.column_stack(probm).T 
 
 
 '''

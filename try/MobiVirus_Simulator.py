@@ -303,7 +303,7 @@ else:
 # while sum(coords_t[:,2])!= 0: 
 
 # Run the simulation for i events
-while tt <= 5:
+while tt <= 50:
     
     # OPTIONAL: Print some plots during the run
     if args.scatter_plots:
@@ -372,7 +372,7 @@ while tt <= 5:
 
     if t_s >= rec_t + t_im and ((coords_t[:,2] == 1).any() or (coords_t[:,2] == 2).any()): # If the event time is bigger than the minimum recovery time and if there are infected people,
                                                                                            # uninfect specific individuals (according to their recovery time)
-                                                                                           # the uninfection happens according to the time of the first infection (even if the second infection happens)
+                                                                                           # the uninfection happens according to the time of the first infection (even if the second infection happens in case of recombination)
         
         uninfection_idx = np.where(t_i == t_im)[0]  # Find indices where t_i equals t_im    
 
@@ -398,8 +398,10 @@ while tt <= 5:
 
                 # For individuals with a mutation label of 2 (Super Spreaders)
                 super_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 2] # find the indexes of the super spreders
-                coords_t[super_idx, 5] = 0  # hange the label of mutation back to 0
-                                            # For those with mutation label 2, no change at the susceptibility label
+                coords_t[super_idx, 5] = 0  # Change the label of mutation back to 0
+                # For those with mutation label 2, the susceptibility label remains 0
+                if args.recombination: # The super spreders that their genome didn't recombine, will have sus = 1, so it needs to change explicitly
+                    coords_t[super_idx, 6] = 0       
             else:
                 coords_t[uninfection_idx, 5] = 0  # Change the label of mutation back to 0
                 coords_t[uninfection_idx, 6] = 1  # Change the susceptibility label back to 1 to all unifected individuals 
@@ -411,9 +413,6 @@ while tt <= 5:
         
         ## Re-initialize the infection times for those individuals that got uninfected so that there is a new minimum ##
         t_i[uninfection_idx] = 999999999 
-        
-        ## Optional: Check the minimum infection time (the "oldest" one) after ##
-        # print(np.min(t_i))
         
         ## New minimum infection time ##
         t_im = np.min(t_i) 
@@ -531,7 +530,7 @@ while tt <= 5:
         ## Get the number of newly infected individuals (label:1) before the new infection process ##
         ib = len(coords_t[coords_t[:,2] == 1])
         
-        ## List to store the infected individuals (label:1) that their genome 
+        ## List to store the infected individuals (label:1) that their genome will get recombined in the currect event ##
         unin_ind = []
 
         ## Go through all the individuals (indexing them with j) ... ##
@@ -547,9 +546,6 @@ while tt <= 5:
                 ## Find those who:  1. Are not already infected     ## 
                 ##                  2. Are susceptable to the virus ##
                 if coords_t[j,2] == 0 and coords_t[j,6] == 1: 
-
-                    # print("1st INFECTION")
-                    # print(c, j, s3, cum_sum)
 
                     ## The individual's genome is passed from the infector (c) to the newly infected individual (j) ##
                     g.iloc[j] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), g.iloc[c], g.iloc[j]) 
@@ -568,15 +564,19 @@ while tt <= 5:
                     
                     ## Add the mutation label depending on the strain of the infection + the mutation produced ##
                     if args.super_strain:
-                        coords_t[j,5] = np.where((s4<=ipi[j]) & (coords_t[j,6]==1) & (coords_t[j,4]==ri_s), 2, np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_n), 1, coords_t[j,5]))
+                        coords_t[j,5] = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_s), 2, np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_n), 1, coords_t[j,5]))
                     else:
-                        coords_t[j, 5] = np.where((s4<=ipi[j]) & (coords_t[j,6]==1) & (coords_t[j,4]==ri_n), 1, coords_t[j,5])
+                        coords_t[j, 5] = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_n), 1, coords_t[j,5])
 
                     ## Update the counters to track the number of Super Strain infections (if are existed) and Normal Strain infections ##
                     if args.super_strain:
                         ss = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_s), ss+1, ss) # Count the super infections
                     ns = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_n), ns+1, ns)     # Count the normal infections
                     
+                    if not args.recombination:
+                        ## Update the susceptibility label for the infected individual, as he is not susceptible anymore ##
+                        coords_t[j,6] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), 0, coords_t[j,6]) 
+
                     ## Update the event time of infection for the infected individual in the list t_i ##
                     t_i[j] = np.where(s4<=ipi[j], t_s, t_i[j]) 
                     # print("Infected at:", t_i[j],j)
@@ -587,9 +587,6 @@ while tt <= 5:
                     ## Collect the data for the infected and infector, the times of infection (1st infection) the event time and the infection rate ##
                     hah = np.concatenate([hah, np.column_stack(np.array((c, j, 1.0, float(t_s), float(coords_t[j,4])), dtype=float))], axis=0)
 
-                    # c_j.append((c, j))
-                    # print(c_j)
-
                     ## Explicitly continue to the next iteration (next individual) ##
                     continue  
 
@@ -597,8 +594,7 @@ while tt <= 5:
                 ##                  2. Are susceptable to the virus                                                              ##
                 ##                  3. Their time for recovery hasn't come yet (event time < 1st infection time + recovery time) ##
                 ##                  4. Are not already infected (1st infection) from the currect infector (c)                    ##
-                # elif coords_t[j,2] == 1 and coords_t[j,6] == 1 and t_s <= t_i[j] + rec_t and (c, j) not in c_j:
-                elif coords_t[j,2] == 1 and coords_t[j,6] == 1 and t_s <= t_i[j] + rec_t :
+                elif args.recombination and (coords_t[j,2] == 1 and coords_t[j,6] == 1 and t_s <= t_i[j] + rec_t) :
                     
                     ## Number to determine whether recombination will take place ##
                     p = rec_probi(r_rec, l)
@@ -668,7 +664,7 @@ while tt <= 5:
 
         if ib >= ia:
             # print("Nobody got infected.")
-            if not unin_ind:
+            if not unin_ind or not args.recombination:
                 # Perform the action if the list is empty
                 print("Nobody got infected.")
             else:
@@ -677,7 +673,7 @@ while tt <= 5:
         else:
             # The array hah[-int(ia-ib):,1] contains all the indices of the newly infected individuals 
             # print("This/These individuals got newly infected: " + ", ".join(map(str, [int(x) for x in hah[-int(ia-ib):,1]])))
-            if not unin_ind:
+            if not unin_ind or not args.recombination:
                 # Perform the action if the list is empty
                 print("This/These individuals got newly infected: " + ", ".join(map(str, [int(x) for x in hah[-int(ia-ib):,1]])))
             else:
