@@ -6,6 +6,7 @@ Calculating:
 - Watterson-Estimator score
 - number of unique sequences
 - haplotype diversity 
+- Fst
 """
 
 import argparse
@@ -47,17 +48,18 @@ def calculate_statistics(input_file, coords_file, sample_size = None):
 
     filtered_rows = __filtering_sequences(sampled_infected_sequences, coords_file)
     pop_coords_1, pop_coords_2 = __pop_coords(sampled_infected_sequences, filtered_rows)
+    pop_mut_1, pop_mut_2 = __pop_mutation_label(sampled_infected_sequences, filtered_rows)
     pop_label_1, pop_label_2 = __pop_mutation_label(sampled_infected_sequences, filtered_rows)
- 
+
     # Calculate statistics
     tajimas_d_score = tajimas_d(sampled_infected_sequences)
     pi_estimator_score = pi_estimator(sampled_infected_sequences)
     watterson_estimator_score = watterson_estimator(sampled_infected_sequences)
     unique_count = count_haplotypes(sampled_infected_sequences)
     haplotype_diversity = calculate_haplotype_diversity(sampled_infected_sequences)
-    fst_coords = Fst(pop_coords_1, pop_coords_2)
-    fst_label = Fst(pop_label_1, pop_label_2)
-
+    fst_coords = Fst(pop_coords_1, pop_coords_2) # fst according to space
+    fst_label = Fst(pop_label_1, pop_label_2) # fst according to label (1 vs 2 infections (recombination))
+    fst_mut = Fst(pop_mut_1, pop_mut_2) # fst accorsing to mutation label
 
     os.remove(new_fasta)  # delete the generated FASTA file
 
@@ -70,7 +72,8 @@ def calculate_statistics(input_file, coords_file, sample_size = None):
     "haplotype_diversity": haplotype_diversity,
     "total_sequences": len(infected_sequences),
     "Fst_coords": fst_coords,
-    "Fst_label": fst_label}
+    "Fst_inf_label": fst_label,
+    "Fst_mut_label": fst_mut}
 
 
 if __name__ == "__main__":
@@ -100,7 +103,8 @@ if __name__ == "__main__":
             print(f"Number of unique sequences: {results['unique_count']}/ {args.sample_size} ({results['unique_count']/args.sample_size:.3f})")
             print(f"Haplotype diversity: {results['haplotype_diversity']}")
             print(f"Fst (2 populations devided by coordinates): {results['Fst_coords']}")
-            print(f"Fst (2 populations devided by mutation label): {results['Fst_label']}")
+            print(f"Fst (2 populations devided by mutation label): {results['Fst_mut_label']}")
+            print(f"Fst (2 populations devided by recombination or not): {results['Fst_inf_label']}")
 
         else:
 
@@ -111,7 +115,8 @@ if __name__ == "__main__":
             print(f"Number of unique sequences: {results['unique_count']}/{results['total_sequences']} ({results['unique_count']/results['total_sequences']:.3f})")
             print(f"Haplotype diversity: {results['haplotype_diversity']}")
             print(f"Fst (2 populations devided by coordinates): {results['Fst_coords']}")
-            print(f"Fst (2 populations devided by mutation label): {results['Fst_label']}")
+            print(f"Fst (2 populations devided by mutation label): {results['Fst_mut_label']}")
+            print(f"Fst (2 populations devided by recombination or not): {results['Fst_inf_label']}")
 
     else:
 
@@ -122,4 +127,5 @@ if __name__ == "__main__":
         print(f"Number of unique sequences: {results['unique_count']}/{results['total_sequences']} ({results['unique_count']/results['total_sequences']:.3f})")
         print(f"Haplotype diversity: {results['haplotype_diversity']}")
         print(f"Fst (2 populations devided by coordinates): {results['Fst_coords']}")
-        print(f"Fst (2 populations devided by mutation label): {results['Fst_label']}")
+        print(f"Fst (2 populations devided by mutation label): {results['Fst_mut_label']}")
+        print(f"Fst (2 populations devided by recombination or not): {results['Fst_inf_label']}")

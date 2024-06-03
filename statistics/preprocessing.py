@@ -41,19 +41,14 @@ def __process_fasta(fasta_file, output_fasta):
     except Exception as e:
         print(f"An error occurred: {e}")
 
-def __read_fasta(fasta_file):
+
+def __read_fasta(file_path: str) -> Dict[str, str]:
 
     """ Function that creates a dictionary with headers as keys and sequences as values. """
-
+    
     sequences = {}
-    current_sequence = None
-    with open(fasta_file, 'r') as file:
-        for line in file:
-            if line.startswith('>'):
-                current_sequence = line.strip()[1:]
-                sequences[current_sequence] = ''
-            else:
-                sequences[current_sequence] += line.strip()
+    for record in SeqIO.parse(file_path, "fasta"):
+        sequences[record.id] = str(record.seq)
     return sequences
 
 
@@ -98,6 +93,25 @@ def __pop_coords(sequences, filtered_rows):
 
     return population_1, population_2
 
+def __pop_infection_label(sequences, filtered_rows): # split the population according to recombination
+
+    """ Create 2 populations according to the 'infection' label in the DataFrame. """
+    population_1 = []
+    population_2 = []
+
+    # Extract values including the 'label' column, which is column 2
+    label_values = filtered_rows['label']  # assuming 'mutation' is the name of the column
+
+    # Iterate through the DataFrame rows
+    for index, label in label_values.items():
+        sequence = sequences.get(str(index), None)  # Convert index to string to match sequence keys
+        if sequence:  # Check if sequence is not None
+            if label == 1.0:  # Assume 'Type1' as a label type for Population 1
+                population_1.append(sequence)
+            else:  # All other label types go to Population 2
+                population_2.append(sequence)
+
+    return population_1, population_2
 
 def __pop_mutation_label(sequences, filtered_rows):
 
@@ -105,7 +119,7 @@ def __pop_mutation_label(sequences, filtered_rows):
     population_1 = []
     population_2 = []
 
-    # Extract values including the 'mutation' column, which is column 5 (index 4)
+    # Extract values including the 'mutation' column, which is column 5 
     mutation_values = filtered_rows['mutation']  # assuming 'mutation' is the name of the column
 
     # unique_mutations = mutation_values.unique()

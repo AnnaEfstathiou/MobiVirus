@@ -5,6 +5,7 @@ Calculating:
 - Watterson-Estimator score
 - number of unique sequences
 - haplotype diversity 
+- Fst 
 """
 
 from collections import Counter
