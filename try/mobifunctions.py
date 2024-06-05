@@ -37,7 +37,27 @@ def log_command(directory, command, flags):
         log_file.write(f"Command: {command}\n")
         for flag, explanation in flags.items():
             log_file.write(f"{flag}: {explanation}\n")
-        log_file.write("\n")
+
+        
+        # Append the initial parameters from the config
+        log_file.write("\nInitial Parameters:\n")
+        log_file.write(f"Number of individuals (n): {config.getint('Initial_Parameters', 'n')}\n")
+        log_file.write(f"Length of genome (l): {config.getint('Initial_Parameters', 'l')}\n")
+        log_file.write(f"Initial number of infected individuals (ii): {config.getint('Initial_Parameters', 'ii')}\n")
+        log_file.write(f"Lower bound for the spacial axis (bound_l): {config.getfloat('Initial_Parameters', 'bound_l')}\n")
+        log_file.write(f"Upper bound for the spacial axis (bound_h): {config.getfloat('Initial_Parameters', 'bound_h')}\n")
+        log_file.write(f"Mutation rate for each genome position (r_m): {config.getfloat('Initial_Parameters', 'r_m')}\n")
+        log_file.write(f"Number of important genome positions (n_i): {config.getint('Initial_Parameters', 'n_i')}\n")
+        log_file.write(f"Rate of infection of 1st strain (ri_n): {config.getfloat('Initial_Parameters', 'ri_n')}\n")
+        log_file.write(f"Rate of infection of 2nd strain (ri_s): {config.getfloat('Initial_Parameters', 'ri_s')}\n")
+        log_file.write(f"Rate of movement of infected individuals (rm_i): {config.getfloat('Initial_Parameters', 'rm_i')}\n")
+        log_file.write(f"Rate of movement of healthy individuals (rm_h): {config.getfloat('Initial_Parameters', 'rm_h')}\n")
+        log_file.write(f"Infection distance (inf_dist): {config.getfloat('Initial_Parameters', 'inf_dist')}\n")
+        log_file.write(f"Probability of infection (prob_inf): {config.getfloat('Initial_Parameters', 'prob_inf')}\n")
+        log_file.write(f"Rate of recombination (r_rec): {config.getfloat('Initial_Parameters', 'r_rec')}\n")
+        log_file.write(f"Recovery time (rec_t): {config.getfloat('Initial_Parameters', 'rec_t')}\n")
+        log_file.write(f"Relative infected mobility (rim): {config.getfloat('Initial_Parameters', 'rim')}\n")
+        log_file.write(f"Generations to get a sample (sample_times): {config.getint('Initial_Parameters', 'sample_times')}\n")
 
 """
 ==================================
