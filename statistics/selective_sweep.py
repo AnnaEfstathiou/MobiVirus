@@ -47,7 +47,10 @@ def plot_watterson(theta_w: List[float], pi_est: List[float], window_size: int):
     plt.ylabel('Scores')
     plt.grid(True)
     plt.legend()
-    plt.show()
+    if args.save_svg:
+        plt.savefig("selective_sweep.svg", format="svg")
+    else:
+        plt.show()
     plt.close()
 
 def main(csv_file, window_size):
@@ -74,6 +77,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process a genome CSV or FASTA file to compute the following statistics: Tajima's D score, Pi-Estimator score, Watterson-Estimator score, number of unique sequences and haplotype diversity.")
     parser.add_argument('genome_file', type=str, help='The path to the input CSV file.')
     parser.add_argument('-w','--window_size', type=int, help='Length of sliding window.', default=None)
+    parser.add_argument('-s','--save_svg', action='store_true', help='Flag to save the plot as an SVG file.')
     args = parser.parse_args()
 
     main(args.genome_file, args.window_size)

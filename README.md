@@ -8,7 +8,6 @@
   - [Main code](#Main-code)
   - [Optional arguments](#Optional-arguments)
   - [Output](#Output)
-- [Statistical calculations](#Statistical-calculations)
 
 ## Abstract
 

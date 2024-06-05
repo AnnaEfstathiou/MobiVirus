@@ -38,6 +38,10 @@ def log_command(directory, command, flags):
         for flag, explanation in flags.items():
             log_file.write(f"{flag}: {explanation}\n")
 
+        # Check if none of the specific flags are present
+        if not any(flag in flags for flag in ['-ratio', '-per_inf', '-max_inf', '-sus']):
+            log_file.write("\nThe simulation stopped because everyone is healthy.\n")
+
         
         # Append the initial parameters from the config
         log_file.write("\nInitial Parameters:\n")
@@ -53,7 +57,7 @@ def log_command(directory, command, flags):
         log_file.write(f"Rate of movement of infected individuals (rm_i): {config.getfloat('Initial_Parameters', 'rm_i')}\n")
         log_file.write(f"Rate of movement of healthy individuals (rm_h): {config.getfloat('Initial_Parameters', 'rm_h')}\n")
         log_file.write(f"Infection distance (inf_dist): {config.getfloat('Initial_Parameters', 'inf_dist')}\n")
-        log_file.write(f"Probability of infection (prob_inf): {config.getfloat('Initial_Parameters', 'prob_inf')}\n")
+        log_file.write(f"Probability that the infector infects an individual in their infection distance (prob_inf): {config.getfloat('Initial_Parameters', 'prob_inf')}\n")
         log_file.write(f"Rate of recombination (r_rec): {config.getfloat('Initial_Parameters', 'r_rec')}\n")
         log_file.write(f"Recovery time (rec_t): {config.getfloat('Initial_Parameters', 'rec_t')}\n")
         log_file.write(f"Relative infected mobility (rim): {config.getfloat('Initial_Parameters', 'rim')}\n")
