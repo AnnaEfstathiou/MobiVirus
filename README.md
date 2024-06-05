@@ -8,6 +8,9 @@
   - [Main code](#Main-code)
   - [Optional arguments](#Optional-arguments)
   - [Output](#Output)
+- [Notes](#Notes)
+  - [How recombination works?](#How-recombination-works?)
+- [Examples](#Examples)
 
 ## Abstract
 
@@ -29,8 +32,8 @@ All the required packages are mentioned in the `requirements.txt` file.
 
 ### Main code
 
-The simulation starts with each individual located at a single position in a two-dimensional space and with a predefined number of infected individuals in the population carrying the viral genome. At each simulated iteration one of two events can occur: movement or infection. If movement is chosen, then it involves a single individual whose x and y coordinates in space change. If infection is chosen then it is decided who will be the infecting individual and who (can be more than one individual) will they infect by tranfering their viral genome (infection is based on the distance between individuals).Alongside the events occur uninfections in which, depending on the recovery time, some infected individuals are selected to become healthy. The simulation stops when everyone in the population is healthy.
-Note that the viral genome consists of 0.0 and 1.0. Potitions with value 1.0 represent potitions that a mutation has happened.
+The simulation starts with each individual located at a single position in a two-dimensional space and with a predefined number of infected individuals in the population carrying the viral genome. At each simulated iteration one of two events can occur: movement or infection. If movement is chosen, then it involves a single individual whose x and y coordinates in space change. If infection is chosen then it is decided who will be the infecting individual and who (can be more than one individual) will they infect by tranfering their viral genome (infection is based on the distance between individuals).Alongside the events some infected individuals are selected to recover (depending on the recovery time). The simulation stops when everyone in the population is healthy (unless special conditions are laid down).
+Note that the viral genome consists of 0.0 and 1.0. Potitions with value 1.0 represent potitions that a mutation has happened (SNPs).
 
 ### Optional arguments
 
@@ -40,6 +43,7 @@ Action arguments:
 
 - **super_strain**: Create a 2nd strain in the simulation that has a different infectivity rate than the normal strain. The different strain has a specific number of important genome positions in the beginning. Both the infectivity rate and the important genome positions are defines in the INI file.
   If the flag is not used then the n_i parameter (number of important genome positions) in the INI file should be equal to 0.
+- **recombination**: Indivuduals can be infected a 2nd time. During the 2nd infection the 2 genomes (infector+infected) recombine. This scenario can occur in a specific time period (time of 1st infection + recovery time).
 - **initial_genomes**: Save the initial viral genomes. Healthy individuals have a viral genome that consists of 0. The number of non-zero genomes is equal to the ii parameter (initial number of infected individuals) in the INI file.
 - **scatter_plots**: Create a scatter plot to visualize the positions (coordinates) along with the health status of the individuals.
 - **visualize_data**: Visualize the data table as a dataframe in the console. the table contains information on the x,y cordinates, the health status of the individuals, the rate of movement and infection, the mutation label (which differs in case there is a super strain) and the susceptibility, of the individuals, to the virus.
@@ -60,3 +64,64 @@ The output directory contains 2 subdirectories: the genomes folder and the sampl
 - Optional Output: The **"plots" directory** contains scatter plots to visualize the positions and the health status of the individuals.
   The samples of the simulation are taken every few generations (defined in the INI file).
   The collected data at the end of the simulation will be saved in the directory that is indicated in the INI file.
+
+## Notes
+
+- ### How recombination works?
+
+  Consider that *j* is an indvidual, who got infected at time *t_i*. After the infection, *j* took the genome of their infector, which went through a mutation process. In another event, if this happens before *j* recover (*t_i + recovery_time*) and also *j* is in the infection distance of the selected infector then the probability of recombination is calculated.
+  
+  **How to calculate the probability of genetic recombination?**
+
+  1. total rate per genome = rate of recombiantion x (genome's length - 1)
+  2. p: poisson number with lam = total rate per genome
+  3. p = 0: no genetic recombination,
+     p > 0: genetic recombination
+
+  **How the genome recombines?**
+    
+    *e.g.*
+
+    genome1: 0.0,0.0,0.0,1.0,0.0,1.0,1.0,0.0,0.0,0.0,1.0,1.0 
+    
+    genome2: 1.0,1.0,0.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0,1.0 
+    
+    p = 3 
+
+    Steps
+    1. Choose 3 (p) random positions e.g. 2, 10, 5 > sort them: 2, 5, 10
+    2. Choose randomly the genome to start e.g. genome2
+    3. a. Take the 1st part of genome2 until position 2,
+       
+       b. the 2nd part of genome1 from position 2 until 5, 
+       
+       c. the 3rd part of genome2 from position 5 until 10, 
+       
+       d. the 4th part of genome1 from position 10 until the end.
+
+    Result
+
+    Recombined genome: 1.0,1.0,0.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,1.0,1.0
+
+
+## Examples
+
+Simulation with normal and super strain.
+```
+python3 MobiVirus_Simulator.py -s
+```
+
+Simulation with normal and super strain and genetic recombination.
+```
+python3 MobiVirus_Simulator.py -s -r
+```
+
+Simulation with normal and super strain. Stop the simulation when 1000 infections have happened.
+```
+python3 MobiVirus_Simulator.py -s -max_inf 1000
+```
+
+Simulation with normal and super strain. Stop the simulation when the susceptible to the virus individuals are less than 15.
+```
+python3 MobiVirus_Simulator.py -s -sus 15
+```
