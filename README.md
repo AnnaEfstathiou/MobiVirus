@@ -89,16 +89,10 @@ The output directory contains 2 subdirectories: the genomes folder and the sampl
     p = 3 
 
     Steps
-    1. Choose 3 (p) random positions e.g. 2, 10, 5 > sort them: 2, 5, 10
+    1. Choose 3 (p) random positions e.g. 2, 10, 5 
     2. Choose randomly the genome to start e.g. genome2
-    3. a. Take the 1st part of genome2 until position 2,
-       
-       b. the 2nd part of genome1 from position 2 until 5, 
-       
-       c. the 3rd part of genome2 from position 5 until 10, 
-       
-       d. the 4th part of genome1 from position 10 until the end.
-
+    3. Take the 1st part of genome2 until position 2, the 2nd part of genome1 from position 2 until 5, the 3rd part of genome2 from position 5 until 10, the 4th part of genome1 from position 10 until the end.
+ 
     Result
 
     Recombined genome: 1.0,1.0,0.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,1.0,1.0
