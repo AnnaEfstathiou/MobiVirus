@@ -157,7 +157,7 @@ Genome Function
 def genome(n, l, r_m):
     
     ## Creates an empty data frame where the rows correspond to the genomes of different individuals and the columns to the genome positions ##
-    ## Returns the dataframe together with the total mutation rate of a genome
+    ## Returns the dataframe together with the total mutation rate of a genome ##
     
     # n = total number of individuals in the sample
     # l = total length of the genome
@@ -169,6 +169,27 @@ def genome(n, l, r_m):
     r_tot = r_m * l # Total rate of mutation of genome
     
     return g, r_tot
+
+def ss_mutation_position(n_i, l, position):
+    
+    ## Assign, initially, one random mutation (1.0) in the region of important genome positions for the infected with mutation 2 (Super Strain) ##
+    
+    # n_i = important positions in the genome
+    # l = total length of the genome
+    # position ('start', 'middle', or 'end') = area of the important positions in the individual's genome
+    
+    if position == 'middle':
+        middle_start = (l - n_i) // 2
+        middle_end = middle_start + n_i
+        positions = list(range(middle_start, middle_end))
+    elif position == 'start':
+        positions = list(range(n_i))
+    elif position == 'end':
+        positions = list(range(l - n_i, l))
+    else:
+        raise ValueError("Invalid position type. Choose from 'middle', 'start', or 'end'.")
+    
+    return random.choice(positions)
 
 '''
 ----------------------

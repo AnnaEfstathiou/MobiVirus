@@ -30,7 +30,7 @@ IMPORTING THE NECESSARY PYTHON FUNCTIONS
 ========================================
 """
 
-from mobifunctions import log_command, coords_func, label, genome, mutation, rec_probi, recombine_genomes,infectivity, probs, movement, ini_distm, new_dist, ind_probi
+from mobifunctions import log_command, coords_func, label, genome, ss_mutation_position, mutation, rec_probi, recombine_genomes,infectivity, probs, movement, ini_distm, new_dist, ind_probi
 from mobifunctions import plot_map, do_plots, sample_data, save_data
 
 """
@@ -119,7 +119,10 @@ parser.add_argument('-ratio', '--ratio_super_vs_normal', type=str, help='Ratio o
 parser.add_argument('-per_inf', '--percentage_infected', type=str, help='Percentage of infected individuals in the population.')
 parser.add_argument('-max_inf', '--max_infections', type=str, help='Maximum infections (if the infection are more, stop).')
 parser.add_argument('-sus', '--percentage_susceptibility', type=str, help='Minimum susceptible individuals (if the susceptible individuals are less, stop).')
-## action parsers
+parser.add_argument('-time', '--end_time', type=str, help='Maximum time for the simulation to run.')
+## action parsers (for break scenarions)
+parser.add_argument('-all_inf', '--all_infected_once', action="store_true", help='All the individuals got infected at least once.')
+## other action parsers
 parser.add_argument('-s', '--super_strain', action="store_true", help='Create a super strain with different (e.g. higher) infectivity that the normal one.')
 parser.add_argument('-r', '--recombination', action="store_true", help='Provide the ability to recombinate genomes, if 2 infections happen.')
 parser.add_argument('-vis_data', '--visualize_data', action="store_true", help='Visualize the data table as a dataframe in the console.')
@@ -161,6 +164,13 @@ if args.percentage_susceptibility:
 else:
     percentage_susceptibility = None
 
+if args.end_time:
+    end_time = float(args.end_time)
+    if end_time <= 0:
+        raise ValueError("The simulation time cannot be negative.")
+else:
+    end_time = None
+
 """
 -------------------------------------
 Validate arguments from the .INI file
@@ -185,7 +195,8 @@ if ii > n:
     raise ValueError("The initial number of infected individuals (ii) can't be bigger than the number of individuals (n) in the simulation")
 
 if not 0 <= prob_inf <= 1:
-    raise ValueError("The ??? Probability of infection ??? must be between 0 and 1!")
+    raise ValueError("The probability that the infector infects an individual in their infection distance must be between 0 and 1!")
+
 #%%
 
 """
@@ -212,6 +223,33 @@ if not os.path.exists(results_directory):
 else:
     print(f"The directory {results_directory} already exists")
 
+
+#%%
+
+"""
+=============================================================
+CREATING A TXT FILE WITH THE COMMAND USED FOR THIS SIMULATION
+=============================================================
+"""
+
+# Construct the command string from sys.argv
+command = ' '.join(sys.argv)
+# Define what each flag means
+flag_explanations = {
+    '-s': 'Create a super strain with different (e.g. higher) infectivity that the normal one.',
+    '-r': 'Provide the ability to recombinate genomes, if 2 infections happen.',
+    '-ratio': 'Ratio of number of Super Strain individuals/number of Normal Strain individuals.',
+    '-per_inf': 'Percentage of infected individuals in the population.',
+    '-max_inf': 'Maximum infections (if the infection are more, stop).',
+    '-sus': 'Minimum susceptible individuals (if the susceptible individuals are less, stop).',
+    '-vis_data': 'Visualize the data table as a dataframe in the console.',
+    '-g0': 'Save the initial genomes of the sample in a csv.',
+    '-plots': 'Create scatter plots of the coordinates of the individuals.'
+    }
+# Filter the used flags and their explanations
+used_flags = {flag: explanation for flag, explanation in flag_explanations.items() if flag in command}
+# Log the command and flags
+log_command(results_directory, command, used_flags)
 #%%
 
 """
@@ -227,15 +265,25 @@ probm = probs(coords_2,rm_i, rm_h)                                              
 probi = np.zeros(n)                                                             # Initialization of infection rate array
 mut = np.zeros(n)                                                               # Initialization of mutations array
 sus = np.ones(n)                                                                # Initialization of susceptibility rate array
+
+## Initially there is only 1 individual infected with the Super Strain (if ss exists) ##
+infected_ind = np.where(coords_2[:, 2] == 1)[0]                                 # Indices of infected individuals
+chosen_index = random.choice(infected_ind)                                      # Randomly select one infected individual to have a rate of infection of super strain 
+probi[chosen_index] = ri_s                                                      # If there is only one strain (normal) all the individuals will have the corresponding rate of infection
+for idx in infected_ind:                                                        # Set the rest of the infected individuals to have a rate of infection of super strain
+    if idx != chosen_index:
+        probi[idx] = ri_n
+
 for i in range(n):
-    probi[i] = np.where(coords_2[:,2][i]==1, random.choice(L), probi[i])        # Randomly assign infected individuals with each strain
+    # probi[i] = np.where(coords_2[:,2][i]==1, random.choice(L), probi[i])      # Randomly assign infected individuals with each strain
                                                                                 # If there is only one strain (normal) all the individuals will have that one
     g.iloc[i] = np.where(coords_2[:,2][i]==1, np.zeros((1,l)), g.iloc[i])       # For the infected individuals, there is a row in g with the genome that they carry
     sus[i] = np.where(coords_2[:,2][i]==1, 0, sus[i])                           # For the healthy individuals, they have a Susceptibility to the virus
     if args.super_strain:
         mut[i] = np.where(probi[i]==ri_s, 2, mut[i])                            # For those with Super Strain, they are labeled as mutation 2
         mut[i] = np.where(probi[i]==ri_n, 1, mut[i])                            # For those with Normal Strain, they are labeled as mutation 1
-        g.loc[i,0] = np.where(mut[i]==2, 1, g.loc[i,0])                         # For the infected with mutation 2 (Super Strain), they have the value 1 in the first position of their genome    
+        random_pos = ss_mutation_position(n_i, l, "middle")                     # Generate the random position in their important genome area where mutation will happen
+        g.loc[i,random_pos] = np.where(mut[i]==2, 1, g.loc[i,random_pos])       # For the infected with mutation 2 (Super Strain), they have the value 1 in a random position in their important genome area
     else:
         mut[i] = np.where(probi[i]==ri_n, 1, mut[i])                            # For those with Normal Strain, they are labeled as mutation 1
 
@@ -285,7 +333,12 @@ if args.super_strain:
     all_inf = np.zeros((1,4))                           # List with the number of Total infected, Super spreaders, Normal spreaders and Infextion times for each generation
 else:
     all_inf = np.zeros((1,3))                           # List with the number of Total infected, Normal spreaders and Infextion times for each generation
-
+if args.all_infected_once:
+    all_infected_once = np.empty((n, 1))                # Initiate the array to store the individuals that got infected at least once
+    all_infected_once[:] = np.nan                       # Using NaN to signify empty positions
+    for j in infected_ind:
+        all_infected_once[j] = j                        # Add the initially infected
+    
 #%%
 
 """
@@ -300,10 +353,10 @@ else:
     print(f"The simulation contains one type of strain, a normal strain with {ri_n} rate of infection.")
 
 # Run the simulation until everyone becomes uninfected 
-# while sum(coords_t[:,2])!= 0: 
+while sum(coords_t[:,2])!= 0: 
 
 # Run the simulation for i events
-while tt <= 50:
+# while tt <= 50:
     
     # OPTIONAL: Print some plots during the run
     if args.scatter_plots:
@@ -359,6 +412,13 @@ while tt <= 50:
         if percentage_susceptibility:
             raise ValueError("In order to stop the simulation when the set number of individuals are susceptible to the virus the super strain must exist. Use the appropriate argument to create the super strain.")
     
+    if args.end_time and t_s >= end_time:
+        print(f"The simulation ended because it was running for {end_time} time.")
+        break
+
+    if args.all_infected_once and np.all(~np.isnan(all_infected_once)):
+        print("The simulation ended because all the individuals got infected at least once!")
+        break
 
     ## Calculate the time that an event will happen ##
     t_s += np.random.exponential(scale=(1/(rt_i+rt_m))) # The scale is 1/rate, because of how the exponential function is defined! t_s is the time when an event will happen
@@ -429,7 +489,6 @@ while tt <= 50:
         #t_ss[tt] = t_s # Keep the times of events in a list
         continue
     
-    
     """
     --------------------------------
     CHOOSING WHICH EVENT WILL HAPPEN
@@ -437,12 +496,10 @@ while tt <= 50:
     """
 
     ## Calculating the probabilities for the infection event and the movement event ##
-    
     p_i = rt_i/(rt_i+rt_m) # Probability of infection  
     p_m = rt_m/(rt_i+rt_m) # Probability of movement 
     
     ## Optional: Print the two probabilities ##
-    
     #print("Movement over infection:", p_m/p_i)
     #print("Infection over movement:", p_i/p_m)
 
@@ -514,9 +571,6 @@ while tt <= 50:
              
         ## Find the index of the first True value in the change array, which corresponds to the infected individual who will be the source of the infection (c) ##
         c = np.amin(np.where(change)) # First one to have cum_sum > s3, therefore the one that infects
- 
-        ## Optional: Print the event that just occured ##
-        # print("infection")
             
         """
         ---------
@@ -572,7 +626,7 @@ while tt <= 50:
                     if args.super_strain:
                         ss = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_s), ss+1, ss) # Count the super infections
                     ns = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_n), ns+1, ns)     # Count the normal infections
-                    
+
                     if not args.recombination:
                         ## Update the susceptibility label for the infected individual, as he is not susceptible anymore ##
                         coords_t[j,6] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), 0, coords_t[j,6]) 
@@ -587,6 +641,10 @@ while tt <= 50:
                     ## Collect the data for the infected and infector, the times of infection (1st infection) the event time and the infection rate ##
                     hah = np.concatenate([hah, np.column_stack(np.array((c, j, 1.0, float(t_s), float(coords_t[j,4])), dtype=float))], axis=0)
 
+                    if args.all_infected_once:
+                        ## Add the individual who got infected to the all_infected_once array to keep track of the infividuals that got infected at least once ##
+                        all_infected_once[j] = j 
+                        
                     ## Explicitly continue to the next iteration (next individual) ##
                     continue  
 
@@ -609,9 +667,6 @@ while tt <= 50:
                         '''
                         Genetic recombination
                         '''
-
-                        # print("2nd INFECTION")
-                        # print(c,j)
 
                         unin_ind.append(j)
                         
@@ -640,7 +695,7 @@ while tt <= 50:
                         if args.super_strain:
                             ss = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_s), ss+1, ss) # Count the super infections
                         ns = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_n), ns+1, ns)     # Count the normal infections
-                        
+
                         ## Update the susceptibility label for the newly infected individual, as they are not susceptible anymore ##
                         coords_t[j,6] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), 0, coords_t[j,6]) 
                         
@@ -711,12 +766,12 @@ while tt <= 50:
     
     tt += 1 #Moving on in the simulation loop
         
-    #print("time for this loop:", loop_t)
+    # print("time for this loop:", loop_t)
 
 ## OPTIONAL: Plot a visual map with the final positions of the sample ##
 if args.scatter_plots:
     if args.super_strain:
-        plot_map(plots, coords_t, tt, t_s, mv, ss, un, super_strain = True)
+        plot_map(plots, coords_t, tt, t_s, mv, un, super_strain = True)
     else:
         plot_map(plots, coords_t, tt, t_s, mv, un, super_strain = False)
 
@@ -733,32 +788,4 @@ print("\nLoops:", tt)
 ## Time for the whole code to run ##
 end=time.time()-initial
 print("Total simulation time (minutes):", end/60)   
-
-
-#%%
-
-"""
-=============================================================
-CREATING A TXT FILE WITH THE COMMAND USED FOR THIS SIMULATION
-=============================================================
-"""
-
-# Construct the command string from sys.argv
-command = ' '.join(sys.argv)
-# Define what each flag means
-flag_explanations = {
-    '-s': 'Create a super strain with different (e.g. higher) infectivity that the normal one.',
-    '-r': 'Provide the ability to recombinate genomes, if 2 infections happen.',
-    '-ratio': 'Ratio of number of Super Strain individuals/number of Normal Strain individuals.',
-    '-per_inf': 'Percentage of infected individuals in the population.',
-    '-max_inf': 'Maximum infections (if the infection are more, stop).',
-    '-sus': 'Minimum susceptible individuals (if the susceptible individuals are less, stop).',
-    '-vis_data': 'Visualize the data table as a dataframe in the console.',
-    '-g0': 'Save the initial genomes of the sample in a csv.',
-    '-plots': 'Create scatter plots of the coordinates of the individuals.'
-    }
-# Filter the used flags and their explanations
-used_flags = {flag: explanation for flag, explanation in flag_explanations.items() if flag in command}
-# Log the command and flags
-log_command(results_directory, command, used_flags)
-#%%
+# %%
