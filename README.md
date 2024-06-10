@@ -9,6 +9,7 @@
   - [Optional arguments](#Optional-arguments)
   - [Output](#Output)
 - [Notes](#Notes)
+  - [How infection works?](#How-infection-works?)
   - [How recombination works?](#How-recombination-works?)
 - [Examples](#Examples)
 
@@ -67,6 +68,13 @@ The output directory contains 2 subdirectories: the genomes folder and the sampl
 
 ## Notes
 
+- ### How infection works?
+
+  1. Choose the infector (c)
+  2. Calculate the probability of c to infect the other individuals
+  3. If the probability is non-zero and the individual (j) is not already infected and susceptable to the virus then a random number (s4) is selected. If s4 <= j's probability of infection, infection happens. 
+  4. The viral genome transfers from the infector (c) to the infected (j) and goes through a mutation process. 
+            
 - ### How recombination works?
 
   Consider that *j* is an indvidual, who got infected at time *t_i*. After the infection, *j* took the genome of their infector, which went through a mutation process. In another event, if this happens before *j* recover (*t_i + recovery_time*) and also *j* is in the infection distance of the selected infector then the probability of recombination is calculated.
@@ -81,22 +89,16 @@ The output directory contains 2 subdirectories: the genomes folder and the sampl
   **How the genome recombines?**
     
     *e.g.*
-
-    genome1: 0.0,0.0,0.0,1.0,0.0,1.0,1.0,0.0,0.0,0.0,1.0,1.0 
-    
-    genome2: 1.0,1.0,0.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0,1.0 
-    
-    p = 3 
+    - genome1: 0.0,0.0,0.0,1.0,0.0,1.0,1.0,0.0,0.0,0.0,1.0,1.0 
+    - genome2: 1.0,1.0,0.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0,1.0 
+    - p = 3 
 
     Steps
     1. Choose 3 (p) random positions e.g. 2, 10, 5 
     2. Choose randomly the genome to start e.g. genome2
     3. Take the 1st part of genome2 until position 2, the 2nd part of genome1 from position 2 until 5, the 3rd part of genome2 from position 5 until 10, the 4th part of genome1 from position 10 until the end.
  
-    Result
-
-    Recombined genome: 1.0,1.0,0.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,1.0,1.0
-
+    Result => Recombined genome: 1.0,1.0,0.0,1.0,0.0,1.0,1.0,0.0,1.0,1.0,1.0,1.0
 
 ## Examples
 
