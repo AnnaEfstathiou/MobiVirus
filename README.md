@@ -15,7 +15,7 @@
 
 ## Abstract
 
-The MobiVirus Simulator simulates a virus infecting individuals in a population as they move around in a two-dimensional space.
+The MobiVirus Simulator simulates a virus infecting individuals in a population as they move around in a two-dimensional (2D) space.
 
 ## Requirements
 
@@ -45,16 +45,18 @@ Action arguments:
 - **super_strain**: Create a 2nd strain in the simulation that has a different infectivity rate than the normal strain. The different strain has a specific number of important genome positions in the beginning. Both the infectivity rate and the important genome positions are defines in the INI file.
   If the flag is not used then the n_i parameter (number of important genome positions) in the INI file should be equal to 0.
 - **recombination**: Indivuduals can be infected a 2nd time. During the 2nd infection the 2 genomes (infector+infected) recombine. This scenario can occur in a specific time period (time of 1st infection + recovery time).
+- **all_infected_once**: The simulation stops when all the individuals are infected at least once. *(optional condition under which the simulation stops)*
 - **initial_genomes**: Save the initial viral genomes. Healthy individuals have a viral genome that consists of 0. The number of non-zero genomes is equal to the ii parameter (initial number of infected individuals) in the INI file.
 - **scatter_plots**: Create a scatter plot to visualize the positions (coordinates) along with the health status of the individuals.
 - **visualize_data**: Visualize the data table as a dataframe in the console. the table contains information on the x,y cordinates, the health status of the individuals, the rate of movement and infection, the mutation label (which differs in case there is a super strain) and the susceptibility, of the individuals, to the virus.
 
-String arguments - optional conditions under which the simulation stops:
+String arguments:
 
-- **percentage_infected**: The simulation stops if the percentage of infected individuals in the population reach a certain number. This number must be a float between 0 and 1.
-- **max_infections**: The simulation stops if the infection are more than a certain number. This number must be a positive integer.
-- **percentage_susceptibility**: The simulation stops if the susceptible, to the virus, individuals are less than a certain number. This number must be a float between 0 and 1. This argument is valid only when the super strain is present in the simulation. This is because it creates an imbalance between the susceptibility of the individuals regarding to the strain they have been infected with. In more detain, if an individual is infected with the normal strain, then when they get healthy they are again susceptible to the virus. In contrast, the healthy individuals, who had previously the super strain are no longer susceptible to any viral strain.
-- **ratio_super_vs_normal**: The simulation stops if the number of individuals carrying the normal strain are less than a certain percentage of the individuals with the super strain. This number must be a float between 0 and 1. This argument is valid only when the super strain is present in the simulation.
+- **percentage_infected**: The simulation stops if the percentage of infected individuals in the population reach a certain number. This number must be a float between 0 and 1. *(optional condition under which the simulation stops)*
+- **max_infections**: The simulation stops if the infection are more than a certain number. This number must be a positive integer. *(optional condition under which the simulation stops)*
+- **percentage_susceptibility**: The simulation stops if the susceptible, to the virus, individuals are less than a certain number. This number must be a float between 0 and 1. This argument is valid only when the super strain is present in the simulation. This is because it creates an imbalance between the susceptibility of the individuals regarding to the strain they have been infected with. In more detain, if an individual is infected with the normal strain, then when they get healthy they are again susceptible to the virus. In contrast, the healthy individuals, who had previously the super strain are no longer susceptible to any viral strain. *(optional condition under which the simulation stops)*
+- **ratio_super_vs_normal**: The simulation stops if the number of individuals carrying the normal strain are less than a certain percentage of the individuals with the super strain. This number must be a float between 0 and 1. This argument is valid only when the super strain is present in the simulation. *(optional condition under which the simulation stops)*
+- **end_time**: The simulation stops at a certain simulation time. This number must be a positive number (int or float). Note that the simulated world has its own clock and time, conducted by the server and so it doesn't correspond to real time. *(optional condition under which the simulation stops)*
 
 ### Output
 
