@@ -238,10 +238,12 @@ command = ' '.join(sys.argv)
 flag_explanations = {
     '-s': 'Create a super strain with different (e.g. higher) infectivity that the normal one.',
     '-r': 'Provide the ability to recombinate genomes, if 2 infections happen.',
+    '-all_inf': 'All the individuals got infected at least once.',
     '-ratio': 'Ratio of number of Super Strain individuals/number of Normal Strain individuals.',
     '-per_inf': 'Percentage of infected individuals in the population.',
     '-max_inf': 'Maximum infections (if the infection are more, stop).',
     '-sus': 'Minimum susceptible individuals (if the susceptible individuals are less, stop).',
+    '-time': 'Maximum time for the simulation to run.',
     '-vis_data': 'Visualize the data table as a dataframe in the console.',
     '-g0': 'Save the initial genomes of the sample in a csv.',
     '-plots': 'Create scatter plots of the coordinates of the individuals.'
@@ -496,8 +498,8 @@ while sum(coords_t[:,2])!= 0:
     """
 
     ## Calculating the probabilities for the infection event and the movement event ##
-    p_i = rt_i/(rt_i+rt_m) # Probability of infection  
-    p_m = rt_m/(rt_i+rt_m) # Probability of movement 
+    p_i = rt_i/(rt_i+rt_m) # Probability of infection  (rt_i = sum(coords_t[:, 4]))
+    p_m = rt_m/(rt_i+rt_m) # Probability of movement   (rt_m = sum(coords_t[:, 3]))
     
     ## Optional: Print the two probabilities ##
     #print("Movement over infection:", p_m/p_i)

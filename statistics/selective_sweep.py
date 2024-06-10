@@ -35,20 +35,21 @@ def sliding_window_watterson(sequences: Dict[str, str], window_size: int) -> Lis
 
     return theta_w_list, pi_est_list
 
-def plot_watterson(theta_w: List[float], pi_est: List[float], window_size: int):
+def plot_watterson(theta_w: List[float], pi_est: List[float], window_size: int, num_sequences):
 
     """ Plot the Watterson estimator and Pi estimator values. """
 
     plt.figure(figsize=(10, 6))
-    plt.plot(theta_w, marker='o', linestyle='--', color='b', label='Watterson Estimator')
-    plt.plot(pi_est, marker='o', linestyle='--', color='r', label='Pi Estimator')
+    plt.plot(theta_w, marker='.', linestyle='solid', color='navy', label='Watterson Estimator')
+    plt.plot(pi_est, marker='.', linestyle='solid', color='firebrick', label='Pi Estimator')
+    plt.plot([], [], ' ', label=f'Number of Sequences: {num_sequences}')
     plt.title(f'Selective Sweep (Window Size: {window_size})')
     plt.xlabel('Window Position')
     plt.ylabel('Scores')
     plt.grid(True)
     plt.legend()
-    if args.save_svg:
-        plt.savefig("selective_sweep.svg", format="svg")
+    if args.save_png:
+        plt.savefig(args.save_png, format="png")
     else:
         plt.show()
     plt.close()
@@ -66,7 +67,7 @@ def main(csv_file, window_size):
             print(f"Loaded {len(sequences)} sequences.")
             
         theta_w, pi_est = sliding_window_watterson(sequences, window_size) # Create 2 list with the corresponding scores
-        plot_watterson(theta_w, pi_est, window_size) # Plot scores
+        plot_watterson(theta_w, pi_est, window_size, len(sequences)) # Plot scores
         
         os.remove(output_fasta_file) # Delete the temporary created fasta file
 
@@ -77,7 +78,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process a genome CSV or FASTA file to compute the following statistics: Tajima's D score, Pi-Estimator score, Watterson-Estimator score, number of unique sequences and haplotype diversity.")
     parser.add_argument('genome_file', type=str, help='The path to the input CSV file.')
     parser.add_argument('-w','--window_size', type=int, help='Length of sliding window.', default=None)
-    parser.add_argument('-s','--save_svg', action='store_true', help='Flag to save the plot as an SVG file.')
+    parser.add_argument('-s','--save_png', type=str, help='Flag to save the plot as an PNG file.')
     args = parser.parse_args()
 
     main(args.genome_file, args.window_size)

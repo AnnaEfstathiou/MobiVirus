@@ -39,7 +39,7 @@ def log_command(directory, command, flags):
             log_file.write(f"{flag}: {explanation}\n")
 
         # Check if none of the specific flags are present
-        if not any(flag in flags for flag in ['-ratio', '-per_inf', '-max_inf', '-sus']):
+        if not any(flag in flags for flag in ['-ratio', '-per_inf', '-max_inf', '-sus', '-all_inf', '-time']):
             log_file.write("\nThe simulation stopped because everyone is healthy.\n")
 
         
