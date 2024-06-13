@@ -270,10 +270,10 @@ sus = np.ones(n)                                                                
 
 ## Initially there is only 1 individual infected with the Super Strain (if ss exists) ##
 infected_ind = np.where(coords_2[:, 2] == 1)[0]                                 # Indices of infected individuals
-chosen_index = random.choice(infected_ind)                                      # Randomly select one infected individual to have a rate of infection of super strain 
-probi[chosen_index] = ri_s                                                      # If there is only one strain (normal) all the individuals will have the corresponding rate of infection
+initial_ss = random.choice(infected_ind)                                        # Randomly select one infected individual to have a rate of infection of super strain 
+probi[initial_ss] = ri_s                                                        # If there is only one strain (normal) all the individuals will have the corresponding rate of infection
 for idx in infected_ind:                                                        # Set the rest of the infected individuals to have a rate of infection of super strain
-    if idx != chosen_index:
+    if idx != initial_ss:
         probi[idx] = ri_n
 
 for i in range(n):
