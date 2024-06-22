@@ -11,7 +11,7 @@ def plot_sfs(num_snps, count_pos, pos, max_snps):
     
     # Creating the bar plot
     plt.figure(figsize=(10, 6))
-    plt.bar(num_snps, count_pos, color='darkorchid')
+    plt.bar(num_snps, count_pos, color='indigo')
     plt.legend([f'Pos of the {max_snps} SNPs: {pos}'])
     plt.xlabel('Count of Positions')
     plt.ylabel('Number of SNPs')

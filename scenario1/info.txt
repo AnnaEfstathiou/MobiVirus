@@ -1,0 +1,20 @@
+mobifunctions.py:
+
+def mutation(g_i, r_tot):
+    
+    # Mutation of an individual's genome #
+    
+    # g_i = genome of an individual (Pandas Series or DataFrame)
+    # r_tot = total rate of mutation of genome
+    
+    p = np.random.poisson(r_tot) # Random Poisson number with lambda = r_tot to give how many mutations will happen
+    N = np.random.randint(0, len(g_i), size=p) # Positions in the genome where mutations will happen (as many as the Poisson number)
+    
+    # Create a copy to avoid modifying the original DataFrame/Series in place
+    g_i_copy = g_i.copy()
+    
+    for i in range(len(N)):
+        g_i_copy[N[i]] = np.where(g_i_copy[N[i]]==0, 1, 0) # Mutate the selected positions: if the original value is 0, set it to 1; otherwise, set it to 0
+    
+    return g_i_copy
+
