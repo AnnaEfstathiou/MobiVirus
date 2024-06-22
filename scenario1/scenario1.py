@@ -123,9 +123,9 @@ parser.add_argument('-max_inf', '--max_infections', type=str, help='Maximum infe
 parser.add_argument('-sus', '--percentage_susceptibility', type=str, help='Minimum susceptible individuals (if the susceptible individuals are less, stop).')
 parser.add_argument('-time', '--end_time', type=str, help='Maximum time for the simulation to run.')
 parser.add_argument('-events', '--end_events', type=str, help='Maximum events (movements+infections) happening during the simulation.')
+parser.add_argument('-ss_event', '--ss_formation_event', type=str, help='Event where the super strain is introduced.')
 ## action parsers (for break scenarions)
 parser.add_argument('-all_inf', '--all_infected_once', action="store_true", help='All the individuals got infected at least once.')
-# parser.add_argument('-create_ss', '--creation_of_ss', action="store_true", help='All the individuals got infected at least once.')
 ## other action parsers
 parser.add_argument('-s', '--super_strain', action="store_true", help='Create a super strain with different (e.g. higher) infectivity that the normal one.')
 parser.add_argument('-r', '--recombination', action="store_true", help='Provide the ability to recombinate genomes, if 2 infections happen.')
@@ -181,6 +181,16 @@ if args.end_events:
         raise ValueError("The number of maximum events (movements+infections) must be a positive integer!")
 else:
     end_events = None
+
+if args.end_events and args.super_strain:
+    if args.ss_formation_event:
+        ss_form = int(args.ss_formation_event)
+        if not ss_form >= 1:
+            raise ValueError("The event that the super strain is introduced must be a positive integer!")
+    else:
+        ss_form = None
+else:
+    raise ValueError("In order to introduce the super strain at a certain event, the appropriate arguments: end_events and super_strain must exists.")
 
 """
 -------------------------------------
@@ -279,13 +289,18 @@ probi = np.zeros(n)                                                             
 mut = np.zeros(n)                                                               # Initialization of mutations array
 sus = np.ones(n)                                                                # Initialization of susceptibility rate array
 
-## Initially there is only 1 individual infected with the Super Strain (if ss exists) ##
-infected_ind = np.where(coords_2[:, 2] == 1)[0]                                 # Indices of infected individuals
-# initial_ss = np.random.choice(infected_ind, 3, replace=False)                   # Randomly select x infected individual to have a rate of infection of super strain 
-probi[infected_ind] = ri_n                                                        # If there is only one strain (normal) all the individuals will have the corresponding rate of infection
-# for idx in infected_ind:                                                        # Set the rest of the infected individuals to have a rate of infection of super strain
-#     if idx not in initial_ss:
-#         probi[idx] = ri_n
+if args.ss_formation_event:
+    ## Initially there are only infrcted individuals with the normal strain ##
+    infected_ind = np.where(coords_2[:, 2] == 1)[0]                                 # Indices of infected individuals
+    probi[infected_ind] = ri_n                                                      # All the infected individuals have the corresponding rate of infection
+else:
+    ## Initially there is only 1 individual infected with the Super Strain (if ss exists) ##
+    infected_ind = np.where(coords_2[:, 2] == 1)[0]                                 # Indices of infected individuals
+    initial_ss = np.random.choice(infected_ind, 3, replace=False)                   # Randomly select x infected individual to have a rate of infection of super strain 
+    probi[initial_ss] = ri_s                                                        # If there is only one strain (normal) all the individuals will have the corresponding rate of infection
+    for idx in infected_ind:                                                        # Set the rest of the infected individuals to have a rate of infection of super strain
+        if idx not in initial_ss:
+            probi[idx] = ri_n
 
 for i in range(n):
     # probi[i] = np.where(coords_2[:,2][i]==1, random.choice(L), probi[i])      # Randomly assign infected individuals with each strain
@@ -521,9 +536,12 @@ while sum(coords_t[:,2])!= 0:
 
     time_bfloop = time.time()-distm_time # Time before event-loop
     
-    ## Select a random number s1 to see which of the two events will happen ##
-    # s1 = np.random.random() # Random number in  [0,1]
-    s1=1
+    if tt == ss_form:
+        ## Force the event to be infection in onrder to boost the chances of super strain to form ##
+        s1 = 1 
+    else:
+        ## Select a random number s1 to see which of the two events will happen ##
+        s1 = np.random.random() # Random number in  [0,1]
     
     ## If s1 is smaller than p_m, the event that will happen is movement ##
     if s1 <= p_m: 
@@ -567,7 +585,7 @@ while sum(coords_t[:,2])!= 0:
             ## Optional: Print the event that just happened ##
             print("Movement of:", c)
 
-        if tt == end_events/2 or tt == (end_events+1)/2:
+        if tt == ss_form:
             print("Stop the simulation because the super strain is not formed!")
             break
         
@@ -608,7 +626,7 @@ while sum(coords_t[:,2])!= 0:
         ## List to store the infected individuals (label:1) that their genome will get recombined in the currect event ##
         unin_ind = []
 
-        if tt == end_events/2 or tt == (end_events+1)/2:
+        if tt == ss_form:
             
             print("...EVENT... ",tt)
            
@@ -850,7 +868,7 @@ while sum(coords_t[:,2])!= 0:
                 print("This/These individuals got newly infected: " + ", ".join(map(str, [int(x) for x in hah[-int(ia-ib):,1]])))
                 print("This/These individuals' genome got recombined: ", ", ".join(map(str, unin_ind)))
 
-        if (tt == end_events/2 or tt == (end_events+1)/2) and len(g.columns)==l:
+        if tt == ss_form and len(g.columns)==l:
             print("Stop the simulation because the super strain is not formed during the infection!")
             break
 
