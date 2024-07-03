@@ -167,7 +167,7 @@ if args.max_movements:
     if not max_movements >= 1:
         raise ValueError("The number of maximum movements must be a positive integer!")
 else:
-    max_infections = None
+    max_movements = None
 
 if args.percentage_susceptibility:
     percentage_susceptibility = float(args.percentage_susceptibility)

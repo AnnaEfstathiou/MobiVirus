@@ -118,6 +118,7 @@ parser = argparse.ArgumentParser(description='Creating other possible senarios (
 parser.add_argument('-ratio', '--ratio_super_vs_normal', type=str, help='Ratio of number of Super Strain individuals/number of Normal Strain individuals.')
 parser.add_argument('-per_inf', '--percentage_infected', type=str, help='Percentage of infected individuals in the population.')
 parser.add_argument('-max_inf', '--max_infections', type=str, help='Maximum infections (if the infection are more, stop).')
+parser.add_argument('-max_mv', '--max_movements', type=str, help='Maximum movements (if the movements are more, stop).')
 parser.add_argument('-sus', '--percentage_susceptibility', type=str, help='Minimum susceptible individuals (if the susceptible individuals are less, stop).')
 parser.add_argument('-time', '--end_time', type=str, help='Maximum time for the simulation to run.')
 parser.add_argument('-events', '--end_events', type=str, help='Maximum events (movements+infections) happening during the simulation.')
@@ -157,6 +158,13 @@ if args.max_infections:
         raise ValueError("The number of maximum infections must be a positive integer!")
 else:
     max_infections = None
+
+if args.max_movements:
+    max_movements = int(args.max_movements)
+    if not max_movements >= 1:
+        raise ValueError("The number of maximum movements must be a positive integer!")
+else:
+    max_movements = None
 
 if args.percentage_susceptibility:
     percentage_susceptibility = float(args.percentage_susceptibility)
@@ -250,6 +258,7 @@ flag_explanations = {
     '-ratio': 'Ratio of number of Super Strain individuals/number of Normal Strain individuals.',
     '-per_inf': 'Percentage of infected individuals in the population.',
     '-max_inf': 'Maximum infections (if the infection are more, stop).',
+    '-max_mv': 'Maximum movements (if the movements are more, stop).',
     '-sus': 'Minimum susceptible individuals (if the susceptible individuals are less, stop).',
     '-time': 'Maximum time for the simulation to run.',
     '-events': 'Maximum events (movements+infections) happening during the simulation.',
@@ -277,7 +286,7 @@ probi = np.zeros(n)                                                             
 mut = np.zeros(n)                                                               # Initialization of mutations array
 sus = np.ones(n)                                                                # Initialization of susceptibility rate array
 
-## Initially there is only 1 individual infected with the Super Strain (if ss exists) ##
+## Initially there is only x individual infected with the Super Strain (if ss exists) ##
 infected_ind = np.where(coords_2[:, 2] == 1)[0]                                 # Indices of infected individuals
 initial_ss = np.random.choice(infected_ind, 3, replace=False)                   # Randomly select x infected individual to have a rate of infection of super strain 
 probi[initial_ss] = ri_s                                                        # If there is only one strain (normal) all the individuals will have the corresponding rate of infection
@@ -394,21 +403,25 @@ while sum(coords_t[:,2])!= 0:
            raise ValueError("In order to calculate the ratio of super vs normal strains in the population, the super strain must exist. Use the appropriate argument to create the super strain.")
 
     ## If the number of the infected individuals is more than a certain % (percentage_infected) of the population, stop the simulation! ##
-    if percentage_infected: # Percentage of infected individuals in the population
-        if sum(coords_t[:, 2]==1) > percentage_infected * n:
-            print(f"The simulation ended because the {percentage_infected*100}% of the population is infected.")
-            break
+    if percentage_infected and sum(coords_t[:, 2]==1) > percentage_infected * n: 
+        print(f"The simulation ended because the {percentage_infected*100}% of the population is infected.")
+        break
     
     ## If the total infections are more than a certain number (max_infections), stop the simulation! ##
     if max_infections: # Maximum infections
         if args.super_strain:
-            if (ss + ns) > max_infections:
+            if (ss + ns) >= max_infections:
                 print(f"The simulation ended because {max_infections} infections happended, totally, in the population.")
                 break
         else:
-            if ns > max_infections:
+            if ns >= max_infections:
                 print(f"The simulation ended because {max_infections} infections happended, totally, in the population.")
                 break
+
+    ## If the total movemets are more than a certain number (max_movements), stop the simulation! ##
+    if max_movements and mv >= max_movements: 
+        print(f"The simulation ended because {max_movements} movements happended, totally, in the population.")
+        break
 
     ## If there is a super strain in the population 
     if args.super_strain:    

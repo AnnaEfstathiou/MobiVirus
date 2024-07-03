@@ -1,34 +1,12 @@
 # MobiVirus Simulator
+## Version 2.0
 
-## Table of contents
+This is another version of the original MobiVirus Simulator.
+The code has the same requirements with the `MobiVirus_Simulator.py` (go to the main README.md file).
 
-- [Abstract](#Abstract)
-- [Requirements](#Requirements)
-- [Detailed Description](#Detailed-Description)
-  - [Main code](#Main-code)
-  - [Optional arguments](#Optional-arguments)
-  - [Output](#Output)
-- [Notes](#Notes)
-  - [All about the strains...](#All-about-the-strains...)
-  - [How infection works?](#How-infection-works?)
-  - [How recombination works?](#How-recombination-works?)
-- [Examples](#Examples)
+## Why this Simulator differs? 
 
-## Abstract
 
-The MobiVirus Simulator simulates a virus infecting individuals in a population as they move around in a two-dimensional (2D) space.
-
-## Requirements
-
-The MobiVirus Simulator works with the use of 3 files:
-
-1. `MobiVirus_Simulator.py`: Main code where the simulation runs.
-2. `mobifunctions.py`: Python script containing the functions used in the simulation.
-3. `parameters.ini`: INI file containing the initial conditions of the simulation.
-
-In order to run the simulation, all files must be in the same directory. The chosen directory must, also, be added in the INI file.
-
-All the required packages are mentioned in the `requirements.txt` file.
 
 ## Detailed Description
 
