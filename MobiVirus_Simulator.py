@@ -419,7 +419,7 @@ while sum(coords_t[:,2])!= 0:
     if args.super_strain:
         ## If the number of individuals with Super Strain are more than a certain % (percentage_super_strain) of the individuals, stop the simulation! ##
         if percentage_super_strain: # Ratio of # Super Strain ind / # Normal Strain ind
-            if sum(coords_t[:, 5]==2) > percentage_super_strain * n: 
+            if sum(coords_t[:, 5]==2) >= percentage_super_strain * n: 
                 print(f"The simulation ended because individuals with Super Strain are more than {percentage_super_strain*100}% of the individuals in the population.") 
                 break
     else:
