@@ -119,6 +119,7 @@ parser = argparse.ArgumentParser(description='Creating other possible senarios (
 ## string parsers (for break scenarions)
 parser.add_argument('-ratio', '--ratio_super_vs_normal', type=str, help='Ratio of number of Super Strain individuals/number of Normal Strain individuals.')
 parser.add_argument('-per_inf', '--percentage_infected', type=str, help='Percentage of infected individuals in the population.')
+parser.add_argument('-per_ss', '--percentage_super_strain', type=str, help='Percentage of super spreaders in the population.')
 parser.add_argument('-max_inf', '--max_infections', type=str, help='Maximum infections (if the infection are more, stop).')
 parser.add_argument('-max_mv', '--max_movements', type=str, help='Maximum movements (if the movements are more, stop).')
 parser.add_argument('-sus', '--percentage_susceptibility', type=str, help='Minimum susceptible individuals (if the susceptible individuals are less, stop).')
@@ -155,6 +156,13 @@ if args.percentage_infected:
 else:
     percentage_infected = None
 
+if args.percentage_super_strain:
+    percentage_super_strain = float(args.percentage_super_strain)
+    if not 0 <= percentage_super_strain <= 1:
+        raise ValueError("The percentage of super spreaders in the population must be between 0 and 1!")
+else:
+    percentage_super_strain = None
+
 if args.max_infections:
     max_infections = int(args.max_infections)
     if not max_infections >= 1:
@@ -190,7 +198,8 @@ if args.end_events:
 else:
     end_events = None
 
-if args.end_events and args.super_strain:
+# if args.end_events and args.super_strain:
+if args.super_strain:
     if args.ss_formation_event:
         ss_form = int(args.ss_formation_event)
         if not ss_form >= 1:
@@ -424,7 +433,18 @@ while sum(coords_t[:,2])!= 0:
     if percentage_infected and sum(coords_t[:, 2]==1) > percentage_infected * n: 
         print(f"The simulation ended because the {percentage_infected*100}% of the population is infected.")
         break
-    
+
+    ## If there is a super strain in the population 
+    if args.super_strain:
+        ## If the number of individuals with Super Strain are more than a certain % (percentage_super_strain) of the individuals, stop the simulation! ##
+        if percentage_super_strain: # Ratio of # Super Strain ind / # Normal Strain ind
+            if sum(coords_t[:, 5]==2) > percentage_super_strain * n: 
+                print(f"The simulation ended because individuals with Super Strain are more than {percentage_super_strain*100}% of the individuals in the population.") 
+                break
+    else:
+        if percentage_super_strain:
+           raise ValueError("In order to calculate the ratio of super strains in the population, the super strain must exist. Use the appropriate argument to create the super strain.")
+
     ## If the total infections are more than a certain number (max_infections), stop the simulation! ##
     if max_infections: # Maximum infections
         if args.super_strain:

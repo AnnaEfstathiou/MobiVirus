@@ -103,7 +103,7 @@ ri_n = config.getfloat('Initial_Parameters', 'ri_n')                # Rate of in
 rm_i = config.getfloat('Initial_Parameters', 'rm_i')                # Rate of movement for infected ind.
 rm_h = config.getfloat('Initial_Parameters', 'rm_h')                # Rate of movement for healthy ind.
 inf_dist = config.getfloat('Initial_Parameters', 'inf_dist')        # Infection distance
-prob_inf = config.getfloat('Initial_Parameters', 'prob_inf')        # ??? Probability of infection ???
+prob_inf = config.getfloat('Initial_Parameters', 'prob_inf')        # Probability that the infector infects an individual in their infection distance
 r_rec = config.getfloat('Initial_Parameters', 'r_rec')              # Rate of recombination
 rec_t = config.getfloat('Initial_Parameters', 'rec_t')              # Recovery time in simulation time
 rim = config.getfloat('Initial_Parameters', 'rim')                  # Relative infection mobility
@@ -119,6 +119,7 @@ parser = argparse.ArgumentParser(description='Creating other possible senarios (
 ## string parsers (for break scenarions)
 parser.add_argument('-ratio', '--ratio_super_vs_normal', type=str, help='Ratio of number of Super Strain individuals/number of Normal Strain individuals.')
 parser.add_argument('-per_inf', '--percentage_infected', type=str, help='Percentage of infected individuals in the population.')
+parser.add_argument('-per_ss', '--percentage_super_strain', type=str, help='Percentage of super spreaders in the population.')
 parser.add_argument('-max_inf', '--max_infections', type=str, help='Maximum infections (if the infection are more, stop).')
 parser.add_argument('-max_mv', '--max_movements', type=str, help='Maximum movements (if the movements are more, stop).')
 parser.add_argument('-sus', '--percentage_susceptibility', type=str, help='Minimum susceptible individuals (if the susceptible individuals are less, stop).')
@@ -154,6 +155,13 @@ if args.percentage_infected:
         raise ValueError("The percentage of infected individuals in the population must be between 0 and 1!")
 else:
     percentage_infected = None
+
+if args.percentage_super_strain:
+    percentage_super_strain = float(args.percentage_super_strain)
+    if not 0 <= percentage_super_strain <= 1:
+        raise ValueError("The percentage of super spreaders in the population must be between 0 and 1!")
+else:
+    percentage_super_strain = None
 
 if args.max_infections:
     max_infections = int(args.max_infections)
@@ -426,6 +434,18 @@ while sum(coords_t[:,2])!= 0:
         print(f"The simulation ended because the {percentage_infected*100}% of the population is infected.")
         break
     
+    ## If there is a super strain in the population 
+    if args.super_strain:
+        ## If the number of individuals with Super Strain are more than a certain % (percentage_super_strain) of the individuals, stop the simulation! ##
+        if percentage_super_strain: # Ratio of # Super Strain ind / # Normal Strain ind
+            if sum(coords_t[:, 5]==2) > percentage_super_strain * n: 
+                print(f"The simulation ended because individuals with Super Strain are more than {percentage_super_strain*100}% of the individuals in the population.") 
+                break
+    else:
+        if percentage_super_strain:
+           raise ValueError("In order to calculate the ratio of super strains in the population, the super strain must exist. Use the appropriate argument to create the super strain.")
+
+
     ## If the total infections are more than a certain number (max_infections), stop the simulation! ##
     if max_infections: # Maximum infections
         if args.super_strain:
@@ -552,8 +572,8 @@ while sum(coords_t[:,2])!= 0:
     time_bfloop = time.time()-distm_time # Time before event-loop
     
     if tt == ss_form:
-        ## Force the event to be infection in onrder to boost the chances of super strain to form ##
-        s1 = 1 
+        s1 = 1 # Force the event to be infection in onrder to boost the chances of super strain to form 
+        prob_inf = 1 # Force the probability that the infector infects an individual in their infection distance to be 100% 
     else:
         ## Select a random number s1 to see which of the two events will happen ##
         s1 = np.random.random() # Random number in  [0,1]
@@ -645,12 +665,15 @@ while sum(coords_t[:,2])!= 0:
             
             print("Super Spreader's Formation Event:",tt)
             print("Infector:",c)
+            print("Ipi:", prob_inf)
            
             ## Go through all the individuals (indexing them with j) ... ##
             for j in range(n): 
 
                 ## Find those who have a non-zero probability to get infected due to their distance ##           
                 if ipi[j] != 0:
+
+                    print("There is someone in the circle with ipi=1")
 
                     ## Pick a random number s4 ##
                     ## The conditions are: If the random number s4 is less than or equal to ipi[j], it means that individual j can get infected by individual c AND the individual j must be susceptible to the virus (coords_t[6,j]==1) ##
@@ -659,6 +682,8 @@ while sum(coords_t[:,2])!= 0:
                     ## Find those who:  1. Are not already infected     ## 
                     ##                  2. Are susceptable to the virus ##
                     if coords_t[j,2] == 0 and coords_t[j,6] == 1: 
+
+                        print("Found sm healthy and susceptable")
                         
                         if len(g.columns) == l: 
                             print(f"Super Spreader: {j}")
