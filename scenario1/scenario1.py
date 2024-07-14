@@ -167,7 +167,7 @@ if args.max_movements:
     if not max_movements >= 1:
         raise ValueError("The number of maximum movements must be a positive integer!")
 else:
-    max_infections = None
+    max_movements = None
 
 if args.percentage_susceptibility:
     percentage_susceptibility = float(args.percentage_susceptibility)
@@ -190,7 +190,8 @@ if args.end_events:
 else:
     end_events = None
 
-if args.end_events and args.super_strain:
+# if args.end_events and args.super_strain:
+if args.super_strain:
     if args.ss_formation_event:
         ss_form = int(args.ss_formation_event)
         if not ss_form >= 1:
@@ -538,7 +539,7 @@ while sum(coords_t[:,2])!= 0:
     CHOOSING WHICH EVENT WILL HAPPEN
     --------------------------------
     """
-    print("Loop", tt,"/",end_events, "Genome length:", len(g.columns))
+    print("Loop", tt, "Genome length:", len(g.columns))
 
     ## Calculating the probabilities for the infection event and the movement event ##
     p_i = rt_i/(rt_i+rt_m) # Probability of infection  (rt_i = sum(coords_t[:, 4]))
@@ -642,7 +643,8 @@ while sum(coords_t[:,2])!= 0:
 
         if tt == ss_form:
             
-            print("...EVENT... ",tt, "infector:",c)
+            print("Super Spreader's Formation Event:",tt)
+            print("Infector:",c)
            
             ## Go through all the individuals (indexing them with j) ... ##
             for j in range(n): 
@@ -657,31 +659,33 @@ while sum(coords_t[:,2])!= 0:
                     ## Find those who:  1. Are not already infected     ## 
                     ##                  2. Are susceptable to the virus ##
                     if coords_t[j,2] == 0 and coords_t[j,6] == 1: 
-                        print("YES")
                         
                         if len(g.columns) == l: 
-                            print(f"CHANGE for {j}")
+                            print(f"Super Spreader: {j}")
                             ## The individual's genome is passed from the infector (c) to the newly infected individual (j) ##
                             g.iloc[j] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), g.iloc[c], g.iloc[j]) 
                             
-                            middle_index = g.shape[1] // 2
+                            # middle_index = g.shape[1] // 2
                             pos = ss_mutation_position(n_i, l, "middle")    
                             g.insert(pos+1, 'new_col', 0.0)
                             # Set the value at index j to 1.0
                             g.at[j, 'new_col'] = 1.0
-                            # Update the column names to be sequential integers
-                            g.columns = range(g.shape[1])
-
+                            # # Update the column names to be sequential integers
+                            # g.columns = range(g.shape[1])
+                            
                             ## The  individual's (j) rate of infection is updated according to their genome ##
                             coords_t[j,4] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), ri_s, coords_t[j, 4])
-                      
+                            
                         else:
-                            print(f"NO CHANGE for {j}")
+                            print(f"Super Spreader: {j}")
                             ## The individual's genome is passed from the infector (c) to the newly infected individual (j) ##
                             g.iloc[j] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), g.iloc[c], g.iloc[j]) 
-                            
-                            ## The individual's (j) genome goes through the mutation procedure ##
-                            g.iloc[j] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), mutation(g.iloc[j], r_tot), g.iloc[j])
+
+                            # Set the value at index j to 1.0
+                            g.at[j, 'new_col'] = 1.0
+
+                            # ## The individual's (j) genome goes through the mutation procedure ##
+                            # g.iloc[j] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), mutation(g.iloc[j], r_tot), g.iloc[j])
 
                             ## The  individual's (j) rate of infection is updated according to their genome ##
                             coords_t[j,4] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), ri_n, coords_t[j, 4]) 
@@ -719,12 +723,16 @@ while sum(coords_t[:,2])!= 0:
 
                         if args.all_infected_once:
                             ## Add the individual who got infected to the all_infected_once array to keep track of the infividuals that got infected at least once ##
-                            all_infected_once[j] = j 
-                            
-                        ## Explicitly continue to the next iteration (next individual) ##
+                            all_infected_once[j] = j         
+                        
+                        ## Explicitly continue to the next iteration (next individual) ##           
                         continue  
         
         else:
+
+            if tt == ss_form+1:
+                # Update the column names to be sequential integers
+                g.columns = range(g.shape[1])
             
             ## Go through all the individuals (indexing them with j) ... ##
             for j in range(n): 
@@ -915,6 +923,9 @@ while sum(coords_t[:,2])!= 0:
         sample_data(samples, genomes, g, tt, coords_t, all_inf, sample_times, super_strain = False)
     
     print("Totally infected:", len(coords_t[coords_t[:,2] == 1]) + len(coords_t[coords_t[:,2] == 2]))
+    print("Super spreaders:", len(coords_t[coords_t[:,5] == 2]))
+    print("----------------------------------")
+
 
     ## Time to run the simulation loop ##
     loop_t = time.time()-time_bfloop 

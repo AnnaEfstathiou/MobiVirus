@@ -21,17 +21,26 @@ INTERNAL FUNCTIONS
 ------------------
 """ 
 
-def __polymorphic_sites(sequences: Dict[str, str]) -> int:
+# def __polymorphic_sites(sequences: Dict[str, str]) -> int:
     
+#     """ Counts the number of positions which show differences (polymorphisms). """
+#     """ Used in the calculation of tajimas'd and watterson estimator. """
+    
+#     sequences_list = list(sequences.values())
+#     seg_sites = 0
+#     for i in range(len(sequences_list[0])):
+#         s = sequences_list[0][i]  # reference character
+#         if any(seq[i] != s for seq in sequences_list):
+#             seg_sites += 1
+#     return seg_sites
+
+def __polymorphic_sites(sequences: Dict[str, str]) -> int:
+   
     """ Counts the number of positions which show differences (polymorphisms). """
     """ Used in the calculation of tajimas'd and watterson estimator. """
-    
+
     sequences_list = list(sequences.values())
-    seg_sites = 0
-    for i in range(len(sequences_list[0])):
-        s = sequences_list[0][i]  # reference character
-        if any(seq[i] != s for seq in sequences_list):
-            seg_sites += 1
+    seg_sites = sum(1 for i in range(len(sequences_list[0])) if len(set(seq[i] for seq in sequences_list)) > 1)
     return seg_sites
 
 def __harmonic(n: int) -> float:
@@ -40,8 +49,6 @@ def __harmonic(n: int) -> float:
     """ Used in the calculation of tajimas'd and watterson estimator. """
 
     return sum(1 / i for i in range(1, n))
-
-
 
 
 """
@@ -84,19 +91,57 @@ def tajimas_d(sequences: Dict[str, str]) -> float:
     tD = delta_Theta / ((e1 * seg_sites + e2 * seg_sites * (seg_sites - 1)) ** 0.5)
     return float(tD)
 
+# def pi_estimator(sequences: Dict[str, str]) -> float:
+
+#     """ Computes Pi estimatorn (Θπ). """
+
+#     __check(sequences)
+
+#     sequences_list = list(sequences.values())
+#     pairwise_combinations = combinations(sequences_list, 2)
+#     cs = [sum(not char1 == char2 for char1, char2 in zip(seq1, seq2)) for seq1, seq2 in pairwise_combinations]
+#     n = len(sequences_list)
+#     binomial = ((n - 1) * n) / 2  
+
+#     return sum(cs) / binomial
+
 def pi_estimator(sequences: Dict[str, str]) -> float:
-
-    """ Computes Pi estimatorn (Θπ). """
-
+    
+    """ Computes Pi estimator (Θπ). """
+    
     __check(sequences)
-
     sequences_list = list(sequences.values())
-    pairwise_combinations = combinations(sequences_list, 2)
-    cs = [sum(not char1 == char2 for char1, char2 in zip(seq1, seq2)) for seq1, seq2 in pairwise_combinations]
     n = len(sequences_list)
-    binomial = ((n - 1) * n) / 2  
+    
+    # Initialize the sum of pairwise differences
+    pairwise_sum = 0
+    
+    # Iterate through each pair of sequences without using combinations
+    for i in range(n):
+        for j in range(i + 1, n):
+            seq1 = sequences_list[i]
+            seq2 = sequences_list[j]
+            # Count differences between the two sequences
+            pairwise_sum += sum(char1 != char2 for char1, char2 in zip(seq1, seq2))
+    
+    # Calculate the binomial coefficient
+    binomial = n * (n - 1) / 2
+    
+    return pairwise_sum / binomial
 
-    return sum(cs) / binomial
+
+# def pi_estimator(sequences: Dict[str, str]) -> float:
+    
+#     """ Computes Pi estimator (Θπ). """
+    
+#     __check(sequences)
+    
+#     sequences_list = np.array(list(sequences.values()))
+#     n = len(sequences_list)
+#     pairwise_sum = np.sum(np.array([np.sum(np.array(list(seq1)) != np.array(list(seq2))) for seq1, seq2 in combinations(sequences_list, 2)]))
+#     binomial = n * (n - 1) / 2
+    
+#     return pairwise_sum / binomial
 
 
 def watterson_estimator(sequences: Dict[str, str]) -> float:
