@@ -654,8 +654,16 @@ while sum(coords_t[:,2])!= 0:
         ---------
         """
         
-        ## Calculate the probability of the selected individual to infect each other individual depending on the distance between them ##
-        ipi = ind_probi(df_i, c, inf_dist, prob_inf) 
+        if coords_t[c,5] == 2: # If the infector is a Super Spreader
+            ## Calculate the probability of the selected individual to infect each other individual depending on the distance between them ##
+            # Higher prob_inf and larger inf_dist
+            ipi = ind_probi(df_i, c, 0.6, 1) 
+        else:
+            ## Calculate the probability of the selected individual to infect each other individual depending on the distance between them ##
+            ipi = ind_probi(df_i, c, inf_dist, prob_inf) 
+
+        # ## Calculate the probability of the selected individual to infect each other individual depending on the distance between them ##
+        # ipi = ind_probi(df_i, c, inf_dist, prob_inf) 
         
         ## Get the number of newly infected individuals (label:1) before the new infection process ##
         ib = len(coords_t[coords_t[:,2] == 1])
@@ -667,7 +675,7 @@ while sum(coords_t[:,2])!= 0:
         Super Strain Formation
         '''
 
-        if (ss_form <= tt <= ss_form + 100) and len(coords_t[coords_t[:,5] == 2]) == 0:
+        if (ss_form <= tt <= ss_form + 200) and len(coords_t[coords_t[:,5] == 2]) == 0:
         
             print("Super Spreader's Formation Event:",tt)
             print("Infector:",c)
