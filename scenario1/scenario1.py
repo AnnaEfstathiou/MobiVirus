@@ -559,7 +559,7 @@ while sum(coords_t[:,2])!= 0:
     CHOOSING WHICH EVENT WILL HAPPEN
     --------------------------------
     """
-    print("Loop", tt, "Genome length:", len(g.columns))
+    print("Loop", tt,",", "Genome length:", len(g.columns))
 
     ## Calculating the probabilities for the infection event and the movement event ##
     p_i = rt_i/(rt_i+rt_m) # Probability of infection  (rt_i = sum(coords_t[:, 4]))
@@ -571,13 +571,15 @@ while sum(coords_t[:,2])!= 0:
 
     time_bfloop = time.time()-distm_time # Time before event-loop
     
-    if tt == ss_form:
-        s1 = 1 # Force the event to be infection in onrder to boost the chances of super strain to form 
-        prob_inf = 1 # Force the probability that the infector infects an individual in their infection distance to be 100% 
-    else:
-        ## Select a random number s1 to see which of the two events will happen ##
-        s1 = np.random.random() # Random number in  [0,1]
+    # if tt == ss_form:
+    #     ## Force the event to be infection in onrder to boost the chances of super strain to form ##
+    #     s1 = 1  
+    # else:
+    #     ## Select a random number s1 to see which of the two events will happen ##
+    #     s1 = np.random.random() # Random number in  [0,1]
     
+    s1 = np.random.random() # Random number in  [0,1]
+
     ## If s1 is smaller than p_m, the event that will happen is movement ##
     if s1 <= p_m: 
         
@@ -620,9 +622,9 @@ while sum(coords_t[:,2])!= 0:
             ## Optional: Print the event that just happened ##
             print("Movement of:", c)
 
-        if tt == ss_form:
-            print("Stop the simulation because the super strain is not formed!")
-            break
+        # if tt == ss_form:
+        #     print("Stop the simulation because the super strain is not formed!")
+        #     break
         
         ## Update the total rate of movement ##
         rt_m = sum(coords_t[:,3]) 
@@ -661,11 +663,14 @@ while sum(coords_t[:,2])!= 0:
         ## List to store the infected individuals (label:1) that their genome will get recombined in the currect event ##
         unin_ind = []
 
-        if tt == ss_form:
-            
+        '''
+        Super Strain Formation
+        '''
+
+        if (ss_form <= tt <= ss_form + 100) and len(coords_t[coords_t[:,5] == 2]) == 0:
+        
             print("Super Spreader's Formation Event:",tt)
             print("Infector:",c)
-            print("Ipi:", prob_inf)
            
             ## Go through all the individuals (indexing them with j) ... ##
             for j in range(n): 
@@ -697,10 +702,7 @@ while sum(coords_t[:,2])!= 0:
                             g.at[j, 'new_col'] = 1.0
                             # # Update the column names to be sequential integers
                             # g.columns = range(g.shape[1])
-                            
-                            ## The  individual's (j) rate of infection is updated according to their genome ##
-                            coords_t[j,4] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), ri_s, coords_t[j, 4])
-                            
+                                                        
                         else:
                             print(f"Super Spreader: {j}")
                             ## The individual's genome is passed from the infector (c) to the newly infected individual (j) ##
@@ -712,9 +714,9 @@ while sum(coords_t[:,2])!= 0:
                             # ## The individual's (j) genome goes through the mutation procedure ##
                             # g.iloc[j] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), mutation(g.iloc[j], r_tot), g.iloc[j])
 
-                            ## The  individual's (j) rate of infection is updated according to their genome ##
-                            coords_t[j,4] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), ri_n, coords_t[j, 4]) 
-                            
+                        ## The  individual's (j) rate of infection is updated according to their genome ##
+                        coords_t[j,4] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), ri_s, coords_t[j, 4])
+
                         ## The label of the individual (j) is updated to infected (one infection) after 1st the infection ##
                         coords_t[j,2] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), 1, 0) 
                             
@@ -722,15 +724,10 @@ while sum(coords_t[:,2])!= 0:
                         coords_t[j,3] = np.where((s4<=ipi[j])&(coords_t[j,6]==1), coords_t[c,3], coords_t[j,3]) 
                                                         
                         ## Add the mutation label depending on the strain of the infection + the mutation produced ##
-                        if args.super_strain:
-                            coords_t[j,5] = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_s), 2, np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_n), 1, coords_t[j,5]))
-                        else:
-                            coords_t[j, 5] = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_n), 1, coords_t[j,5])
+                        coords_t[j,5] = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_s), 2, coords_t[j,5])
 
-                        ## Update the counters to track the number of Super Strain infections (if are existed) and Normal Strain infections ##
-                        if args.super_strain:
-                            ss = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_s), ss+1, ss) # Count the super infections
-                        ns = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_n), ns+1, ns)     # Count the normal infections
+                        ## Update the counters to track the number of Super Strain infections ##
+                        ss = np.where((s4<=ipi[j])&(coords_t[j,6]==1)&(coords_t[j,4]==ri_s), ss+1, ss) # Count the super infections
 
                         if not args.recombination:
                             ## Update the susceptibility label for the infected individual, as he is not susceptible anymore ##
@@ -752,12 +749,12 @@ while sum(coords_t[:,2])!= 0:
                         
                         ## Explicitly continue to the next iteration (next individual) ##           
                         continue  
-        
+                
         else:
 
-            if tt == ss_form+1:
-                # Update the column names to be sequential integers
-                g.columns = range(g.shape[1])
+            # if len(coords_t[coords_t[:,5] == 2])>0:
+            #     # Update the column names to be sequential integers
+            #     g.columns = range(g.shape[1])
             
             ## Go through all the individuals (indexing them with j) ... ##
             for j in range(n): 
@@ -916,9 +913,9 @@ while sum(coords_t[:,2])!= 0:
                 print("This/These individuals got newly infected: " + ", ".join(map(str, [int(x) for x in hah[-int(ia-ib):,1]])))
                 print("This/These individuals' genome got recombined: ", ", ".join(map(str, unin_ind)))
 
-        if tt == ss_form and len(g.columns)==l:
-            print("Stop the simulation because the super strain is not formed during the infection!")
-            break
+        # if tt == ss_form and len(g.columns)==l:
+        #     print("Stop the simulation because the super strain is not formed during the infection!")
+        #     break
 
         ## Update the total rate of movement ##
         rt_m = sum(coords_t[:,3])   
