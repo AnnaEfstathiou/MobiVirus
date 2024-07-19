@@ -4,9 +4,9 @@
 #%%
 """
 ================================
-|      ------------------     |
-|   | MobiVirus Simulator |   |
-|      ------------------     |
+|      ------------------      |
+|   | MobiVirus Simulator |    |
+|      ------------------      |
 ================================
 
 If -s and -events flags is used then the super strain is created at the miidle of the simulationby adding a beneficial SNP in the middle og the simulation.
@@ -102,8 +102,10 @@ n_i = config.getint('Initial_Parameters', 'n_i')                    # Important 
 ri_n = config.getfloat('Initial_Parameters', 'ri_n')                # Rate of infection from normal/strain 1
 rm_i = config.getfloat('Initial_Parameters', 'rm_i')                # Rate of movement for infected ind.
 rm_h = config.getfloat('Initial_Parameters', 'rm_h')                # Rate of movement for healthy ind.
-inf_dist = config.getfloat('Initial_Parameters', 'inf_dist')        # Infection distance
-prob_inf = config.getfloat('Initial_Parameters', 'prob_inf')        # Probability that the infector infects an individual in their infection distance
+inf_dist_ns = config.getfloat('Initial_Parameters', 'inf_dist_ns')  # Infection distance (normal strain)
+inf_dist_ss = config.getfloat('Initial_Parameters', 'inf_dist_ss')  # Infection distance (normal strain)
+prob_inf_ns = config.getfloat('Initial_Parameters', 'prob_inf_ns')  # Probability that the infector infects an individual in their infection distance (normal strain)
+prob_inf_ss = config.getfloat('Initial_Parameters', 'prob_inf_ss')  # Probability that the infector infects an individual in their infection distance (super strain)
 r_rec = config.getfloat('Initial_Parameters', 'r_rec')              # Rate of recombination
 rec_t = config.getfloat('Initial_Parameters', 'rec_t')              # Recovery time in simulation time
 rim = config.getfloat('Initial_Parameters', 'rim')                  # Relative infection mobility
@@ -232,7 +234,7 @@ else:
 if ii > n:
     raise ValueError("The initial number of infected individuals (ii) can't be bigger than the number of individuals (n) in the simulation")
 
-if not 0 <= prob_inf <= 1:
+if not 0 <= prob_inf_ns <= 1 and not 0 <= prob_inf_ss <= 1:
     raise ValueError("The probability that the infector infects an individual in their infection distance must be between 0 and 1!")
 
 #%%
@@ -657,10 +659,10 @@ while sum(coords_t[:,2])!= 0:
         if coords_t[c,5] == 2: # If the infector is a Super Spreader
             ## Calculate the probability of the selected individual to infect each other individual depending on the distance between them ##
             # Higher prob_inf and larger inf_dist
-            ipi = ind_probi(df_i, c, 0.6, 1) 
+            ipi = ind_probi(df_i, c, inf_dist_ss, prob_inf_ss) 
         else:
             ## Calculate the probability of the selected individual to infect each other individual depending on the distance between them ##
-            ipi = ind_probi(df_i, c, inf_dist, prob_inf) 
+            ipi = ind_probi(df_i, c, inf_dist_ns, prob_inf_ns) 
 
         # ## Calculate the probability of the selected individual to infect each other individual depending on the distance between them ##
         # ipi = ind_probi(df_i, c, inf_dist, prob_inf) 
