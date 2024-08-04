@@ -223,47 +223,47 @@ Infection Rate Function
 -----------------------
 '''
 
-# def infectivity(in_probi, g, n_i, ri_s, position):
+def infectivity(in_probi, g, n_i, ri_s, position):
 
-#     ## Gives the specific value of the infection rate of an individual, depending on the strain of the virus ##
-#     ## The strain is decided by the n_i important positions in the individual's genome ##
+    ## Gives the specific value of the infection rate of an individual, depending on the strain of the virus ##
+    ## The strain is decided by the n_i important positions in the individual's genome ##
     
-#     # g = genome of individual
-#     # n_i = important positions in the genome
-#     # in_probi = infection rate of the infector
-#     # ri_s = infectivity rate of super strain
-#     # position ('start', 'middle', or 'end') = area of the important positions in the individual's genome
+    # g = genome of individual
+    # n_i = important positions in the genome
+    # in_probi = infection rate of the infector
+    # ri_s = infectivity rate of super strain
+    # position ('start', 'middle', or 'end') = area of the important positions in the individual's genome
     
-#     if position == "start":
+    if position == "start":
 
-#         if np.any(np.array(g[:n_i])==1):
-#             probi = ri_s
-#         else:
-#             probi = in_probi
+        if np.any(np.array(g[:n_i])==1):
+            probi = ri_s
+        else:
+            probi = in_probi
 
-#     elif position == "middle":
+    elif position == "middle":
 
-#         genome_length = len(g)
-#         middle_start = (genome_length - n_i) // 2
-#         middle_end = middle_start + n_i
-#         if np.any(np.array(g[middle_start:middle_end]) == 1):
-#             probi = ri_s
-    #     else:
-    #         probi = in_probi
+        genome_length = len(g)
+        middle_start = (genome_length - n_i) // 2
+        middle_end = middle_start + n_i
+        if np.any(np.array(g[middle_start:middle_end]) == 1):
+            probi = ri_s
+        else:
+            probi = in_probi
     
-    # elif position == "end":
+    elif position == "end":
 
-    #     genome_length = len(g)
-    #     end_start = genome_length - n_i
-    #     if np.any(np.array(g[end_start:]) == 1):
-    #         probi = ri_s
-    #     else:
-    #         probi = in_probi
+        genome_length = len(g)
+        end_start = genome_length - n_i
+        if np.any(np.array(g[end_start:]) == 1):
+            probi = ri_s
+        else:
+            probi = in_probi
     
-    # else:
-    #     raise ValueError("Invalid position value. Expected 'start', 'middle', or 'end'.")
+    else:
+        raise ValueError("Invalid position value. Expected 'start', 'middle', or 'end'.")
     
-    # return probi
+    return probi
 
 '''
 --------------------------------

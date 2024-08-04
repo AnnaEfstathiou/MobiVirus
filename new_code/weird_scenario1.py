@@ -779,12 +779,6 @@ while sum(coords_t[:,2])!= 0:
                     ##                  2. Are susceptable to the virus                                                              ##
                     ##                  3. The random number s4 is less than or equal to their ipi[j]                                ##
                     elif args.recombination and (coords_t[j,2] == 1 and coords_t[j,6] == 1 and s4 <= ipi[j]) :
-                    # elif args.recombination and (coords_t[j,2] == 1 and coords_t[j,6] == 1 and t_s <= t_i[j] + rec_t) :
-
-                        # if p == 0 > continue
-                        # else 
-                            # if ss:
-                            # else ns:
 
                         p = rec_probi(r_rec, l) # Number to determine whether recombination will take place 
 
@@ -820,7 +814,7 @@ while sum(coords_t[:,2])!= 0:
                                 coords_t[j,6] = 0             # Change the susceptibility label for the newly infected individual, as they are not susceptible anymore 
 
                                 ## Updating time and time related variables ##
-                                t_rec[j] = t_s
+                                t_rec[j] = t_s                # Update the event time of recombination for the infected individual in the list t_rec
 
                                 ## Collect the data for the infected and infector, the event time and the infection rate ##
                                 hah = np.concatenate([hah, np.column_stack(np.array((c, j, 2.0, float(t_s), float(coords_t[j,4])), dtype=float))], axis=0)                      
@@ -849,7 +843,7 @@ while sum(coords_t[:,2])!= 0:
                                 coords_t[j,6] = 0             # Change the susceptibility label for the newly infected individual, as they are not susceptible anymore 
      
                                 ## Updating time and time related variables ##
-                                t_rec[j] = t_s
+                                t_rec[j] = t_s                # Update the event time of recombination for the infected individual in the list t_rec
 
                                 ## Collect the data for the infected and infector, the event time and the infection rate ##
                                 hah = np.concatenate([hah, np.column_stack(np.array((c, j, 2.0, float(t_s), float(coords_t[j,4])), dtype=float))], axis=0)                      
@@ -892,18 +886,12 @@ while sum(coords_t[:,2])!= 0:
                 print("This/These individuals got newly infected: " + ", ".join(map(str, [int(x) for x in hah[-int(ia-ib):,1]])))
                 print("This/These individuals' genome got recombined: ", ", ".join(map(str, unin_ind)))
 
-        # if tt == ss_form and len(g.columns)==l:
-        #     print("Stop the simulation because the super strain is not formed during the infection!")
-        #     break
-
-        ## Update the total rate of movement ##
-        rt_m = sum(coords_t[:,3])   
-        
-        ## Update the total rate of infection ##
-        rt_i = sum(coords_t[:,4])
+        ## Updating rates (movement & infection) ##
+        rt_m = sum(coords_t[:,3])                 # New rate of movement
+        rt_i = sum(coords_t[:,4])                 # New rate of infection
         
         ## Remove the lines in the genome table that correspond to the genomes of recovered individuals ##
-        n_rows = sum(coords_t[:, 2] == 0)  # This calculates how many rows meet the condition
+        n_rows = sum(coords_t[:, 2] == 0)  # Calculating how many rows meet the condition
         g.iloc[coords_t[:, 2] == 0] = np.nan * np.ones((n_rows, l))
         
 
@@ -914,6 +902,7 @@ while sum(coords_t[:,2])!= 0:
         #     ## Collect the data for the number of Total infected, Normal spreaders and infection time for each generation ##
         #     all_inf = np.concatenate([all_inf, np.column_stack(np.array((sum(coords_t[:,2] != 0), sum(coords_t[:,5]==1), float(t_s)), dtype=float))], axis=0)    
 
+        ## Collect the data for the number of Total infected, Super spreaders, Normal spreaders and infection time for each generation ##
         all_inf = np.concatenate([all_inf, np.column_stack(np.array((sum(coords_t[:,2] != 0), sum(coords_t[:,5]==2), sum(coords_t[:,5]==1), float(t_s)), dtype=float))], axis=0)    
         
     # if args.super_strain:
@@ -922,10 +911,12 @@ while sum(coords_t[:,2])!= 0:
     # else:
     #     ## Save a sample of data from the simulation, according to the conditions of the sample_data() function##
     #     sample_data(samples, genomes, g, tt, coords_t, all_inf, sample_times, super_strain = False)
+
+    ## Save a sample of data from the simulation, according to the conditions of the sample_data() function##
     sample_data(samples, genomes, g, tt, coords_t, all_inf, sample_times, super_strain = True)
     
-    print("Totally infected:", len(coords_t[coords_t[:,2] == 1]) + sum(coords_t[coords_t[:,2] == 2]))
-    print("Super spreaders:", len(coords_t[coords_t[:,5] == 2]))
+    print(f"Totally infected:{len(coords_t[coords_t[:,2]==1])+len(coords_t[coords_t[:,2]==2])} (ns:{len(coords_t[coords_t[:,5]==1])},ss:{len(coords_t[coords_t[:,5]==2])})")
+    # print("Super spreaders:", len(coords_t[coords_t[:,5] == 2]))
     # print("Super spreaders:", len(coords_t[coords_t[:,5] == 2]))
     print("----------------------------------")
 
@@ -949,9 +940,12 @@ if args.scatter_plots:
 #     save_data(samples, genomes, coords_2, coords_t, g, all_inf, unin, hah, ss, ns, mv, t_un, super_strain = True)
 # else:    ## Save the data from the simulation in the correct directory ##
 #     save_data(samples, genomes, coords_2, coords_t, g, all_inf, unin, hah, 0, ns, mv, t_un, super_strain = False)
+
+## Save the data from the simulation in the correct directory ##
 save_data(samples, genomes, coords_2, coords_t, g, all_inf, unin, hah, ss, ns, mv, t_un, super_strain = True)
 
 print("\nLoops:", tt)
-## Time for the whole code to run ##
+
+## Time for the whole simulation to run ##
 end=time.time()-initial
 print("Total simulation time (minutes):", end/60)   
