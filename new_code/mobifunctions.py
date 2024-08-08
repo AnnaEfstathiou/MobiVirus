@@ -38,10 +38,28 @@ def log_command(directory, command, flags):
         for flag, explanation in flags.items():
             log_file.write(f"{flag}: {explanation}\n")
 
-        # Check if none of the specific flags are present
-        if not any(flag in flags for flag in ['-ratio', '-per_inf', '-max_inf', '-sus', '-all_inf', '-time']):
+        # Checking why the simulation stopped
+        if not any(flag in flags for flag in ['-ratio', '-per_inf', '-per_ss', '-max_inf', '-max_mv', '-sus', '-all_inf', '-time', '-events']):
             log_file.write("\nThe simulation stopped because everyone is healthy.\n")
-
+        # elif 'all_inf' in flags.keys():
+        #     log_file.write("\nThe simulation might stop when all the individuals are infected at least once.\n")
+        # elif 'ratio' in flags.keys():
+        #     log_file.write("\nThe simulation might stop when the given ratio of super Strain individuals/normal Strain individuals becomes real.\n")      
+        # elif 'per_inf' in flags.keys():
+        #     log_file.write("\nThe simulation might stop when the infected individuals in the population reach the given percentage.\n")
+        # elif 'per_ss' in flags.keys():
+        #     log_file.write("\nThe simulation might stop when the super spreaders in the population reach the given percentage.\n")
+        # elif 'max_inf' in flags.keys():
+        #     log_file.write("\nThe simulation might stop when the given number of infections happen.\n")
+        # elif 'max_mv' in flags.keys():
+        #     log_file.write("\nThe simulation might stop when the given number of movements happen.\n")
+        # elif 'sus' in flags.keys():
+        #     log_file.write("\nThe simulation might stop when only the given number of individuals are susceptible to the virus.\n")
+        # elif 'time' in flags.keys():
+        #     print("FOUND")
+        #     log_file.write("\nThe simulation might stop at the given simulation time.\n")
+        # elif 'events' in flags.keys():
+        #     log_file.write("\nThe simulation might stop when the given number of events (movements+infections) happpen.\n")
         
         # Append the initial parameters from the config
         log_file.write("\nInitial Parameters:\n")

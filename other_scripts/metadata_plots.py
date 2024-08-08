@@ -1,24 +1,24 @@
 import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
 import imageio.v2 as imageio
 
 
-def plot_simulation_results(csv_file):
+def plot_spreaders(csv_file):
     
     ## Plotting the information from an instance of the simulation ##
     # all_inf csv file
 
     # Read the CSV file
-    df = pd.read_csv(csv_file)
+    spreaders_data = pd.read_csv(csv_file)
 
     # Extract columns
-    total_infected = df['Total infected']
-    super_spreaders = df['Super spreaders']
-    normal_spreaders = df['Normal spreaders']
-    time = df['Time']
+    total_infected = spreaders_data['Total infected']
+    super_spreaders = spreaders_data['Super spreaders']
+    normal_spreaders = spreaders_data['Normal spreaders']
+    time = spreaders_data['Time']
     
-
     # Create a plot
     plt.figure(figsize=(10, 6))
     plt.plot(time, total_infected, label='Total Infected')
@@ -31,28 +31,58 @@ def plot_simulation_results(csv_file):
     plt.title('Simulation Results Over Time')
     plt.legend()
 
-    # Show the plot
-    plt.show()
+    if args.save_png:
+        plt.savefig("spreaders_plot.png", format="png")
+    else:
+        plt.show()
+    plt.close()
 
 
-def create_gif(directory):
-    images = []
-    names = []
-    for filename in os.listdir(directory):
-        if int(filename[:-4])==0 or int(filename[:-4])%100==0:
-            names.append(os.path.join(directory, filename))
-        
-    names.sort()
-    names.sort(key=len)
+def plot_coordinates(csv_file):
     
-    for g in names:
-        images.append(imageio.imread(g, format='jpg'))
-    
-    imageio.mimsave(directory+'figs.gif', images, duration=0.8)
+    ## Create a scatter plot with the coordinates and mutation label for all individuals. ##
+    # coords csv file
+
+    coords_data = pd.read_csv(csv_file)
+
+    plt.figure(figsize=(10, 6))
+
+    # Assigning labels for every mutation value 
+    mutation_labels = {
+    0.0: 'Healthy individuals',
+    1.0: 'Normal spreaders',
+    2.0: 'Super spreaders'
+    }
+
+    # Assigning colors to different mutation values
+    colors = {0.0: 'SpringGreen', 1.0: 'DarkOrange', 2.0: 'SlateBlue'}
+
+    # Plotting each point with the corresponding color and legend
+    for mutation_value in coords_data['mutation'].unique():
+        subset = coords_data[coords_data['mutation'] == mutation_value]
+        plt.scatter(subset['x'], subset['y'], color=colors[mutation_value], label=f'{mutation_labels[mutation_value]} = {len(subset)}')
+
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.title('Scatter Plot of x vs y with Different Mutations')
+    plt.legend()
+    if args.save_png:
+        plt.savefig("scatter_plot.png", format="png")
+    else:
+        plt.show()
+    plt.close()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Plot simulation results over time from a CSV file.')
-    parser.add_argument('csv_file', type=str, help='Path to the CSV file')
+    parser.add_argument('-csv', '--csv_file', type=str, help='Path to a CSV file. For the scatter plot use the coords.csv file. For the plot of the number of normal and super spreaders use an all_inf.csv file.')
+    parser.add_argument('-spreaders', '--ns_ss_spreaders', action="store_true", help='Create a plot showing the number of normal and super spreaders.')
+    parser.add_argument('-coords', '--coordinates_scatter_plot', action="store_true", help='Create a scatter plot with the coordinates and mutation label for all individuals.')
+    parser.add_argument('-s','--save_png', action="store_true", help='Flag to save the plot as an PNG file.')
     args = parser.parse_args()
 
-    plot_simulation_results(args.csv_file)
+    if args.ns_ss_spreaders:
+        plot_spreaders(args.csv_file)
+    elif args.coordinates_scatter_plot:
+        plot_coordinates(args.csv_file)
+    
