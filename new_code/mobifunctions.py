@@ -148,7 +148,7 @@ Infection Label Function
 ------------------------
 '''
 
-def label(n, i):
+def infection_label(n, i):
     
     ## Creates a stacked column array where every cell corresponds to an individual, with a label depending on if they are infected with the virus or not ##
     ## In the initial stage of the simulation, there is a sample of infected individuals among the healthy ones ##
@@ -527,57 +527,57 @@ Output - Results Functions
 --------------------------
 '''
 
-''' PLOTS '''
+# ''' PLOTS '''
 
-def plot_map(plots_directory, coords, tt, ts, mv, un, super_strain = False):
+# def plot_map(plots_directory, coords, tt, ts, mv, un, super_strain = False):
     
-    ## Create plot with all of the regions ##
+#     ## Create plot with all of the regions ##
 
-    fig, ax = plt.subplots()
-    ax.scatter(200, 200, c='k', s=0)  # Add a point at coordinates (200, 200) with no size (s=0) for scaling purposes
-    # Set the x and y axis labels
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    # Set the x and y axis limits
-    ax.set_xlim(-2, 8)
-    ax.set_ylim(-0.5, 10)
+#     fig, ax = plt.subplots()
+#     ax.scatter(200, 200, c='k', s=0)  # Add a point at coordinates (200, 200) with no size (s=0) for scaling purposes
+#     # Set the x and y axis labels
+#     ax.set_xlabel('x')
+#     ax.set_ylabel('y')
+#     # Set the x and y axis limits
+#     ax.set_xlim(-2, 8)
+#     ax.set_ylim(-0.5, 10)
 
-    ax.set_title("Simulation time =""{0:.4f}".format(ts)) # Set the title of the plot with the current simulation time
+#     ax.set_title("Simulation time =""{0:.4f}".format(ts)) # Set the title of the plot with the current simulation time
 
-    # Scatter plot infected individuals with the normal strain in red
-    ax.scatter(list(coords[(coords[:, 2] != 0) & (coords[:, 5] == 1)][:, 0]),
-               list(coords[(coords[:, 2] != 0) & (coords[:, 5] == 1)][:, 1]), s=3, c='indianred',
-               label='Normal infections = %i' % (len(coords[coords[:, 5] == 1][:, 0])))  
-    if super_strain == True:
-        # Scatter plot infected individuals with the super strain in blue
-        ax.scatter(list(coords[(coords[:, 2] != 0) & (coords[:, 5] == 2)][:, 0]),
-                list(coords[(coords[:, 2] != 0) & (coords[:, 5] == 2)][:, 1]), s=3, c='blue',
-                label='Super spreaders = %i' % (len(coords[coords[:, 5] == 2][:, 0])))  
-    # Scatter plot uninfected individuals in gold
-    # ax.scatter(list(coords[coords[:, 2] == 0][:, 0]), list(coords[coords[:, 2] == 0][:, 1]), s=3, c='gold')
-    ax.scatter(list(coords[coords[:, 2] == 0][:, 0]), list(coords[coords[:, 2] == 0][:, 1]), s=3, c='gold',
-               label='Not infected individuals = %i' % len(coords[coords[:, 2] == 0][:, 0]))
+#     # Scatter plot infected individuals with the normal strain in red
+#     ax.scatter(list(coords[(coords[:, 2] != 0) & (coords[:, 5] == 1)][:, 0]),
+#                list(coords[(coords[:, 2] != 0) & (coords[:, 5] == 1)][:, 1]), s=3, c='indianred',
+#                label='Normal infections = %i' % (len(coords[coords[:, 5] == 1][:, 0])))  
+#     if super_strain == True:
+#         # Scatter plot infected individuals with the super strain in blue
+#         ax.scatter(list(coords[(coords[:, 2] != 0) & (coords[:, 5] == 2)][:, 0]),
+#                 list(coords[(coords[:, 2] != 0) & (coords[:, 5] == 2)][:, 1]), s=3, c='blue',
+#                 label='Super spreaders = %i' % (len(coords[coords[:, 5] == 2][:, 0])))  
+#     # Scatter plot uninfected individuals in gold
+#     # ax.scatter(list(coords[coords[:, 2] == 0][:, 0]), list(coords[coords[:, 2] == 0][:, 1]), s=3, c='gold')
+#     ax.scatter(list(coords[coords[:, 2] == 0][:, 0]), list(coords[coords[:, 2] == 0][:, 1]), s=3, c='gold',
+#                label='Not infected individuals = %i' % len(coords[coords[:, 2] == 0][:, 0]))
     
-    ax.scatter([], [], label="Total Un-infections = %i" % un, s=0) # empty scatter plot for displaying legend information
+#     ax.scatter([], [], label="Total Un-infections = %i" % un, s=0) # empty scatter plot for displaying legend information
 
-    plt.legend(title="Cumulative Movements = %i" % mv, loc='upper center') # Add legend with title for cumulative movements
-    plt.savefig(plots_directory + '/' + str(tt) + '.jpg', dpi=1200)
-    plt.close(fig)
+#     plt.legend(title="Cumulative Movements = %i" % mv, loc='upper center') # Add legend with title for cumulative movements
+#     plt.savefig(plots_directory + '/' + str(tt) + '.jpg', dpi=1200)
+#     plt.close(fig)
 
-def do_plots(plots_directory, coords_t, tt, t_s, mv, un, super_strain):
+# def do_plots(plots_directory, coords_t, tt, t_s, mv, un, super_strain):
     
-    ## Make plots according to the following conditions:   ##
-    ## if its the 0th generation of the simulation,        ##
-    ## if the number of generation can be devided by 1000, ##
-    ## if the "Super Strain" disappears.                   ##
+#     ## Make plots according to the following conditions:   ##
+#     ## if its the 0th generation of the simulation,        ##
+#     ## if the number of generation can be devided by 1000, ##
+#     ## if the "Super Strain" disappears.                   ##
     
-    if tt==0 or tt%1000==0 or sum(coords_t[:,5]==1)==0: 
-        plot_map(plots_directory, coords_t, tt, t_s, mv, un, super_strain)
+#     if tt==0 or tt%1000==0 or sum(coords_t[:,5]==1)==0: 
+#         plot_map(plots_directory, coords_t, tt, t_s, mv, un, super_strain)
 
 
 ''' DATA '''
 
-def sample_data(samples_directory, genomes_directory, g, tt, coords_t, all_inf, sample_times, super_strain = False):
+def sample_data(samples_directory, genomes_directory, g, tt, coords_t, all_inf, sample_times):
 
     # if tt==0 or tt%sample_times==0 or sum(coords_t[:,5]==1)==0:
     if tt==0 or tt%sample_times==0:
@@ -587,18 +587,11 @@ def sample_data(samples_directory, genomes_directory, g, tt, coords_t, all_inf, 
         coords_t = pd.DataFrame(data=coords_t, columns=["x","y", "label", "rate of movement", "rate of infection", "mutation", "susceptibility"])
         coords_t.to_csv(samples_directory+'/coords_'+str(tt)+'.csv', header=True, index=False)
 
-        if super_strain == False:
-
-            all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Normal spreaders', 'Time'])
-            all_inf.to_csv(samples_directory+'/all_inf_'+str(tt)+'.csv', header=True, index=False)
-        
-        else:
-
-            all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time'])
-            all_inf.to_csv(samples_directory+'/all_inf_'+str(tt)+'.csv', header=True, index=False)
+        all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time'])
+        all_inf.to_csv(samples_directory+'/all_inf_'+str(tt)+'.csv', header=True, index=False)
 
 
-def save_data(samples_directory, genomes_directory, coords_2, coords_t, g, all_inf, unin, hah, ss, ns, mv, t_un, super_strain = False):
+def save_data(samples_directory, genomes_directory, coords_2, coords_t, g, all_inf, unin, hah, ss, ns, mv, t_un):
     
     g.to_csv(genomes_directory+'/genomes_'+'final'+'.csv',header=False, index=False)
     
@@ -617,22 +610,10 @@ def save_data(samples_directory, genomes_directory, coords_2, coords_t, g, all_i
     coords_2 = pd.DataFrame(data=coords_2, columns=["x","y", "label", "rate of movement", "rate of infection", "mutation", "susceptibility"])
     coords_2.to_csv(samples_directory+'/initial_coords.csv', header=True, index=False)
 
-    if super_strain == False:
+    all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time'])
+    all_inf.to_csv(samples_directory+'/all_inf_'+'final'+'.csv', header=True, index=False)
 
-        all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Normal spreaders', 'Time'])
-        all_inf.to_csv(samples_directory+'/all_inf_'+'final'+'.csv', header=True, index=False)
-
-        extra_data = np.column_stack(np.array((ns, mv), dtype=int))
-        extra_data = pd.DataFrame(data=extra_data, columns=['Total Normal spreaders', 'Total movements'])
-        extra_data.to_csv(samples_directory+'/extra_data.csv', header=True, index=False)
-        #np.savetxt(directory+'extra_data.txt', pd.DataFrame(data=np.column_stack(np.array((ss, ns, mv),dtype=int)), columns=['Total Super spreaders', 'Total Normal spreaders', 'Total movements']), fmt=['%1d', '%1d', '%1d'], header='Total Super infections, Total Normal infections , Total movements', comments='')
-
-    else:
-
-        all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time'])
-        all_inf.to_csv(samples_directory+'/all_inf_'+'final'+'.csv', header=True, index=False)
-
-        extra_data = np.column_stack(np.array((ss, ns, mv), dtype=int))
-        extra_data = pd.DataFrame(data=extra_data, columns=['Total Super spreaders', 'Total Normal spreaders', 'Total movements'])
-        extra_data.to_csv(samples_directory+'/extra_data.csv', header=True, index=False)
-        #np.savetxt(directory+'extra_data.txt', pd.DataFrame(data=np.column_stack(np.array((ss, ns, mv),dtype=int)), columns=['Total Super spreaders', 'Total Normal spreaders', 'Total movements']), fmt=['%1d', '%1d', '%1d'], header='Total Super infections, Total Normal infections , Total movements', comments='')
+    extra_data = np.column_stack(np.array((ss, ns, mv), dtype=int))
+    extra_data = pd.DataFrame(data=extra_data, columns=['Total Super spreaders', 'Total Normal spreaders', 'Total movements'])
+    extra_data.to_csv(samples_directory+'/extra_data.csv', header=True, index=False)
+    #np.savetxt(directory+'extra_data.txt', pd.DataFrame(data=np.column_stack(np.array((ss, ns, mv),dtype=int)), columns=['Total Super spreaders', 'Total Normal spreaders', 'Total movements']), fmt=['%1d', '%1d', '%1d'], header='Total Super infections, Total Normal infections , Total movements', comments='')
