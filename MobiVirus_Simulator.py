@@ -128,7 +128,7 @@ parser.add_argument('-max_inf', '--max_infections', type=str, help='The simulati
 parser.add_argument('-max_mv', '--max_movements', type=str, help='The simulation stops when the given number of movements happen.')
 parser.add_argument('-sus', '--percentage_susceptibility', type=str, help='The simulation stops when only the given number of individuals are susceptible to the virus.')
 parser.add_argument('-time', '--end_time', type=str, help='The simulation stops at the given simulation time.')
-parser.add_argument('-events', '--end_events', type=str, help='The simulation stops when the given number of events (movements+infections) happpen.')
+parser.add_argument('-events', '--end_events', type=str, help='The simulation stops when the given number of events (movements+infections) happpens.')
 parser.add_argument('-ss_event', '--ss_formation_event', type=str, help='Event where the super strain is introduced.')
 ## Action parsers ##
 parser.add_argument('-all_inf', '--all_infected_once', action="store_true", help='The simulation stops when all the individuals are infected at least once.')
@@ -214,6 +214,10 @@ Validate arguments from the .INI file
 
 if not args.ss_formation_event:
     iss = config.getint('Initial_Parameters', 'iss') # Initial number of infected individuals with a super strain 
+    if iss == 0 and n_i != 0:
+        raise ValueError("The number of important genome positions (n_i) in the INI file must be 0, if there are no Super Strains (iss=0)!")
+    elif iss > ii:
+        raise ValueError("The initial number of infected individuals with a super strain cannot be bigger than all the initial infected individuals.")
 
 if args.ss_formation_event:
     ss_events = config.getint('Initial_Parameters', 'ss_events') # Period of events when the super strain is introduced (if previously there are no individuals with a super strain)
@@ -238,7 +242,7 @@ RESULTS' DIRECTORY INITIALIZATION
 
 ## Append current timestamp to directorie's name ##
 timestamp = datetime.now().strftime("%d_%m_%Y_%H_%M")
-results_directory = directory + f'results_{timestamp}/'
+results_directory = directory + f'simulation_{timestamp}/'
 ## Create the names for the subdirectories ##
 samples = results_directory + 'samples'  # Directory to store genomes per sampled generation (CSV format) 
 genomes =  results_directory + 'genomes' # Directory to store general information about infections and movements per sampled generation (CSV format)  
@@ -339,8 +343,8 @@ distm_time = time.time()-coord_time                     # Time to calculate the 
 rt_m = sum(coords_t[:, 3])                              # Total rate of movement 
 rt_i = sum(coords_t[:, 4])                              # Total rate of infection 
 mv = 0                                                  # Count for the movements
-ss = len(coords_t[coords_t[:,5] == 2])                  # Number of Super-spreaders
-ns = len(coords_t[coords_t[:,5] == 1])                  # Number of Normal-spreades
+# ss = len(coords_t[coords_t[:,5] == 2])                  # Number of Super-spreaders
+# ns = len(coords_t[coords_t[:,5] == 1])                  # Number of Normal-spreades
 un = 0                                                  # Total number of uninfections
 hah = np.zeros((1, 5))                                  # Empty array that will be the array of who infected who
 unin = []                                               # List that keeps who got uninfected 
@@ -882,7 +886,7 @@ while sum(coords_t[:,2])!= 0:
     tt += 1 #Moving on in the simulation loop
         
 ## Save the data from the simulation in the correct directory ##
-save_data(samples, genomes, coords_2, coords_t, g, all_inf, unin, hah, ss, ns, mv, t_un)
+save_data(samples, genomes, coords_2, coords_t, g, all_inf, unin, hah, t_un)
 
 print("\nEvents-Loops:", tt)
 

@@ -321,11 +321,11 @@ Movement Function
 
 def movement(coords, bound_l, bound_h, c, rim): 
 
-    ## Calculates the new spacial coordinates of the individual that will move ##
+    ## Calculates the new spatial coordinates of the individual that will move ##
     ## Returns the full data table but with new coordinates ##
     ## The new coordinates are randomly selected from two different Gaussian distributions (one for each coordinate) ##
     ## The mean value of the distribution is the initial coordinate (x or y accordingly) and the standard deviation is taken from the standard deviation of the distribution of all of the coordinates from our sample (x or y accordingly) ##
-    ## If the individual is infected, the standard deviation of the Gaussian distribution is 3 times smaller than the one for a healthy individual ##
+    ## If the individual is infected, the standard deviation of the Gaussian distribution is rim*10 times smaller than the one for a healthy individual ##
     ## In that way we add the condition that an infected individual is more likely to stay in the same place or move closer to its initial position ##
     
     
@@ -579,19 +579,18 @@ Output - Results Functions
 
 def sample_data(samples_directory, genomes_directory, g, tt, coords_t, all_inf, sample_times):
 
-    # if tt==0 or tt%sample_times==0 or sum(coords_t[:,5]==1)==0:
     if tt==0 or tt%sample_times==0:
                 
         g.to_csv(genomes_directory+'/genomes_'+str(tt)+'.csv',header=False, index=False)
         
-        coords_t = pd.DataFrame(data=coords_t, columns=["x","y", "label", "rate of movement", "rate of infection", "mutation", "susceptibility"])
+        coords_t = pd.DataFrame(data=coords_t, columns=["x","y", "Infection label", "Rate of movement", "Rate of infection", "Mutation", "Susceptibility"])
         coords_t.to_csv(samples_directory+'/coords_'+str(tt)+'.csv', header=True, index=False)
 
         all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time'])
         all_inf.to_csv(samples_directory+'/all_inf_'+str(tt)+'.csv', header=True, index=False)
 
 
-def save_data(samples_directory, genomes_directory, coords_2, coords_t, g, all_inf, unin, hah, ss, ns, mv, t_un):
+def save_data(samples_directory, genomes_directory, coords_2, coords_t, g, all_inf, unin, hah, t_un):
     
     g.to_csv(genomes_directory+'/genomes_'+'final'+'.csv',header=False, index=False)
     
@@ -604,16 +603,16 @@ def save_data(samples_directory, genomes_directory, coords_2, coords_t, g, all_i
     hah.to_csv(samples_directory+'/infections.csv', header=True, index=False)
     #np.savetxt(directory+'infections.txt', pd.DataFrame(data = hah, columns=['Infects', 'Infected', 'Infection time', 'Infection Probability']), fmt=['%3d','%3d','%.3f', '%.1f'])
     
-    coords_t = pd.DataFrame(data=coords_t, columns=["x","y", "label", "rate of movement", "rate of infection", "mutation", "susceptibility"])
+    coords_t = pd.DataFrame(data=coords_t, columns=["x","y", "Infection label", "Rate of movement", "Rate of infection", "Mutation", "Susceptibility"])
     coords_t.to_csv(samples_directory+'/coords_final.csv', header=True, index=False)
     
-    coords_2 = pd.DataFrame(data=coords_2, columns=["x","y", "label", "rate of movement", "rate of infection", "mutation", "susceptibility"])
+    coords_2 = pd.DataFrame(data=coords_2, columns=["x","y", "Infection label", "Rate of movement", "Rate of infection", "Mutation", "Susceptibility"])
     coords_2.to_csv(samples_directory+'/initial_coords.csv', header=True, index=False)
 
     all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time'])
     all_inf.to_csv(samples_directory+'/all_inf_'+'final'+'.csv', header=True, index=False)
 
-    extra_data = np.column_stack(np.array((ss, ns, mv), dtype=int))
-    extra_data = pd.DataFrame(data=extra_data, columns=['Total Super spreaders', 'Total Normal spreaders', 'Total movements'])
-    extra_data.to_csv(samples_directory+'/extra_data.csv', header=True, index=False)
+    # extra_data = np.column_stack(np.array((ss, ns, mv), dtype=int))
+    # extra_data = pd.DataFrame(data=extra_data, columns=['Total Super spreaders', 'Total Normal spreaders', 'Total movements'])
+    # extra_data.to_csv(samples_directory+'/extra_data.csv', header=True, index=False)
     #np.savetxt(directory+'extra_data.txt', pd.DataFrame(data=np.column_stack(np.array((ss, ns, mv),dtype=int)), columns=['Total Super spreaders', 'Total Normal spreaders', 'Total movements']), fmt=['%1d', '%1d', '%1d'], header='Total Super infections, Total Normal infections , Total movements', comments='')
