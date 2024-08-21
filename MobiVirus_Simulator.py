@@ -348,7 +348,7 @@ mv = 0                                                  # Count for the movement
 un = 0                                                  # Total number of uninfections
 hah = np.zeros((1, 5))                                  # Empty array that will be the array of who infected who
 unin = []                                               # List that keeps who got uninfected 
-all_inf = np.zeros((1,4))                               # List with the number of Total infected, Super spreaders, Normal spreaders and Infextion times for each generation
+all_inf = np.zeros((1,5))                               # List with the number of Total infected, Super spreaders, Normal spreaders, Infextion times for each generation and total events (up to that point)
 if args.all_infected_once:
     all_infected_once = np.empty((n, 1))                # Initiate the array to store the individuals that got infected at least once
     all_infected_once[:] = np.nan                       # Using NaN to signify empty positions
@@ -379,8 +379,6 @@ print(f"The simulation contains 2 types of strains, a normal strain with {ri_n} 
 ## Run the simulation until everyone becomes healthy ##
 while sum(coords_t[:,2])!= 0: 
     
-    #print("went back to while")
-
     """
     ---------------
     BREAK SCENARIOS
@@ -613,9 +611,6 @@ while sum(coords_t[:,2])!= 0:
              
         ## Find the index of the first True value in the change array, which corresponds to the infected individual who will be the source of the infection (c) ##
         c = np.amin(np.where(change)) # First one to have cum_sum > s3, therefore the one that infects
-        
-        #print("Infectors genome:")
-        #print(g.iloc[c])
 
         """
         ---------
@@ -871,8 +866,8 @@ while sum(coords_t[:,2])!= 0:
         n_rows = sum(coords_t[:, 2] == 0)  # Calculating how many rows meet the condition
         g.iloc[coords_t[:, 2] == 0] = np.nan * np.ones((n_rows, l))
         
-        ## Collect the data for the number of Total infected, Super spreaders, Normal spreaders and infection time for each generation ##
-        all_inf = np.concatenate([all_inf, np.column_stack(np.array((sum(coords_t[:,2] != 0), sum(coords_t[:,5]==2), sum(coords_t[:,5]==1), float(t_s)), dtype=float))], axis=0)    
+        ## Collect the data for the number of Total infected, Super spreaders, Normal spreaders, Infextion times for each generation and total events (up to that point) ##
+        all_inf = np.concatenate([all_inf, np.column_stack(np.array((sum(coords_t[:,2] != 0), sum(coords_t[:,5]==2), sum(coords_t[:,5]==1), float(t_s), int(tt)), dtype=float))], axis=0)    
         
     ## Save a sample of data from the simulation, according to the conditions of the sample_data() function##
     sample_data(samples, genomes, g, tt, coords_t, all_inf, sample_times)

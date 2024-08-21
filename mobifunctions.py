@@ -586,7 +586,7 @@ def sample_data(samples_directory, genomes_directory, g, tt, coords_t, all_inf, 
         coords_t = pd.DataFrame(data=coords_t, columns=["x","y", "Infection label", "Rate of movement", "Rate of infection", "Mutation", "Susceptibility"])
         coords_t.to_csv(samples_directory+'/coords_'+str(tt)+'.csv', header=True, index=False)
 
-        all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time'])
+        all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time', 'Events'])
         all_inf.to_csv(samples_directory+'/all_inf_'+str(tt)+'.csv', header=True, index=False)
 
 
@@ -609,7 +609,7 @@ def save_data(samples_directory, genomes_directory, coords_2, coords_t, g, all_i
     coords_2 = pd.DataFrame(data=coords_2, columns=["x","y", "Infection label", "Rate of movement", "Rate of infection", "Mutation", "Susceptibility"])
     coords_2.to_csv(samples_directory+'/initial_coords.csv', header=True, index=False)
 
-    all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time'])
+    all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time', 'Events'])
     all_inf.to_csv(samples_directory+'/all_inf_'+'final'+'.csv', header=True, index=False)
 
     # extra_data = np.column_stack(np.array((ss, ns, mv), dtype=int))
