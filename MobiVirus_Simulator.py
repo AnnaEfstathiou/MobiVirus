@@ -868,7 +868,7 @@ while sum(coords_t[:,2])!= 0:
         
         ## Collect the data for the number of Total infected, Super spreaders, Normal spreaders, Infextion times for each generation and total events (up to that point) ##
         all_inf = np.concatenate([all_inf, np.column_stack(np.array((sum(coords_t[:,2] != 0), sum(coords_t[:,5]==2), sum(coords_t[:,5]==1), float(t_s), int(tt)), dtype=float))], axis=0)    
-        
+
     ## Save a sample of data from the simulation, according to the conditions of the sample_data() function##
     sample_data(samples, genomes, g, tt, coords_t, all_inf, sample_times)
     
