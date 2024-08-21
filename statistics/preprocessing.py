@@ -148,7 +148,7 @@ def __pop_infection_label(sequences, filtered_rows): # split the population acco
     population_2 = []
 
     # Extract values including the 'label' column, which is column 2
-    label_values = filtered_rows['label']  # assuming 'mutation' is the name of the column
+    label_values = filtered_rows['Infection label']  # assuming 'mutation' is the name of the column
 
     # Iterate through the DataFrame rows
     for index, label in label_values.items():
@@ -168,7 +168,7 @@ def __pop_mutation_label(sequences, filtered_rows):
     population_2 = []
 
     # Extract values including the 'mutation' column, which is column 5 
-    mutation_values = filtered_rows['mutation']  # assuming 'mutation' is the name of the column
+    mutation_values = filtered_rows['Mutation']  # assuming 'mutation' is the name of the column
 
     # unique_mutations = mutation_values.unique()
     # if len(unique_mutations) != 2:

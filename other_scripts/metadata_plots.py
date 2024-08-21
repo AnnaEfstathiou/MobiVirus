@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import os
 import imageio.v2 as imageio
 
-
 def plot_spreaders(csv_file):
     
     ## Plotting the information from an instance of the simulation ##
@@ -58,8 +57,8 @@ def plot_coordinates(csv_file):
     colors = {0.0: 'SpringGreen', 1.0: 'DarkOrange', 2.0: 'SlateBlue'}
 
     # Plotting each point with the corresponding color and legend
-    for mutation_value in coords_data['mutation'].unique():
-        subset = coords_data[coords_data['mutation'] == mutation_value]
+    for mutation_value in coords_data['Mutation'].unique():
+        subset = coords_data[coords_data['Mutation'] == mutation_value]
         plt.scatter(subset['x'], subset['y'], color=colors[mutation_value], label=f'{mutation_labels[mutation_value]} = {len(subset)}')
 
     plt.xlabel('x')

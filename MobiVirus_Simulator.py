@@ -379,7 +379,7 @@ print(f"The simulation contains 2 types of strains, a normal strain with {ri_n} 
 ## Run the simulation until everyone becomes healthy ##
 while sum(coords_t[:,2])!= 0: 
     
-    print("went back to while")
+    #print("went back to while")
 
     """
     ---------------
@@ -541,7 +541,7 @@ while sum(coords_t[:,2])!= 0:
     CHOOSING WHICH EVENT WILL HAPPEN
     --------------------------------
     """
-    print("Event-Loop:", tt)
+    print("Event-Loop:", tt, "Simulation Time:", t_s)
 
     time_bfloop = time.time()- distm_time # Time before event-loop
 
@@ -614,8 +614,8 @@ while sum(coords_t[:,2])!= 0:
         ## Find the index of the first True value in the change array, which corresponds to the infected individual who will be the source of the infection (c) ##
         c = np.amin(np.where(change)) # First one to have cum_sum > s3, therefore the one that infects
         
-        print("Infectors genome:")
-        print(g.iloc[c])
+        #print("Infectors genome:")
+        #print(g.iloc[c])
 
         """
         ---------
