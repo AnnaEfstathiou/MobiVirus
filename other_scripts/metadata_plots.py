@@ -71,12 +71,41 @@ def plot_coordinates(csv_file):
         plt.show()
     plt.close()
 
+def plot_time_events(csv_file):
+    
+    ## Plotting simulation time according to time of events. ##
+    # all_inf csv file
+
+    # Read the CSV file
+    time_related_data = pd.read_csv(csv_file)
+
+    # Extract columns
+    time = time_related_data['Time']
+    events = time_related_data['Events']
+    
+    # Create a plot
+    plt.figure(figsize=(10, 6))
+    plt.plot(events, time)
+
+    # Add labels and title
+    plt.xlabel('Events')
+    plt.ylabel('Simulation Time')
+    plt.title('Events over simulation time')
+    plt.legend()
+
+    if args.save_png:
+        plt.savefig("time_over_events.png", format="png")
+    else:
+        plt.show()
+    plt.close()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Plot simulation results over time from a CSV file.')
-    parser.add_argument('-csv', '--csv_file', type=str, help='Path to a CSV file. For the scatter plot use the coords.csv file. For the plot of the number of normal and super spreaders use an all_inf.csv file.')
+    parser.add_argument('-csv', '--csv_file', type=str, help='Path to a CSV file. For the scatter plot use the coords.csv file. For the plots of the number of normal - super spreaders and time-events use an all_inf.csv file.')
     parser.add_argument('-spreaders', '--ns_ss_spreaders', action="store_true", help='Create a plot showing the number of normal and super spreaders.')
     parser.add_argument('-coords', '--coordinates_scatter_plot', action="store_true", help='Create a scatter plot with the coordinates and mutation label for all individuals.')
+    parser.add_argument('-time', '--time_over_events_plot', action="store_true", help='Create a plot showing the relation between events and simulation time.')
     parser.add_argument('-s','--save_png', action="store_true", help='Flag to save the plot as an PNG file.')
     args = parser.parse_args()
 
@@ -84,4 +113,5 @@ if __name__ == "__main__":
         plot_spreaders(args.csv_file)
     elif args.coordinates_scatter_plot:
         plot_coordinates(args.csv_file)
-    
+    elif args.time_over_events_plot:
+        plot_time_events(args.csv_file)
