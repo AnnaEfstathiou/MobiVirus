@@ -378,6 +378,8 @@ print(f"The simulation contains 2 types of strains, a normal strain with {ri_n} 
 
 ## Run the simulation until everyone becomes healthy ##
 while sum(coords_t[:,2])!= 0: 
+
+    print("Event-Loop:", tt)
     
     """
     ---------------
@@ -442,6 +444,8 @@ while sum(coords_t[:,2])!= 0:
     t_s += np.random.exponential(scale=(1/(rt_i+rt_m))) # t_s: time when an event will happen
                                                         # The scale is 1/rate, because of how the exponential function is defined! 
     t_ss.append(t_s)                                    # Keep the event times in a list
+    
+    print("Time of simulation:",t_s)
 
     #%% Recovery
     """
@@ -460,9 +464,12 @@ while sum(coords_t[:,2])!= 0:
         uninfection_idx = np.where(t_i == t_im)[0]                       # Individuals who are about to recover (indices where t_i equals t_im)  
         normal_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 1]  # Normal spreaders to recover
         super_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 2]   # Super spreaders to recover
- 
+        print("Unin:", uninfection_idx)
+        print("Normal:", normal_idx)
+        print("Super:", super_idx)
+
         ## Recovery of normal spreaders ##
-        if np.array_equal(uninfection_idx, normal_idx) and t_s >= rec_t_ns + t_im:
+        if normal_idx.any() and t_s >= rec_t_ns + t_im:
             
             print("Recovered individuals (normal spreaders): " + ", ".join(map(str, [int(x) for x in normal_idx])))
             
@@ -492,10 +499,11 @@ while sum(coords_t[:,2])!= 0:
             t_i[normal_idx] = 999999999               # Re-initialize the infection times for those that recover 
             t_im = np.min(t_i)                        # New minimum infection time
 
-            continue # goes back to while
+            ## Explicitly go back to while ... ## 
+            continue 
 
         ## Recovery of super spreaders ##
-        elif np.array_equal(uninfection_idx, super_idx) and t_s >= rec_t_ss + t_im:
+        elif super_idx.any() and t_s >= rec_t_ss + t_im:
             
             print("Recovered individuals (super spreaders): " + ", ".join(map(str, [int(x) for x in super_idx])))
             
@@ -539,7 +547,7 @@ while sum(coords_t[:,2])!= 0:
     CHOOSING WHICH EVENT WILL HAPPEN
     --------------------------------
     """
-    print("Event-Loop:", tt, "Simulation Time:", t_s)
+    # print("Event-Loop:", tt, "Simulation Time:", t_s)
 
     time_bfloop = time.time()- distm_time # Time before event-loop
 
