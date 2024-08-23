@@ -21,7 +21,7 @@ def distribution_of_time(csv_file):
     plt.title('Distribution of Time')
 
     if args.save_png:
-        plt.savefig("spreaders_plot.png", format="png")
+        plt.savefig("distribution_of_time.png", format="png")
     else:
         plt.show()
     plt.close()
