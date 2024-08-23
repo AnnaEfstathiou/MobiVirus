@@ -2,28 +2,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import argparse
 
-# # Define your rates
-# rt_i = 0.5  # Example rate value for rt_i
-# rt_m = 0.3  # Example rate value for rt_m
-
-# # Calculate the scale parameter
-# scale = 1 / (rt_i + rt_m)
-
-# # Generate random samples from an exponential distribution
-# samples = np.random.exponential(scale, size=1000)  # Adjust the size for more or fewer samples
-
-# # Plot the histogram
-# plt.hist(samples, bins=30, alpha=0.75, color='skyblue', edgecolor='black')
-
-# # Add labels and title
-# plt.xlabel('Value')
-# plt.ylabel('Frequency')
-# plt.title('Histogram of Exponential Distribution')
-
-# # Show the plot
-# plt.show()
-
-
 def distribution_of_time(csv_file):
     
     ## Plotting the information from an instance of the simulation ##
