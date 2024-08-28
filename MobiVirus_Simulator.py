@@ -464,9 +464,6 @@ while sum(coords_t[:,2])!= 0:
         uninfection_idx = np.where(t_i == t_im)[0]                       # Individuals who are about to recover (indices where t_i equals t_im)  
         normal_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 1]  # Normal spreaders to recover
         super_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 2]   # Super spreaders to recover
-        print("Unin:", uninfection_idx)
-        print("Normal:", normal_idx)
-        print("Super:", super_idx)
 
         ## Recovery of normal spreaders ##
         if normal_idx.any() and t_s >= rec_t_ns + t_im:

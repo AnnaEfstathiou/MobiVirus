@@ -4,10 +4,17 @@ import matplotlib.pyplot as plt
 import os
 import imageio.v2 as imageio
 
+
+"""
+----------------------
+MUTATION RELATED PLOTS
+----------------------
+"""
+
 def plot_spreaders(csv_file):
-    
-    ## Plotting the information from an instance of the simulation ##
-    # all_inf csv file
+
+    '''Plotting the number of individuals with each mutation over time.'''
+    ## necessary argument: all_inf CSV file ##
 
     # Read the CSV file
     spreaders_data = pd.read_csv(csv_file)
@@ -37,14 +44,19 @@ def plot_spreaders(csv_file):
     plt.close()
 
 
+"""
+-------------------
+SPACE RELATED PLOTS
+-------------------
+"""
+
 def plot_coordinates(csv_file):
     
-    ## Create a scatter plot with the coordinates and mutation label for all individuals. ##
-    # coords csv file
+    '''Plotting (scatter plot) the coordinates and mutation label for all individuals. ##'''
+    ## necessary argument: coords CSV file ##
 
+    # Read the CSV file
     coords_data = pd.read_csv(csv_file)
-
-    plt.figure(figsize=(10, 6))
 
     # Assigning labels for every mutation value 
     mutation_labels = {
@@ -61,9 +73,10 @@ def plot_coordinates(csv_file):
         subset = coords_data[coords_data['Mutation'] == mutation_value]
         plt.scatter(subset['x'], subset['y'], color=colors[mutation_value], label=f'{mutation_labels[mutation_value]} = {len(subset)}')
 
+    plt.figure(figsize=(10, 6))
     plt.xlabel('x')
     plt.ylabel('y')
-    plt.title('Scatter Plot of x vs y with Different Mutations')
+    plt.title('Scatter Plot of xy coordinates')
     plt.legend()
     if args.save_png:
         plt.savefig("scatter_plot.png", format="png")
@@ -71,10 +84,48 @@ def plot_coordinates(csv_file):
         plt.show()
     plt.close()
 
+
+def plot_marginal_histograms(csv_file):
+
+    '''Plotting the distribution of x and y coordinates (separately) for all individuals.'''
+    ## necessary argument: coords CSV file ##
+    
+    # Read the data from the CSV file
+    coords_data = pd.read_csv(csv_file)
+
+    # Create figure and axes
+    fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+
+    # Histogram for x-coordinates
+    ax[0].hist(coords_data['x'], bins=30, color='skyblue', edgecolor='black')
+    ax[0].set_title('Histogram of X Coordinates')
+    ax[0].set_xlabel('x')
+    ax[0].set_ylabel('Frequency')
+
+    # Histogram for y-coordinates
+    ax[1].hist(coords_data['y'], bins=30, color='salmon', edgecolor='black')
+    ax[1].set_title('Histogram of Y Coordinates')
+    ax[1].set_xlabel('y')
+    ax[1].set_ylabel('Frequency')
+
+    plt.tight_layout()
+    if args.save_png:
+        plt.savefig("marginal_histograms.png", format="png")
+    else:
+        plt.show()
+    plt.close()
+
+
+"""
+------------------
+TIME RELATED PLOTS
+------------------
+"""
+
 def plot_time_events(csv_file):
     
-    ## Plotting simulation time according to time of events. ##
-    # all_inf csv file
+    '''Plotting the number of events over the simulation time.'''
+    ## necessary argument: all_inf CSV file ##
 
     # Read the CSV file
     time_related_data = pd.read_csv(csv_file)
@@ -100,12 +151,40 @@ def plot_time_events(csv_file):
     plt.close()
 
 
+def distribution_of_time(csv_file):
+    
+    '''Plotting the distribution of simulation time (time vs frequency).'''    
+    ## necessary argument: all_inf CSV file ##
+
+    # Read the CSV file
+    time_data = pd.read_csv(csv_file)
+
+    # Extract columns
+    time = time_data['Time']
+
+    # Create a histogram
+    plt.hist(time, bins=30, alpha=0.75, color='skyblue', edgecolor='black')
+
+    # Add labels and title
+    plt.xlabel('Time Values')
+    plt.ylabel('Frequency')
+    plt.title('Distribution of Time')
+
+    if args.save_png:
+        plt.savefig("distribution_of_time.png", format="png")
+    else:
+        plt.show()
+    plt.close()
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Plot simulation results over time from a CSV file.')
     parser.add_argument('-csv', '--csv_file', type=str, help='Path to a CSV file. For the scatter plot use the coords.csv file. For the plots of the number of normal - super spreaders and time-events use an all_inf.csv file.')
     parser.add_argument('-spreaders', '--ns_ss_spreaders', action="store_true", help='Create a plot showing the number of normal and super spreaders.')
     parser.add_argument('-coords', '--coordinates_scatter_plot', action="store_true", help='Create a scatter plot with the coordinates and mutation label for all individuals.')
+    parser.add_argument('-hist', '--histogram', action="store_true", help='Create a heatmap showing the relation between events and simulation time.')
     parser.add_argument('-time', '--time_over_events_plot', action="store_true", help='Create a plot showing the relation between events and simulation time.')
+    parser.add_argument('-dist_time', '--distribution_of_time', action="store_true", help='Create a plot showing the relation between events and simulation time.')
     parser.add_argument('-s','--save_png', action="store_true", help='Flag to save the plot as an PNG file.')
     args = parser.parse_args()
 
@@ -113,5 +192,10 @@ if __name__ == "__main__":
         plot_spreaders(args.csv_file)
     elif args.coordinates_scatter_plot:
         plot_coordinates(args.csv_file)
+    elif args.histogram:
+        plot_marginal_histograms(args.csv_file)
     elif args.time_over_events_plot:
         plot_time_events(args.csv_file)
+    elif args.distribution_of_time:
+        distribution_of_time(args.csv_file)
+
