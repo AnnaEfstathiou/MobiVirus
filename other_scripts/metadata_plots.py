@@ -176,6 +176,32 @@ def distribution_of_time(csv_file):
         plt.show()
     plt.close()
 
+"""
+-------------------
+EVENT RELATED PLOTS
+-------------------
+"""
+
+def type_of_event(csv_file):
+
+    data = pd.read_csv(csv_file)
+
+    # Step 2: Map 'Type of Event' to numeric values for plotting
+    type_mapping = {'infection': 1, 'movement': 2}
+    data['Type Value'] = data['Type of Event'].map(type_mapping)
+
+    # Step 3: Plot the data
+    plt.figure(figsize=(10, 6))
+    plt.plot(data['Event'], data['Type Value'], marker='o', linestyle='-', color='darkmagenta')
+    plt.title('Type of Event Over Time')
+    plt.xlabel('Event')
+    plt.ylabel('Type of Event')
+
+    # Step 4: Customize the plot
+    plt.yticks([1, 2], ['infection', 'movement'])
+    plt.grid(True)
+    plt.show()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Plot simulation results over time from a CSV file.')
@@ -185,6 +211,7 @@ if __name__ == "__main__":
     parser.add_argument('-hist', '--histogram', action="store_true", help='Create a heatmap showing the relation between events and simulation time.')
     parser.add_argument('-time', '--time_over_events_plot', action="store_true", help='Create a plot showing the relation between events and simulation time.')
     parser.add_argument('-dist_time', '--distribution_of_time', action="store_true", help='Create a plot showing the relation between events and simulation time.')
+    parser.add_argument('-type', '--type_of_event', action="store_true", help='Create a plot showing the type of event.')
     parser.add_argument('-s','--save_png', action="store_true", help='Flag to save the plot as an PNG file.')
     args = parser.parse_args()
 
@@ -198,4 +225,7 @@ if __name__ == "__main__":
         plot_time_events(args.csv_file)
     elif args.distribution_of_time:
         distribution_of_time(args.csv_file)
+    elif args.type_of_event:
+        type_of_event(args.csv_file)
+    
 
