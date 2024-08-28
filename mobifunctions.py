@@ -435,24 +435,6 @@ def mutation(g_i, r_tot):
     
     return g_i
 
-# def mutation(g_i, r_tot):
-    
-#     # Mutation of an individual's genome #
-    
-#     # g_i = genome of an individual (Pandas Series or DataFrame)
-#     # r_tot = total rate of mutation of genome
-    
-#     p = np.random.poisson(r_tot) # Random Poisson number with lambda = r_tot to give how many mutations will happen
-#     N = np.random.randint(0, len(g_i), size=p) # Positions in the genome where mutations will happen (as many as the Poisson number)
-    
-#     # Create a copy to avoid modifying the original DataFrame/Series in place
-#     g_i_copy = g_i.copy()
-    
-#     for i in range(len(N)):
-#         g_i_copy[N[i]] = np.where(g_i_copy[N[i]]==0, 1, 0) # Mutate the selected positions: if the original value is 0, set it to 1; otherwise, set it to 0
-    
-#     return g_i_copy
-
 '''
 --------------------
 Genome Recombination
@@ -527,54 +509,6 @@ Output - Results Functions
 --------------------------
 '''
 
-# ''' PLOTS '''
-
-# def plot_map(plots_directory, coords, tt, ts, mv, un, super_strain = False):
-    
-#     ## Create plot with all of the regions ##
-
-#     fig, ax = plt.subplots()
-#     ax.scatter(200, 200, c='k', s=0)  # Add a point at coordinates (200, 200) with no size (s=0) for scaling purposes
-#     # Set the x and y axis labels
-#     ax.set_xlabel('x')
-#     ax.set_ylabel('y')
-#     # Set the x and y axis limits
-#     ax.set_xlim(-2, 8)
-#     ax.set_ylim(-0.5, 10)
-
-#     ax.set_title("Simulation time =""{0:.4f}".format(ts)) # Set the title of the plot with the current simulation time
-
-#     # Scatter plot infected individuals with the normal strain in red
-#     ax.scatter(list(coords[(coords[:, 2] != 0) & (coords[:, 5] == 1)][:, 0]),
-#                list(coords[(coords[:, 2] != 0) & (coords[:, 5] == 1)][:, 1]), s=3, c='indianred',
-#                label='Normal infections = %i' % (len(coords[coords[:, 5] == 1][:, 0])))  
-#     if super_strain == True:
-#         # Scatter plot infected individuals with the super strain in blue
-#         ax.scatter(list(coords[(coords[:, 2] != 0) & (coords[:, 5] == 2)][:, 0]),
-#                 list(coords[(coords[:, 2] != 0) & (coords[:, 5] == 2)][:, 1]), s=3, c='blue',
-#                 label='Super spreaders = %i' % (len(coords[coords[:, 5] == 2][:, 0])))  
-#     # Scatter plot uninfected individuals in gold
-#     # ax.scatter(list(coords[coords[:, 2] == 0][:, 0]), list(coords[coords[:, 2] == 0][:, 1]), s=3, c='gold')
-#     ax.scatter(list(coords[coords[:, 2] == 0][:, 0]), list(coords[coords[:, 2] == 0][:, 1]), s=3, c='gold',
-#                label='Not infected individuals = %i' % len(coords[coords[:, 2] == 0][:, 0]))
-    
-#     ax.scatter([], [], label="Total Un-infections = %i" % un, s=0) # empty scatter plot for displaying legend information
-
-#     plt.legend(title="Cumulative Movements = %i" % mv, loc='upper center') # Add legend with title for cumulative movements
-#     plt.savefig(plots_directory + '/' + str(tt) + '.jpg', dpi=1200)
-#     plt.close(fig)
-
-# def do_plots(plots_directory, coords_t, tt, t_s, mv, un, super_strain):
-    
-#     ## Make plots according to the following conditions:   ##
-#     ## if its the 0th generation of the simulation,        ##
-#     ## if the number of generation can be devided by 1000, ##
-#     ## if the "Super Strain" disappears.                   ##
-    
-#     if tt==0 or tt%1000==0 or sum(coords_t[:,5]==1)==0: 
-#         plot_map(plots_directory, coords_t, tt, t_s, mv, un, super_strain)
-
-
 ''' DATA '''
 
 def sample_data(samples_directory, genomes_directory, g, tt, coords_t, all_inf, sample_times):
@@ -591,7 +525,7 @@ def sample_data(samples_directory, genomes_directory, g, tt, coords_t, all_inf, 
         all_inf.to_csv(samples_directory+'/all_inf_'+str(tt)+'.csv', header=True, index=False)
 
 
-def save_data(samples_directory, genomes_directory, coords_2, coords_t, g, all_inf, unin, hah, t_un):
+def save_data(samples_directory, genomes_directory, coords_2, coords_t, g, all_inf, unin, hah, t_un, type_event):
     
     g.to_csv(genomes_directory+'/genomes_'+'final'+'.csv',header=False, index=False)
     
@@ -613,6 +547,10 @@ def save_data(samples_directory, genomes_directory, coords_2, coords_t, g, all_i
     all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time', 'Events'])
     all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Events']] = all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Events']].astype(int) # Convert some columns to integer while keeping 'Time' as float
     all_inf.to_csv(samples_directory+'/all_inf_'+'final'+'.csv', header=True, index=False)
+
+    type_event = type_event[1:, :] # Remove the first row of zeros using numpy slicing
+    type_event = pd.DataFrame(data=type_event, columns=['Event','Type of Event'])
+    type_event.to_csv(samples_directory+'/type_event.csv', header=True, index=False)
 
     # extra_data = np.column_stack(np.array((ss, ns, mv), dtype=int))
     # extra_data = pd.DataFrame(data=extra_data, columns=['Total Super spreaders', 'Total Normal spreaders', 'Total movements'])

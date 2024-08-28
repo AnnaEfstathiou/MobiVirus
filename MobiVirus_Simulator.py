@@ -354,6 +354,7 @@ if args.all_infected_once:
     all_infected_once[:] = np.nan                       # Using NaN to signify empty positions
     for j in infected_ind:
         all_infected_once[j] = j                        # Add the initially infected
+type_event = np.zeros((1,2))                            # List with the type of each event
 '''Time'''
 t_s = 0                                                 # Event time (initialization)
 tt = 0                                                  # Time variable that runs the simulation (or number of generation)
@@ -558,6 +559,8 @@ while sum(coords_t[:,2])!= 0:
     ## If s1 is smaller than p_m, the event that will happen is movement ##
     if s1 <= p_m: 
         
+        type_event = np.concatenate([type_event, np.column_stack((np.array([tt]), np.array(['movement'])))])
+
         ## Calculate the cumulative sum of the rate of movement from all the individuals in order to create the probability axis of the movement event ##
         cum_sum = np.cumsum(coords_t[:, 3]) 
 
@@ -605,6 +608,8 @@ while sum(coords_t[:,2])!= 0:
     ## In the other case, where s1 is bigger than p_m, infection will be the event happening ##
     else:                                       
         
+        type_event = np.concatenate([type_event, np.column_stack((np.array([tt]), np.array(['infection'])))])
+
         ## Calclulate the cumulative sum of the infected individuals' infection rates in order to make the probability axis of the infection event ##
         cum_sum = np.cumsum(coords_t[:, 4]) 
 
@@ -886,7 +891,7 @@ while sum(coords_t[:,2])!= 0:
     tt += 1 #Moving on in the simulation loop
         
 ## Save the data from the simulation in the correct directory ##
-save_data(samples, genomes, coords_2, coords_t, g, all_inf, unin, hah, t_un)
+save_data(samples, genomes, coords_2, coords_t, g, all_inf, unin, hah, t_un, type_event)
 
 print("\nEvents-Loops:", tt)
 
