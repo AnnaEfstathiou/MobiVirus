@@ -12,7 +12,7 @@ Calculating:
 import argparse
 import os
 import random
-from preprocessing import __csv_to_fasta, __process_fasta, __read_fasta, __filtering_sequences, __pop_coords, __pop_mutation_label, validate_files
+from preprocessing import __csv_to_fasta, __process_fasta, __read_fasta, __filtering_sequences, __pop_coords, __pop_mutation_label, __pop_infection_label, validate_files
 from statistics import tajimas_d, pi_estimator, watterson_estimator, count_haplotypes, calculate_haplotype_diversity, Fst
 
 
@@ -48,8 +48,8 @@ def calculate_statistics(input_file, coords_file, sample_size = None):
 
     filtered_rows = __filtering_sequences(sampled_infected_sequences, coords_file)
     pop_coords_1, pop_coords_2 = __pop_coords(sampled_infected_sequences, filtered_rows)
+    pop_label_1, pop_label_2 = __pop_infection_label(sampled_infected_sequences, filtered_rows)
     pop_mut_1, pop_mut_2 = __pop_mutation_label(sampled_infected_sequences, filtered_rows)
-    pop_label_1, pop_label_2 = __pop_mutation_label(sampled_infected_sequences, filtered_rows)
 
     # Calculate statistics
     tajimas_d_score = tajimas_d(sampled_infected_sequences)

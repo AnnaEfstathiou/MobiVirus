@@ -4,35 +4,52 @@ import argparse
 import re
 
 def extract_numeric_value(name):
+    
     """Extract numeric value from a string using regex."""
+    
     match = re.search(r'\d+', name)
     return int(match.group()) if match else None
 
 def plot_summary_statistics(csv_file):
+    
     """
-    Plot the summary statistics.
-    1st plot: Tajima's D, Pi-Estimator score, Watterson-Estimator score
-    2nd plot: number of unique sequences represented as a ratio (e.g 415/559 = 0.742)
-    3rd plot: haplotype diversity score
-
+    Plot summary statistics.
+    1st plot: Tajima's D score
+    2nd plot: Pi-Estimator score
+    3rd plot: Watterson-Estimator score
+    4th plot: number of unique sequences represented as a ratio (e.g 415/559 = 0.742)
+    5th plot: haplotype diversity score
+    6th plot: Fst scores according to the different coordinates. infection and mutation label
+    
     INPUT
-    - csv_file: The path to the csv file for which to run the stats.py script.
+    - csv_file: The path to a csv file containing the necessary statistics.
     """
     
     # Read the CSV file
-    csv_df = pd.read_csv(csv_file, index_col=0)  # adjust the index_col parameter as needed
-
-    # Extract numeric values from index (file names) for x-axis
-    numeric_labels = [extract_numeric_value(label) for label in csv_df.index]
+    csv_df = pd.read_csv(csv_file, index_col=0)  
 
     # Convert 'Number of unique sequences' column to just the numeric value before the parentheses
-    csv_df['Unique Sequences Value'] = csv_df['Number of unique sequences'].apply(lambda x: float(x.split(' ')[0]))
+    # and exclude 'Not enough sequences' values
+    csv_df['Unique Sequences Value'] = csv_df['Number of unique sequences'].apply(
+        lambda x: float(x.split(' ')[0]) if 'Not enough sequences' not in x else None)
 
-    fig, ax = plt.subplots(6, 1, figsize=(12, 22))  # Adjusted to 6 plots to accommodate new plot
+    # Convert the relevant columns to numeric, replacing non-numeric entries with NaN.
+    csv_df["Tajima's D"] = pd.to_numeric(csv_df["Tajima's D"], errors='coerce')
+    csv_df["Pi-Estimator"] = pd.to_numeric(csv_df["Pi-Estimator"], errors='coerce')
+    csv_df["Watterson-Estimator"] = pd.to_numeric(csv_df["Watterson-Estimator"], errors='coerce')
+    csv_df["Haplotype Diversity"] = pd.to_numeric(csv_df["Haplotype Diversity"], errors='coerce')
+    csv_df["Fst (coords)"] = pd.to_numeric(csv_df["Fst (coords)"], errors='coerce')
+    csv_df["Fst (label)"] = pd.to_numeric(csv_df["Fst (label)"], errors='coerce')
+    csv_df["Fst (mutation)"] = pd.to_numeric(csv_df["Fst (mutation)"], errors='coerce')
 
+    # Extract numeric values from index (file names) for x-axis (e.g. genome_500.csv > 500)
+    numeric_labels = [extract_numeric_value(label) for label in csv_df.index]
     # Define a step size for x-axis labels (e.g., every 5th label)
     step = 5
     x_labels = [numeric_labels[i] if i % step == 0 else '' for i in range(len(numeric_labels))]
+
+    # Create 6 subplots
+    fig, ax = plt.subplots(6, 1, figsize=(12, 22)) 
 
     # Plot Tajima's D score
     csv_df["Tajima's D"].plot(ax=ax[0], marker='o', color='orange')
@@ -100,3 +117,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     plot_summary_statistics(args.statistics_file)
+

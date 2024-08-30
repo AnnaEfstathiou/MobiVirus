@@ -186,8 +186,8 @@ def Fst(population_1, population_2):
 
         """Calculate allele frequencies for a population."""
 
-        allele_counts = np.sum(population, axis=0)
-        total_alleles = 2 * len(population)
+        allele_counts = np.sum(population, axis=0) # Count SNPs at each position (column)
+        total_alleles = len(population)            # Each individual contributes one allele per locus (haplotypes)
         return allele_counts / total_alleles
 
     def expected_heterozygosity(allele_freq):

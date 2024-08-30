@@ -37,6 +37,7 @@ def plot_spreaders(csv_file):
     plt.title('Simulation Results Over Time')
     plt.legend()
 
+    # Display or save the plot
     if args.save_png:
         plt.savefig("spreaders_plot.png", format="png")
     else:
@@ -52,7 +53,7 @@ SPACE RELATED PLOTS
 
 def plot_coordinates(csv_file):
     
-    '''Plotting (scatter plot) the coordinates and mutation label for all individuals. ##'''
+    '''Plotting (scatter plot) the coordinates and mutation label for all individuals.'''
     ## necessary argument: coords CSV file ##
 
     # Read the CSV file
@@ -78,6 +79,8 @@ def plot_coordinates(csv_file):
     plt.ylabel('y')
     plt.title('Scatter Plot of xy coordinates')
     plt.legend()
+
+    # Display or save the plot
     if args.save_png:
         plt.savefig("scatter_plot.png", format="png")
     else:
@@ -109,6 +112,8 @@ def plot_marginal_histograms(csv_file):
     ax[1].set_ylabel('Frequency')
 
     plt.tight_layout()
+
+    # Display or save the plot
     if args.save_png:
         plt.savefig("marginal_histograms.png", format="png")
     else:
@@ -144,6 +149,7 @@ def plot_time_events(csv_file):
     plt.title('Events over simulation time')
     plt.legend()
 
+    # Display or save the plot
     if args.save_png:
         plt.savefig("time_over_events.png", format="png")
     else:
@@ -170,6 +176,7 @@ def distribution_of_time(csv_file):
     plt.ylabel('Frequency')
     plt.title('Distribution of Time')
 
+    # Display or save the plot
     if args.save_png:
         plt.savefig("distribution_of_time.png", format="png")
     else:
@@ -184,34 +191,45 @@ EVENT RELATED PLOTS
 
 def type_of_event(csv_file):
 
+    '''Plotting the type of event (movement or infection).'''
+    ## necessary argument: type_event CSV file ##
+    
+    # Read the CSV file
     data = pd.read_csv(csv_file)
 
-    # Step 2: Map 'Type of Event' to numeric values for plotting
+    # Map 'Type of Event' to numeric values for plotting
     type_mapping = {'infection': 1, 'movement': 2}
     data['Type Value'] = data['Type of Event'].map(type_mapping)
 
-    # Step 3: Plot the data
-    plt.figure(figsize=(10, 6))
-    plt.plot(data['Event'], data['Type Value'], marker='o', linestyle='-', color='darkmagenta')
-    plt.title('Type of Event Over Time')
-    plt.xlabel('Event')
-    plt.ylabel('Type of Event')
+    # Create a scatter plot of all data points
+    plt.figure(figsize=(16, 6))  # Larger figure size for clarity
+    scatter = plt.scatter(data['Event'], data['Type Value'], 
+                          c=data['Type Value'], cmap='viridis', 
+                          alpha=0.6, s=10)  # Use color mapping and transparency
 
-    # Step 4: Customize the plot
+    # Customize the plot
+    plt.title('Type of Events (Infections VS Movements)', fontsize=14)
+    plt.xlabel('Events', fontsize=12)
+    plt.ylabel('Type of Event', fontsize=12)
     plt.yticks([1, 2], ['infection', 'movement'])
     plt.grid(True)
-    plt.show()
 
+    # Display or save the plot
+    if args.save_png:
+        plt.savefig("type_of_event.png", format="png")
+    else:
+        plt.show()
+    plt.close()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Plot simulation results over time from a CSV file.')
-    parser.add_argument('-csv', '--csv_file', type=str, help='Path to a CSV file. For the scatter plot use the coords.csv file. For the plots of the number of normal - super spreaders and time-events use an all_inf.csv file.')
-    parser.add_argument('-spreaders', '--ns_ss_spreaders', action="store_true", help='Create a plot showing the number of normal and super spreaders.')
-    parser.add_argument('-coords', '--coordinates_scatter_plot', action="store_true", help='Create a scatter plot with the coordinates and mutation label for all individuals.')
-    parser.add_argument('-hist', '--histogram', action="store_true", help='Create a heatmap showing the relation between events and simulation time.')
-    parser.add_argument('-time', '--time_over_events_plot', action="store_true", help='Create a plot showing the relation between events and simulation time.')
-    parser.add_argument('-dist_time', '--distribution_of_time', action="store_true", help='Create a plot showing the relation between events and simulation time.')
-    parser.add_argument('-type', '--type_of_event', action="store_true", help='Create a plot showing the type of event.')
+    parser.add_argument('-csv', '--csv_file', type=str, help='Path to a CSV file.')
+    parser.add_argument('-spreaders', '--ns_ss_spreaders', action="store_true", help='Plotting the number of individuals with each mutation over time. (all_inf CSV)')
+    parser.add_argument('-coords', '--coordinates_scatter_plot', action="store_true", help='Plotting (scatter plot) the coordinates and mutation label for all individuals. (coords CSV)')
+    parser.add_argument('-hist', '--histogram', action="store_true", help='Plotting the distribution of x and y coordinates (separately) for all individuals. (coords CSV)')
+    parser.add_argument('-time', '--time_over_events_plot', action="store_true", help='Plotting the number of events over the simulation time. (all_inf CSV)')
+    parser.add_argument('-dist_time', '--distribution_of_time', action="store_true", help='Plotting the distribution of simulation time (time vs frequency). (all_inf CSV)')
+    parser.add_argument('-type', '--type_of_event', action="store_true", help='Plotting the type of events. (type_event CSV)')
     parser.add_argument('-s','--save_png', action="store_true", help='Flag to save the plot as an PNG file.')
     args = parser.parse_args()
 

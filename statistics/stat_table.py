@@ -77,12 +77,14 @@ def calc_stats_for_dir(directory, sample_size=None):
                         num_unique_seqs_formatted,
                         stats['haplotype_diversity'],
                         stats['Fst_coords'],
-                        stats['Fst_label']
+                        stats['Fst_inf_label'], # recombination  (recombined VS no recombined strains)
+                        stats['Fst_mut_label']  # mutation label (normal VS super strain)
                     ]
                 except ValueError as e:
                     fasta_file_to_remove = os.path.splitext(genome_file)[0] + "_processed.fa"
                     if str(e) == "At least 2 sequences required!":
                         results[genome_file] = [
+                            "Not enough sequences",
                             "Not enough sequences",
                             "Not enough sequences",
                             "Not enough sequences",
@@ -100,7 +102,7 @@ def calc_stats_for_dir(directory, sample_size=None):
                         continue  # Continue processing the next file
                               
     
-    stats_df = pd.DataFrame.from_dict(results, orient='index', columns=['Tajima\'s D', 'Pi-Estimator', 'Watterson-Estimator', 'Number of unique sequences', 'Haplotype Diversity', 'Fst (coords)', 'Fst (label)'])
+    stats_df = pd.DataFrame.from_dict(results, orient='index', columns=['Tajima\'s D', 'Pi-Estimator', 'Watterson-Estimator', 'Number of unique sequences', 'Haplotype Diversity', 'Fst (coords)', 'Fst (label)', 'Fst (mutation)'])
     # extract numbers from the filenames and sort accordingly
     # the csv named as 'genomes_final.csv' will be the last one in the DataFrame
     stats_df['sort_key'] = stats_df.index.map(
