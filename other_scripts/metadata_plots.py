@@ -69,12 +69,13 @@ def plot_coordinates(csv_file):
     # Assigning colors to different mutation values
     colors = {0.0: 'SpringGreen', 1.0: 'DarkOrange', 2.0: 'SlateBlue'}
 
+    plt.figure(figsize=(10, 6))
+
     # Plotting each point with the corresponding color and legend
     for mutation_value in coords_data['Mutation'].unique():
         subset = coords_data[coords_data['Mutation'] == mutation_value]
         plt.scatter(subset['x'], subset['y'], color=colors[mutation_value], label=f'{mutation_labels[mutation_value]} = {len(subset)}')
 
-    plt.figure(figsize=(10, 6))
     plt.xlabel('x')
     plt.ylabel('y')
     plt.title('Scatter Plot of xy coordinates')
