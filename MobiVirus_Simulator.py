@@ -14,7 +14,6 @@
 ## Importing Packages ##
 import argparse
 import numpy as np
-import random
 import pandas as pd
 import time
 import os
@@ -31,7 +30,7 @@ IMPORTING THE NECESSARY PYTHON FUNCTIONS
 ========================================
 """
 
-from mobifunctions import log_command, coords_func, infection_label, genome, ss_mutation_position, mutation, rec_probi, recombine_genomes,infectivity, probs, movement, ini_distm, new_dist, ind_probi
+from mobifunctions import log_command, coords_func, infection_label, genome, ss_mutation_position, mutation, rec_probi, recombine_genomes, infectivity, probs, movement, ini_distm, new_dist, ind_probi
 from mobifunctions import sample_data, save_data
 
 #%% Parameters initialization (INI file)
@@ -68,28 +67,6 @@ Read directory from the Initial_Parameters section
 """
 directory = config.get('Directory', 'directory').strip('"')  # Directory where the scripts exist (.ini file & .py script with functions)
 
-"""
------------------------------------------------
-Read values from the Initial_Parameters section
------------------------------------------------
-coords_2 = The characteristics of the individuals, meaning coordinates, labels, probabilities of movement/infection
-g        = genome of the individuals, with the shape of a matrix where each line is each individuals' genome, in the form of an array
-r_tot    = total mutation rate 
-n_i      = number of important positions in the genome
-n        = total number of individuals
-l        = length of genome
-
-The columns in Coords_(2 or t)
-------------------------------
-# 0 = x coords
-# 1 = y coords
-# 2 = label (not infected = 0, one infection = 1, two infections (if recombination) = 2)
-# 3 = rate of movement
-# 4 = rate of infection
-# 5 = mutation label (normal strain = 1, super strain = 2)
-# 6 = susceptibility
-------------------------------
-"""
 n = config.getint('Initial_Parameters', 'n')                        # Number of individuals in the simulation
 l = config.getint('Initial_Parameters', 'l')                        # Length of genome
 bound_l = config.getfloat('Initial_Parameters', 'bound_l')          # Lower bound for the plot
@@ -290,6 +267,19 @@ CREATING A DATA TABLE WITH THE INFO FOR EACH INDIVIDUAL
 =======================================================
 """
 
+"""
+The columns in Coords_(2 or t)
+------------------------------
+# 0 = x coords
+# 1 = y coords
+# 2 = label (not infected = 0, one infection = 1, two infections (if recombination) = 2)
+# 3 = rate of movement
+# 4 = rate of infection
+# 5 = mutation label (normal strain = 1, super strain = 2)
+# 6 = susceptibility
+------------------------------
+"""
+
 label_i = infection_label(n,ii)                                                     # Divide the people in infected and not infected
 coords_2 = np.concatenate([coords_func(n, bound_l, bound_h), label_i], axis =1)     # Initiate the array data table with the x,y coordinates and the infection label
 g, r_tot = genome(n, l, r_m)                                                        # Initialization of genome table (shape n*l, nan for not infected, all 0's for initially infected)
@@ -343,8 +333,6 @@ distm_time = time.time()-coord_time                     # Time to calculate the 
 rt_m = sum(coords_t[:, 3])                              # Total rate of movement 
 rt_i = sum(coords_t[:, 4])                              # Total rate of infection 
 mv = 0                                                  # Count for the movements
-# ss = len(coords_t[coords_t[:,5] == 2])                  # Number of Super-spreaders
-# ns = len(coords_t[coords_t[:,5] == 1])                  # Number of Normal-spreades
 un = 0                                                  # Total number of uninfections
 hah = np.zeros((1, 5))                                  # Empty array that will be the array of who infected who
 unin = []                                               # List that keeps who got uninfected 
@@ -354,7 +342,7 @@ if args.all_infected_once:
     all_infected_once[:] = np.nan                       # Using NaN to signify empty positions
     for j in infected_ind:
         all_infected_once[j] = j                        # Add the initially infected
-type_event = np.zeros((1,2))                            # List with the type of each event
+event_type = np.zeros((1,3))                            # List with the type of each event
 '''Time'''
 t_s = 0                                                 # Event time (initialization)
 tt = 0                                                  # Time variable that runs the simulation (or number of generation)
@@ -446,7 +434,7 @@ while sum(coords_t[:,2])!= 0:
                                                         # The scale is 1/rate, because of how the exponential function is defined! 
     t_ss.append(t_s)                                    # Keep the event times in a list
     
-    print("Time of simulation:",t_s)
+    print("Simulation Time:",t_s)
 
     #%% Recovery
     """
@@ -545,7 +533,6 @@ while sum(coords_t[:,2])!= 0:
     CHOOSING WHICH EVENT WILL HAPPEN
     --------------------------------
     """
-    # print("Event-Loop:", tt, "Simulation Time:", t_s)
 
     time_bfloop = time.time()- distm_time # Time before event-loop
 
@@ -559,8 +546,6 @@ while sum(coords_t[:,2])!= 0:
     ## If s1 is smaller than p_m, the event that will happen is movement ##
     if s1 <= p_m: 
         
-        type_event = np.concatenate([type_event, np.column_stack((np.array([tt]), np.array(['movement'])))])
-
         ## Calculate the cumulative sum of the rate of movement from all the individuals in order to create the probability axis of the movement event ##
         cum_sum = np.cumsum(coords_t[:, 3]) 
 
@@ -596,6 +581,9 @@ while sum(coords_t[:,2])!= 0:
             
             ## Add one movement in the mv counter of movements that have occurred ##
             mv += 1
+
+            ## Store the type of event (movement) and the individual that moved ##
+            event_type = np.concatenate([event_type, np.column_stack((np.array([tt]), np.array(['movement']), np.array([c])))])
             
             ## Optional: Print the event that just happened ##
             print("Movement of:", c)
@@ -608,8 +596,6 @@ while sum(coords_t[:,2])!= 0:
     ## In the other case, where s1 is bigger than p_m, infection will be the event happening ##
     else:                                       
         
-        type_event = np.concatenate([type_event, np.column_stack((np.array([tt]), np.array(['infection'])))])
-
         ## Calclulate the cumulative sum of the infected individuals' infection rates in order to make the probability axis of the infection event ##
         cum_sum = np.cumsum(coords_t[:, 4]) 
 
@@ -622,6 +608,10 @@ while sum(coords_t[:,2])!= 0:
         ## Find the index of the first True value in the change array, which corresponds to the infected individual who will be the source of the infection (c) ##
         c = np.amin(np.where(change)) # First one to have cum_sum > s3, therefore the one that infects
 
+        ## Store the type of event (infection) and the infector  ##
+        event_type = np.concatenate([event_type, np.column_stack((np.array([tt]), np.array(['infection']), np.array([c])))])
+
+        
         """
         ---------
         INFECTION
@@ -653,16 +643,13 @@ while sum(coords_t[:,2])!= 0:
         if args.ss_formation_event and (ss_form <= tt <= ss_form + ss_events) and len(coords_t[coords_t[:,5] == 2]) == 0:
         
             print("Super Spreader's Formation Event:",tt)
-            print("Infector:",c)
            
             ## Go through all the individuals (indexing them with j) ... ##
             for j in range(n): 
 
                 ## Find those who have a non-zero probability of getting infected due to their distance ##           
                 if ipi[j] != 0:
-
-                    print("There is someone in the circle with ipi=1")
-
+                  
                     ## Pick a random number s4 ##
                     s4 = np.random.random() 
 
@@ -671,18 +658,9 @@ while sum(coords_t[:,2])!= 0:
                     ##                  3. The random number s4 is less than or equal to their ipi[j] ##
                     if coords_t[j,2] == 0 and coords_t[j,6] == 1 and s4 <= ipi[j]: 
 
-                        print("Found sm healthy and susceptable") 
-                        print(f"Super Spreader: {j}")
-
                         ## Updating genomes ##
                         g.iloc[j] = g.iloc[c].copy() # The individual's genome is passed from the infector (c) to the newly infected individual (j)
-                        
-                        print("Copied Infectors genome")
-                        print(g.iloc[j])
-                        
                         g.at[j, ss_pos] = 1.0        # Set the value at 1.0 in the selected position                   
-                        print("NEW Infectors genome")
-                        print(g.iloc[j])
 
                         ## Updating the data table ##                                                                       
                         coords_t[j,2] = 1             # Change the infection label to infected (1)
@@ -716,6 +694,8 @@ while sum(coords_t[:,2])!= 0:
                 ## Find those who have a non-zero probability to get infected due to their distance ##           
                 if ipi[j] != 0:
 
+                    # print(f"Distance of {j}:{df_i[j,c]} with coordinates: {coords_t[j,0],coords_t[j,1]} and state: {coords_t[j,5]}")
+
                     ## Pick a random number s4 ##
                     s4 = np.random.random() 
 
@@ -727,7 +707,6 @@ while sum(coords_t[:,2])!= 0:
                         ## Updating genomes ##
                         g.iloc[j] = g.iloc[c].copy()           # The individual's genome is passed from the infector (c) to the newly infected individual (j)
                         g.iloc[j] = mutation(g.iloc[j], r_tot) # The individual's (j) genome goes through the mutation procedure
-                        # g.iloc[j] = np.where(s4<=ipi[j], mutation(g.iloc[j], r_tot), g.iloc[j]) # The individual's (j) genome goes through the mutation procedure
 
                         ## Updating the data table ##                                                                       
                         coords_t[j,2] = 1             # Change the infection label to infected (1)
@@ -888,10 +867,10 @@ while sum(coords_t[:,2])!= 0:
     ## Time to run the simulation loop ##
     loop_t = time.time()-time_bfloop 
     
-    tt += 1 #Moving on in the simulation loop
+    tt += 1 # Moving on in the simulation loop
         
 ## Save the data from the simulation in the correct directory ##
-save_data(samples, genomes, coords_2, coords_t, g, all_inf, unin, hah, t_un, type_event)
+save_data(samples, genomes, coords_2, coords_t, g, all_inf, unin, hah, t_un, event_type)
 
 print("\nEvents-Loops:", tt)
 

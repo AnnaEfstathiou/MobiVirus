@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import os
 import imageio.v2 as imageio
 
-
+#%% Strains
 """
 ----------------------
 MUTATION RELATED PLOTS
@@ -44,20 +44,26 @@ def plot_spreaders(csv_file):
         plt.show()
     plt.close()
 
-
+#%% Space
 """
 -------------------
 SPACE RELATED PLOTS
 -------------------
 """
 
-def plot_coordinates(csv_file):
+def plot_coordinates(csv_file_1, csv_file_2):
     
     '''Plotting (scatter plot) the coordinates and mutation label for all individuals.'''
     ## necessary argument: coords CSV file ##
 
-    # Read the CSV file
-    coords_data = pd.read_csv(csv_file)
+    # Read the CSV files
+    coords_data = pd.read_csv(csv_file_1) 
+    infectors_data = pd.read_csv(csv_file_2)
+
+    # Extracting the number from the CSV filename
+    base_name = os.path.basename(csv_file_1)    # Get the filename only (without the path)
+    name_part = os.path.splitext(base_name)[0]  # Remove the file extension
+    number_part = name_part.split("_")[-1]      # Get the number part (corresponds to loop or generation)
 
     # Assigning labels for every mutation value 
     mutation_labels = {
@@ -68,7 +74,7 @@ def plot_coordinates(csv_file):
 
     # Assigning colors to different mutation values
     colors = {0.0: 'SpringGreen', 1.0: 'DarkOrange', 2.0: 'SlateBlue'}
-
+    
     plt.figure(figsize=(10, 6))
 
     # Plotting each point with the corresponding color and legend
@@ -76,6 +82,16 @@ def plot_coordinates(csv_file):
         subset = coords_data[coords_data['Mutation'] == mutation_value]
         plt.scatter(subset['x'], subset['y'], color=colors[mutation_value], label=f'{mutation_labels[mutation_value]} = {len(subset)}')
 
+   # Get the row corresponding to the current event
+    event_row = infectors_data[infectors_data['Event'] == int(number_part)] # Get the row corresponding to the given event
+    if event_row['Event Type'].values[0] == 'infection':                    # If the event = infection...
+        infector = event_row['Individual'].values[0]                        # Get the individual who will infect 
+        coords_infector = coords_data.iloc[infector]                        # Get the coordinates of the individual who will infect 
+        if coords_infector["Mutation"] == 1.0:
+            plt.scatter(coords_infector['x'], coords_infector['y'], color='mediumvioletred', label='Infector (normal strain)')
+        elif coords_infector["Mutation"] == 2.0:
+            plt.scatter(coords_infector['x'], coords_infector['y'], color='deeppink', label='Infector (super strain)')
+    
     plt.xlabel('x')
     plt.ylabel('y')
     plt.title('Scatter Plot of xy coordinates')
@@ -83,7 +99,8 @@ def plot_coordinates(csv_file):
 
     # Display or save the plot
     if args.save_png:
-        plt.savefig("scatter_plot.png", format="png")
+        scatter_plot_name = f'scatter_plot_{number_part}.png'
+        plt.savefig(scatter_plot_name, format="png")
     else:
         plt.show()
     plt.close()
@@ -121,7 +138,7 @@ def plot_marginal_histograms(csv_file):
         plt.show()
     plt.close()
 
-
+#%% Time 
 """
 ------------------
 TIME RELATED PLOTS
@@ -184,6 +201,7 @@ def distribution_of_time(csv_file):
         plt.show()
     plt.close()
 
+#%% Events
 """
 -------------------
 EVENT RELATED PLOTS
@@ -222,9 +240,11 @@ def type_of_event(csv_file):
         plt.show()
     plt.close()
 
+#%% Parsers
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Plot simulation results over time from a CSV file.')
     parser.add_argument('-csv', '--csv_file', type=str, help='Path to a CSV file.')
+    parser.add_argument('-inf', '--infectors_file', type=str, help='Path to a CSV file containg the infectors.')
     parser.add_argument('-spreaders', '--ns_ss_spreaders', action="store_true", help='Plotting the number of individuals with each mutation over time. (all_inf CSV)')
     parser.add_argument('-coords', '--coordinates_scatter_plot', action="store_true", help='Plotting (scatter plot) the coordinates and mutation label for all individuals. (coords CSV)')
     parser.add_argument('-hist', '--histogram', action="store_true", help='Plotting the distribution of x and y coordinates (separately) for all individuals. (coords CSV)')
@@ -237,7 +257,7 @@ if __name__ == "__main__":
     if args.ns_ss_spreaders:
         plot_spreaders(args.csv_file)
     elif args.coordinates_scatter_plot:
-        plot_coordinates(args.csv_file)
+        plot_coordinates(args.csv_file, args.infectors_file)
     elif args.histogram:
         plot_marginal_histograms(args.csv_file)
     elif args.time_over_events_plot:

@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 
 """
+---------------------------------
 Functions for MobiVirus Simulator
+---------------------------------
 """
 
 #Packages
@@ -66,20 +68,20 @@ def log_command(directory, command, flags):
         log_file.write(f"Number of individuals (n): {config.getint('Initial_Parameters', 'n')}\n")
         log_file.write(f"Length of genome (l): {config.getint('Initial_Parameters', 'l')}\n")
         log_file.write(f"Initial number of infected individuals (ii): {config.getint('Initial_Parameters', 'ii')}\n")
+        log_file.write(f"Initial number of infected individuals with a super strain (if not ss_formation_event parser is used) (iss): {config.getint('Initial_Parameters', 'iss')}\n")
         log_file.write(f"Lower bound for the spacial axis (bound_l): {config.getfloat('Initial_Parameters', 'bound_l')}\n")
         log_file.write(f"Upper bound for the spacial axis (bound_h): {config.getfloat('Initial_Parameters', 'bound_h')}\n")
         log_file.write(f"Mutation rate for each genome position (r_m): {config.getfloat('Initial_Parameters', 'r_m')}\n")
         log_file.write(f"Number of important genome positions (n_i): {config.getint('Initial_Parameters', 'n_i')}\n")
-        log_file.write(f"Rate of infection of 1st strain (ri_n): {config.getfloat('Initial_Parameters', 'ri_n')}\n")
-        log_file.write(f"Rate of infection of 2nd strain (ri_s): {config.getfloat('Initial_Parameters', 'ri_s')}\n")
-        log_file.write(f"Rate of movement of infected individuals (rm_i): {config.getfloat('Initial_Parameters', 'rm_i')}\n")
-        log_file.write(f"Rate of movement of healthy individuals (rm_h): {config.getfloat('Initial_Parameters', 'rm_h')}\n")
+        log_file.write(f"Rate of infection (ri): {config.getfloat('Initial_Parameters', 'ri_n')} (ns), {config.getfloat('Initial_Parameters', 'ri_s')} (ss)\n")
+        log_file.write(f"Rate of movement (rm): {config.getfloat('Initial_Parameters', 'rm_i')} (infected), {config.getfloat('Initial_Parameters', 'rm_h')} (healthy)\n")
         log_file.write(f"Infection distance (inf_dist): {config.getfloat('Initial_Parameters', 'inf_dist_ns')} (ns), {config.getfloat('Initial_Parameters', 'inf_dist_ss')} (ss)\n")
         log_file.write(f"Probability that the infector infects an individual in their infection distance (prob_inf): {config.getfloat('Initial_Parameters', 'prob_inf_ns')} (ns), {config.getfloat('Initial_Parameters', 'prob_inf_ss')} (ss)\n")
         log_file.write(f"Rate of recombination (r_rec): {config.getfloat('Initial_Parameters', 'r_rec')}\n")
         log_file.write(f"Recovery time (rec_t): {config.getfloat('Initial_Parameters', 'rec_t_ns')} (ns), {config.getfloat('Initial_Parameters', 'rec_t_ss')} (ss)\n")
         log_file.write(f"Relative infected mobility (rim): {config.getfloat('Initial_Parameters', 'rim')}\n")
         log_file.write(f"Generations to get a sample (sample_times): {config.getint('Initial_Parameters', 'sample_times')}\n")
+        log_file.write(f"Period of events when the super strain is introduced (if ss_formation_event flag is used): {config.getint('Initial_Parameters', 'ss_events')}\n")     
 
 """
 ==================================
@@ -110,7 +112,6 @@ Read directory from the Initial_Parameters section
 
 # Directory where the scripts exist
 directory = config.get('Directory', 'directory').strip('"')                 
-
 
 """
 ===================================
@@ -303,6 +304,7 @@ def ini_distm(coords):
             x1, y1 = coords[i, :2]
             x2, y2 = coords[j, :2]
             df[j,i] = np.sqrt((x2-x1)**2 + (y2-y1)**2)
+            df[i,j] = df[j,i]
     
     return df
 
@@ -396,7 +398,8 @@ def new_dist(coords, coords_f, initial_dist, c): # where c in the index of the c
         for j in range(i+1, n):
             x1, y1 = coords_f[0,:2]
             x2, y2 = coords[j, :2]
-            df[j,i] = np.where((i==c or j==c), np.sqrt((x2-x1)**2 + (y2-y1)**2), df[j,i])  # Change only the distance matrix cells of the individul that moved
+            df[j,i] = np.where((i==c or j==c), np.sqrt((x2-x1)**2 + (y2-y1)**2), df[j,i])  # Change only the distance matrix cells of the individual that moved
+            df[i,j] = df[j,i]  
     
     return df
 
@@ -525,18 +528,16 @@ def sample_data(samples_directory, genomes_directory, g, tt, coords_t, all_inf, 
         all_inf.to_csv(samples_directory+'/all_inf_'+str(tt)+'.csv', header=True, index=False)
 
 
-def save_data(samples_directory, genomes_directory, coords_2, coords_t, g, all_inf, unin, hah, t_un, type_event):
+def save_data(samples_directory, genomes_directory, coords_2, coords_t, g, all_inf, unin, hah, t_un, event_type):
     
     g.to_csv(genomes_directory+'/genomes_'+'final'+'.csv',header=False, index=False)
     
     unin = np.concatenate([np.column_stack(np.array((unin, t_un), dtype=float))], axis=0)
     unin = pd.DataFrame(data=unin, columns=['Uninfected individual', 'Time of uninfection'])
     unin.to_csv(samples_directory+'/uninfections.csv', header=True, index=False)
-    #np.savetxt(directory+'uninfections.txt', pd.DataFrame(data = unin), fmt=['%3d','%.3f'])
     
     hah = pd.DataFrame(data=hah, columns=['Infecting', 'Infected', 'Times of Infections', 'Time', 'Infection Rate'])
     hah.to_csv(samples_directory+'/infections.csv', header=True, index=False)
-    #np.savetxt(directory+'infections.txt', pd.DataFrame(data = hah, columns=['Infects', 'Infected', 'Infection time', 'Infection Probability']), fmt=['%3d','%3d','%.3f', '%.1f'])
     
     coords_t = pd.DataFrame(data=coords_t, columns=["x","y", "Infection label", "Rate of movement", "Rate of infection", "Mutation", "Susceptibility"])
     coords_t.to_csv(samples_directory+'/coords_final.csv', header=True, index=False)
@@ -548,11 +549,6 @@ def save_data(samples_directory, genomes_directory, coords_2, coords_t, g, all_i
     all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Events']] = all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Events']].astype(int) # Convert some columns to integer while keeping 'Time' as float
     all_inf.to_csv(samples_directory+'/all_inf_'+'final'+'.csv', header=True, index=False)
 
-    type_event = type_event[1:, :] # Remove the first row of zeros using numpy slicing
-    type_event = pd.DataFrame(data=type_event, columns=['Event','Type of Event'])
-    type_event.to_csv(samples_directory+'/type_event.csv', header=True, index=False)
-
-    # extra_data = np.column_stack(np.array((ss, ns, mv), dtype=int))
-    # extra_data = pd.DataFrame(data=extra_data, columns=['Total Super spreaders', 'Total Normal spreaders', 'Total movements'])
-    # extra_data.to_csv(samples_directory+'/extra_data.csv', header=True, index=False)
-    #np.savetxt(directory+'extra_data.txt', pd.DataFrame(data=np.column_stack(np.array((ss, ns, mv),dtype=int)), columns=['Total Super spreaders', 'Total Normal spreaders', 'Total movements']), fmt=['%1d', '%1d', '%1d'], header='Total Super infections, Total Normal infections , Total movements', comments='')
+    event_type = event_type[1:, :] # Remove the first row of zeros using numpy slicing
+    event_type = pd.DataFrame(data=event_type, columns=['Event','Event Type','Individual'])
+    event_type.to_csv(samples_directory+'/event_type.csv', header=True, index=False)
