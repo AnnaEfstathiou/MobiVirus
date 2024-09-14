@@ -1,6 +1,7 @@
 #!/bin/bash
 
-"""mko"""
+## Create scatter plot for all the generations contained in a simulation ##
+## Argument: simulations directory
 
 # Check if a directory argument is provided
 if [ "$#" -ne 1 ]; then

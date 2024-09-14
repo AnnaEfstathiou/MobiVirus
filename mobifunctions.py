@@ -13,6 +13,7 @@ import random
 import matplotlib.pyplot as plt
 import pandas as pd
 import statistics
+import msprime
 import os
 import sys
 from configparser import ConfigParser
@@ -43,32 +44,12 @@ def log_command(directory, command, flags):
         # Checking why the simulation stopped
         if not any(flag in flags for flag in ['-ratio', '-per_inf', '-per_ss', '-max_inf', '-max_mv', '-sus', '-all_inf', '-time', '-events']):
             log_file.write("\nThe simulation stopped because everyone is healthy.\n")
-        # elif 'all_inf' in flags.keys():
-        #     log_file.write("\nThe simulation might stop when all the individuals are infected at least once.\n")
-        # elif 'ratio' in flags.keys():
-        #     log_file.write("\nThe simulation might stop when the given ratio of super Strain individuals/normal Strain individuals becomes real.\n")      
-        # elif 'per_inf' in flags.keys():
-        #     log_file.write("\nThe simulation might stop when the infected individuals in the population reach the given percentage.\n")
-        # elif 'per_ss' in flags.keys():
-        #     log_file.write("\nThe simulation might stop when the super spreaders in the population reach the given percentage.\n")
-        # elif 'max_inf' in flags.keys():
-        #     log_file.write("\nThe simulation might stop when the given number of infections happen.\n")
-        # elif 'max_mv' in flags.keys():
-        #     log_file.write("\nThe simulation might stop when the given number of movements happen.\n")
-        # elif 'sus' in flags.keys():
-        #     log_file.write("\nThe simulation might stop when only the given number of individuals are susceptible to the virus.\n")
-        # elif 'time' in flags.keys():
-        #     print("FOUND")
-        #     log_file.write("\nThe simulation might stop at the given simulation time.\n")
-        # elif 'events' in flags.keys():
-        #     log_file.write("\nThe simulation might stop when the given number of events (movements+infections) happpen.\n")
         
         # Append the initial parameters from the config
         log_file.write("\nInitial Parameters:\n")
         log_file.write(f"Number of individuals (n): {config.getint('Initial_Parameters', 'n')}\n")
         log_file.write(f"Length of genome (l): {config.getint('Initial_Parameters', 'l')}\n")
         log_file.write(f"Initial number of infected individuals (ii): {config.getint('Initial_Parameters', 'ii')}\n")
-        log_file.write(f"Initial number of infected individuals with a super strain (if not ss_formation_event parser is used) (iss): {config.getint('Initial_Parameters', 'iss')}\n")
         log_file.write(f"Lower bound for the spacial axis (bound_l): {config.getfloat('Initial_Parameters', 'bound_l')}\n")
         log_file.write(f"Upper bound for the spacial axis (bound_h): {config.getfloat('Initial_Parameters', 'bound_h')}\n")
         log_file.write(f"Mutation rate for each genome position (r_m): {config.getfloat('Initial_Parameters', 'r_m')}\n")
@@ -81,7 +62,9 @@ def log_command(directory, command, flags):
         log_file.write(f"Recovery time (rec_t): {config.getfloat('Initial_Parameters', 'rec_t_ns')} (ns), {config.getfloat('Initial_Parameters', 'rec_t_ss')} (ss)\n")
         log_file.write(f"Relative infected mobility (rim): {config.getfloat('Initial_Parameters', 'rim')}\n")
         log_file.write(f"Generations to get a sample (sample_times): {config.getint('Initial_Parameters', 'sample_times')}\n")
-        log_file.write(f"Period of events when the super strain is introduced (if ss_formation_event flag is used): {config.getint('Initial_Parameters', 'ss_events')}\n")     
+        log_file.write("\nSuper_strain_Parameters:\n")
+        log_file.write(f"Event that the super strain mutation is introduced for the 1st time: {config.getint('Super_strain_Parameters', 'ss_formation')}\n")   
+        log_file.write(f"Period of events when the super strain is introduced (if previously there are no individuals with a super strain): {config.getint('Super_strain_Parameters', 'ss_events')}\n")       
 
 """
 ==================================
@@ -125,19 +108,17 @@ Coordinates Function
 --------------------
 '''
 
-def coords_func(n, bound_l, bound_h):
+def coords_function(n, bound_l, bound_h):
     
-    ## Creates a stacked column array of the (x,y) 2D coordinates of each individual in the dataset ##
-    ## The coordinates are assingned randomly using a uniform distribution ##
+    ## Creates a stacked column array of the (x,y) 2D coordinates of each individual in the dataset. ##
+    ## The coordinates are assingned randomly using a uniform distribution.                          ##
     
     # n = total number of individuals in the sample
     # bound_l =  lower bound of the spacial axes
     # bound_h = higher bound of the spacial axes
     # x = random coordinate in the x axis 
     # y = random coordinate in the y axis
-    
-    # Default values:  The defined space is a rectangle with the same bounds in the x and y axis 
-    
+        
     x = np.random.uniform(low=bound_l, high=bound_h, size=n)
     y = np.random.uniform(low=bound_l, high=bound_h, size=n)
 
@@ -149,23 +130,23 @@ Infection Label Function
 ------------------------
 '''
 
-def infection_label(n, i):
+def infection_label(n, ii):
     
-    ## Creates a stacked column array where every cell corresponds to an individual, with a label depending on if they are infected with the virus or not ##
-    ## In the initial stage of the simulation, there is a sample of infected individuals among the healthy ones ##
+    ## Creates a stacked column array where every cell corresponds to an individual, with a label depending on if they are infected with the virus or not. ##
+    ## In the initial stage of the simulation, there is a sample of infected individuals among the healthy ones.                                           ##
     
     # n = total number of individuals in the sample
-    # i = number of infectd individuals
+    # ii = number of infectd individuals
     # label 0 = healthy individual
     # label 1 = infected individual (only 1 infection)
     
-    z = np.array([1]*i)
-    o = np.array([0]*(n-i))
-    s = np.concatenate((z, o))
-    random.shuffle(s)
-    l = np.column_stack(s)
-    
-    return l.T
+    infected_array = np.array([1]*ii)
+    healthy_array = np.array([0]*(n-ii))
+    all = np.concatenate((infected_array, healthy_array))
+    random.shuffle(all)
+    labels = np.column_stack(all)
+
+    return labels.T
 
 '''
 ---------------
@@ -173,21 +154,53 @@ Genome Function
 ---------------
 '''
 
-def genome(n, l, r_m):
+def msprime_genomes(ii,l,r_rec,r_m, ss_pos):
+
+    ## Generate genomes using msprime simulator ##
+
+    # ii = number of genomes (infected individuals)
+    # l = genomes length
+    # r_rec = recombination rate
+    # r_m = mutation rate for each genome position
+    # ss_pos = position in the region of determinant genome positions for the infected with mutation 2 (Super Strain)
+
+    # Function to apply the transformation: turn even numbers to 0.0 and odd (>1) to 1.0 to make the genome binary
+    def transform_value(x):
+        if x > 1.0:
+            if x % 2 == 0:  # even
+                return 0.0
+            else:           # odd
+                return 1.0
+        return x
     
-    ## Creates an empty data frame where the rows correspond to the genomes of different individuals and the columns to the genome positions ##
-    ## Returns the dataframe together with the total mutation rate of a genome ##
+    """ msprime simulation """
+
+    # STEP 1: Simulate a tree sequence
+    tree_sequence = msprime.sim_ancestry( 
+        samples = ii,               # number of genomes
+        sequence_length = l,        # genomes length
+        recombination_rate = r_rec, # recombination rate
+        ploidy = 1,                 # haplotypes
+        random_seed = 8273)         # seed for reproducibility
     
-    # n = total number of individuals in the sample
-    # l = total length of the genome
-    # r_m = mutation rate of a position in the genome
+    # STEP 2: Introduce mutations on the simulated ancestry
+    mutated_tree_sequence = msprime.sim_mutations(tree_sequence, rate=r_m, random_seed=8273)
+
+    """ Process the simulated sequences """
+
+    initial_genomes = np.zeros((ii, l)) # initialize an array for the initial viral genomes 
+
+    # Loop through each variant in the mutated tree sequence
+    for var in mutated_tree_sequence.variants():
+        pos_index = int(var.site.position)            # convert the site position to an integer index (column in initial_genomes)
+        initial_genomes[:, pos_index] = var.genotypes # insert the variants into the corresponding column of initial_genomes
+
+    viral_genomes = pd.DataFrame(initial_genomes)      # convert the genomes into a DataFrame
+    viral_genomes = viral_genomes.map(transform_value) # munipulate the mutations
+    viral_genomes[ss_pos] = 0.0                        # set super strain position all to 0.0
     
-    # Default result: If the genome of an individual has a specific value in at least one of the important positions, the individual is infected by the Super Strain
-    
-    g =  pd.DataFrame(index=range(n), columns=range(l))
-    r_tot = r_m * l # Total rate of mutation of genome
-    
-    return g, r_tot
+    return viral_genomes
+
 
 def ss_mutation_position(n_i, l, position):
     
@@ -211,89 +224,15 @@ def ss_mutation_position(n_i, l, position):
     return random.choice(positions)
 
 '''
-----------------------
-Movement Rate Function
-----------------------
-'''
-
-def probs(coords, rm_i, rm_h):
-    
-    ## Creates a stacked column array where every cell corresponds to an individual with a value for the rate of movement for that individual ##
-    ## The rate of movement depends on the infection label (see parameters.ini) ##
-    
-    # coords = the full coordinate table
-    # rm_i = rate of movement for infected individual
-    # rm_h = rate of movement for healthy individual
-    
-    probm = np.zeros(len(coords)) # random rate of movement for each individual
-
-    mask = coords[:, 2] != 0.0    # for those who are infected (label 1 (or 2))
-    probm[mask] = rm_i            # they get rm_i in the corresponding positions in probm
-
-    mask = coords[:, 2] == 0.0    # for those that are healthy
-    probm[mask] = rm_h            # they get rm_h in the corresponding positions in probm
-    
-    return np.column_stack(probm).T 
-
-
-'''
------------------------
-Infection Rate Function
------------------------
-'''
-
-def infectivity(in_probi, g, n_i, ri_s, position):
-
-    ## Gives the specific value of the infection rate of an individual, depending on the strain of the virus ##
-    ## The strain is decided by the n_i important positions in the individual's genome ##
-    
-    # g = genome of individual
-    # n_i = important positions in the genome
-    # in_probi = infection rate of the infector
-    # ri_s = infectivity rate of super strain
-    # position ('start', 'middle', or 'end') = area of the important positions in the individual's genome
-    
-    if position == "start":
-
-        if np.any(np.array(g[:n_i])==1):
-            probi = ri_s
-        else:
-            probi = in_probi
-
-    elif position == "middle":
-
-        genome_length = len(g)
-        middle_start = (genome_length - n_i) // 2
-        middle_end = middle_start + n_i
-        if np.any(np.array(g[middle_start:middle_end]) == 1):
-            probi = ri_s
-        else:
-            probi = in_probi
-    
-    elif position == "end":
-
-        genome_length = len(g)
-        end_start = genome_length - n_i
-        if np.any(np.array(g[end_start:]) == 1):
-            probi = ri_s
-        else:
-            probi = in_probi
-    
-    else:
-        raise ValueError("Invalid position value. Expected 'start', 'middle', or 'end'.")
-    
-    return probi
-
-'''
 --------------------------------
 Initial Distance Matrix Function
 --------------------------------
 '''
 
-def ini_distm(coords):
+def initial_distances(coords):
     
     ## Creates a dataframe containing the distance between all the individuals in the sample ##
-    ## The rows and the columns of the dataframe both correspond to the individuals ##
+    ## The rows and the columns of the dataframe both correspond to the individuals          ##
     
     # coords = dataframne of the individual's spacial coordinates
     
@@ -303,7 +242,7 @@ def ini_distm(coords):
         for j in range(i+1, n):
             x1, y1 = coords[i, :2]
             x2, y2 = coords[j, :2]
-            df[j,i] = np.sqrt((x2-x1)**2 + (y2-y1)**2)
+            df[j,i] = np.sqrt((x2-x1)**2 + (y2-y1)**2) # Euclidean distance
             df[i,j] = df[j,i]
     
     return df
@@ -323,62 +262,58 @@ Movement Function
 
 def movement(coords, bound_l, bound_h, c, rim): 
 
-    ## Calculates the new spatial coordinates of the individual that will move ##
-    ## Returns the full data table but with new coordinates ##
-    ## The new coordinates are randomly selected from two different Gaussian distributions (one for each coordinate) ##
-    ## The mean value of the distribution is the initial coordinate (x or y accordingly) and the standard deviation is taken from the standard deviation of the distribution of all of the coordinates from our sample (x or y accordingly) ##
-    ## If the individual is infected, the standard deviation of the Gaussian distribution is rim*10 times smaller than the one for a healthy individual ##
-    ## In that way we add the condition that an infected individual is more likely to stay in the same place or move closer to its initial position ##
-    
-    
+    ## Calculates the new spatial coordinates of the individual that will move                                                                                                                                    ##
+    ## Returns the full data table but with new coordinates                                                                                                                                                       ##
+    ## The new coordinates are randomly selected from two different Gaussian distributions (one for each coordinate)                                                                                              ##
+    ## The mean value of the distribution is the initial coordinate (x or y accordingly) and the stdev is taken from the stdev of the distribution of all of the coordinates from the sample (x or y accordingly) ##
+    ## If the individual is infected, the stdev of the Gaussian distribution is rims times smaller than the one for a healthy individual                                                                          ##
+    ## This is because that an infected individual is more likely to stay in the same place or move closer to their initial position                                                                              ##
+    ## Individuals are not allowed to move outside the box (or space)                                                                                                                                             ##
+
     # coords = the full coordinate table in order to get the standard deviations
     # bound_l =  lower bound of the spacial axes
     # bound_h = higher bound of the spacial axes
-    # c = the specific individual that will move
-    # If these standard deviations are defined, we use them and not the standard deviation from all of the coordinates in the sample
+    # c = the individual that will move
     # rim = relative infected mobility. The parameter that differentiates between the mobility of a healthy individual and an infected one
-    ## Individuals are not allowed to move outside the box (or space) ##
     
-    x_f = 0                 # new x coordinate
-    y_f = 0                 # new y coordinate
-    label_f = coords[c, 2]  # label of individual (healthy or infected)
-    probm_f = coords[c, 3]  # random rate of movement
-    probi_f = coords[c, 4]  # rate of infection of individual
-    mut_f = coords[c, 5]    # mutation label
-    sus_f = coords[c, 6]    # susceptibility
+    x_c = 0                 # new x coordinate
+    y_c = 0                 # new y coordinate
+    label_c = coords[c, 2]  # label of individual (healthy or infected)
+    probm_c = coords[c, 3]  # rate of movement
+    probi_c = coords[c, 4]  # rate of infection 
+    mut_c = coords[c, 5]    # mutation label
+    sus_c = coords[c, 6]    # susceptibility
 
-    r_x = statistics.stdev(coords[:, 0]) # std from the distribution of x coordinate from our sample
-    r_y = statistics.stdev(coords[:, 1]) # std from the distribution of y coordinate from our sample
+    stdev_x = statistics.stdev(coords[:, 0]) # std from the distribution of x coordinate from our sample
+    stdev_y = statistics.stdev(coords[:, 1]) # std from the distribution of y coordinate from our sample
 
     # if the individual is healthy
     if coords[c, 2] == 0: 
-
-        a = np.random.normal(coords[c,0], r_x )
+        # x coordinates
+        a = np.random.normal(coords[c,0], stdev_x)
         while a > bound_h or a< bound_l:
-            a = np.random.normal(coords[c,0], r_x )
-                
-        b = np.random.normal(coords[c,1], r_y )
+            a = np.random.normal(coords[c,0], stdev_x)
+        # y coordinates        
+        b = np.random.normal(coords[c,1], stdev_y)
         while b > bound_h or b< bound_l:
-            b = np.random.normal(coords[c,1], r_y )
-                 
-        x_f = a
-        y_f = b
+            b = np.random.normal(coords[c,1], stdev_y)
+        x_c = a
+        y_c = b
     
     # if the individual is infected
     else:
-            
-        a = np.random.normal(coords[c,0], r_x*rim )
+        # x coordinates
+        a = np.random.normal(coords[c,0], stdev_x*rim)
         while a > bound_h or a< bound_l:
-            a = np.random.normal(coords[c,0], r_x*rim )
-                
-        b = np.random.normal(coords[c,1], r_y*rim )
+            a = np.random.normal(coords[c,0], stdev_x*rim)
+        # y coordinates
+        b = np.random.normal(coords[c,1], stdev_y*rim)
         while b > bound_h or b< bound_l:
-            b = np.random.normal(coords[c,1], r_y*rim )
-                 
-        x_f = a
-        y_f = b
+            b = np.random.normal(coords[c,1], stdev_y*rim)          
+        x_c = a
+        y_c = b
 
-    return np.column_stack((x_f, y_f, label_f, probm_f, probi_f, mut_f, sus_f))
+    return np.column_stack((x_c, y_c, label_c, probm_c, probi_c, mut_c, sus_c))
 
 
 '''
@@ -387,13 +322,18 @@ Distance Matrix After Movement Function
 ---------------------------------------
 '''
 
-def new_dist(coords, coords_f, initial_dist, c): # where c in the index of the coords that corresponds the individual that moved
+def new_distances(coords, coords_f, distances, c): 
     
     ## Changes only the column of the initial distance matrix that coresponds to the individual that moved ##
     ## For that column only, it calculates the new distances between the individual c and the rest in the sample ##
 
+    # coords = the full coordinate table in order to get the standard deviations
+    # coords_f = full data table with coordinates after movement
+    # distances = distance matrix
+    # c = the individual that will move
+
     n = len(coords)
-    df = initial_dist.copy()
+    df = distances.copy()
     for i in range(n):
         for j in range(i+1, n):
             x1, y1 = coords_f[0,:2]
@@ -411,15 +351,14 @@ Infection
 
 def ind_probi(df, c, inf_dist, prob_inf):
     
-    ## Gives an array of length as many as the individuals and shape (n,1), only for the one individual that infects in that moment ##
-    ## In the cells, 1 is for those who are in the "infection distance" and 0 for the others ##
-    
-    # 1 is also the probability of infection
-    
-    n = len(df) # the number of individuals
-    ipi = np.zeros((n))
+    ## Gives an array of length as many as the individuals and shape (n,1)                                  ##
+    ## In the cells, non-zero values are for those who are in the "infection distance" and 0 for the others ##
+        
+    n = len(df) # number of individuals
+    ipi = np.zeros((n)) # initialize an array to store the probabilities of someone to get infected
     for i in range(n):
-        ipi[i] = np.where((df[i,c] < inf_dist) & (df[i,c] != 0), prob_inf, 0) # The first condition defines the infection distance
+        ipi[i] = np.where((df[i,c] < inf_dist) & (df[i,c] != 0), prob_inf, 0) # 1st condition: infection distance
+                                                                              # 2nd condition: exclude the individual that will infect
     
     return ipi
 
@@ -447,11 +386,11 @@ Genome Recombination
 def rec_probi(r_rec, l):
 
     ## Number to determine whether recombination will take place ##
-    ## If p = 0 >> No genetic recombination ##
-    ## If p > 0 >> Genetic recombination ##
-    ## Genetic recombination is less possible for small r_rec ##
+    ## If p = 0 >> No genetic recombination                      ##
+    ## If p > 0 >> Genetic recombination                         ##
+    ## Genetic recombination is less possible for small r_rec    ##
 
-    rec_total = r_rec * (l-1) # recombination rate per genome
+    rec_total = r_rec * (l-1)        # recombination rate per genome
     p = np.random.poisson(rec_total) # Random Poisson number with lambda = rec_total to determine if recombination will happen
 
     return p
@@ -484,14 +423,10 @@ def recombine_genomes(genome1: pd.Series, genome2: pd.Series, p: int) -> pd.Seri
     if p <= 0:
         raise ValueError("p must be a positive number")
     
-    # Generate p random unique positions
-    positions = sorted(np.random.choice(range(1, len(genome1)), p, replace=False))
+    positions = sorted(np.random.choice(range(1, len(genome1)), p, replace=False)) # Generate p random unique positions
+    start_genome = np.random.choice([1, 2])                                        # Choose the initial genome to start
     
-    # Choose the initial genome to start
-    start_genome = np.random.choice([1, 2])
-    
-    # Initialize the new genome
-    new_genome = []
+    new_genome = []  # Initialize the new genome
     previous_position = 0
     
     # Perform recombination
@@ -523,8 +458,9 @@ def sample_data(samples_directory, genomes_directory, g, tt, coords_t, all_inf, 
         coords_t = pd.DataFrame(data=coords_t, columns=["x","y", "Infection label", "Rate of movement", "Rate of infection", "Mutation", "Susceptibility"])
         coords_t.to_csv(samples_directory+'/coords_'+str(tt)+'.csv', header=True, index=False)
 
-        all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time', 'Events'])
-        all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Events']] = all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Events']].astype(int) # Convert some columns to integer while keeping 'Time' as float
+        all_inf = all_inf[1:, :] # Remove the first row of zeros using numpy slicing
+        all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time', 'Event'])
+        all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Event']] = all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Event']].astype(int) # Convert some columns to integer while keeping 'Time' as float
         all_inf.to_csv(samples_directory+'/all_inf_'+str(tt)+'.csv', header=True, index=False)
 
 
@@ -533,10 +469,11 @@ def save_data(samples_directory, genomes_directory, coords_2, coords_t, g, all_i
     g.to_csv(genomes_directory+'/genomes_'+'final'+'.csv',header=False, index=False)
     
     unin = np.concatenate([np.column_stack(np.array((unin, t_un), dtype=float))], axis=0)
-    unin = pd.DataFrame(data=unin, columns=['Uninfected individual', 'Time of uninfection'])
-    unin.to_csv(samples_directory+'/uninfections.csv', header=True, index=False)
+    unin = pd.DataFrame(data=unin, columns=['Recovered individual', 'Recovery Time'])
+    unin.to_csv(samples_directory+'/recovery.csv', header=True, index=False)
     
-    hah = pd.DataFrame(data=hah, columns=['Infecting', 'Infected', 'Times of Infections', 'Time', 'Infection Rate'])
+    hah = hah[1:, :] # Remove the first row of zeros using numpy slicing
+    hah = pd.DataFrame(data=hah, columns=['Infecting', 'Infected', 'Infection Time', 'Simulation Time', 'Infection Rate'])
     hah.to_csv(samples_directory+'/infections.csv', header=True, index=False)
     
     coords_t = pd.DataFrame(data=coords_t, columns=["x","y", "Infection label", "Rate of movement", "Rate of infection", "Mutation", "Susceptibility"])
@@ -545,8 +482,9 @@ def save_data(samples_directory, genomes_directory, coords_2, coords_t, g, all_i
     coords_2 = pd.DataFrame(data=coords_2, columns=["x","y", "Infection label", "Rate of movement", "Rate of infection", "Mutation", "Susceptibility"])
     coords_2.to_csv(samples_directory+'/initial_coords.csv', header=True, index=False)
 
-    all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time', 'Events'])
-    all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Events']] = all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Events']].astype(int) # Convert some columns to integer while keeping 'Time' as float
+    all_inf = all_inf[1:, :] # Remove the first row of zeros using numpy slicing
+    all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time', 'Event'])
+    all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Event']] = all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Event']].astype(int) # Convert some columns to integer while keeping 'Time' as float
     all_inf.to_csv(samples_directory+'/all_inf_'+'final'+'.csv', header=True, index=False)
 
     event_type = event_type[1:, :] # Remove the first row of zeros using numpy slicing

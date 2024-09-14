@@ -1,11 +1,10 @@
 import argparse
 import pandas as pd
-import matplotlib.pyplot as plt
+
+'''This script checks how many events happend during the given period.'''
 
 def events_per_time(csv_file, start_time, end_time):
     
-    '''This script checks how many events happend during the given period.'''
-
     # Read the CSV file
     data = pd.read_csv(csv_file)
     
@@ -29,9 +28,9 @@ def events_per_time(csv_file, start_time, end_time):
     event_2 = filtered_end.iloc[0]
     
     # Calculate how many events happened between the two times
-    event_count = event_2['Events'] - event_1['Events']
+    event_count = event_2['Event'] - event_1['Event']
     
-    return print(f"\nBetween the period: {event_1['Time']}-{event_2['Time']}, {int(event_count)} events happened (events from {int(event_1['Events'])} to {int(event_2['Events'])}).")
+    return print(f"\nBetween the period: {event_1['Time']}-{event_2['Time']}, {int(event_count)} events happened (events from {int(event_1['Event'])} to {int(event_2['Event'])}).")
 
 
 if __name__ == "__main__":

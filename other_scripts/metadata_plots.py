@@ -2,7 +2,7 @@ import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
-import imageio.v2 as imageio
+# import imageio.v2 as imageio
 
 #%% Strains
 """
@@ -155,7 +155,7 @@ def plot_time_events(csv_file):
 
     # Extract columns
     time = time_related_data['Time']
-    events = time_related_data['Events']
+    events = time_related_data['Event']
     
     # Create a plot
     plt.figure(figsize=(10, 6))
@@ -211,31 +211,35 @@ EVENT RELATED PLOTS
 def type_of_event(csv_file):
 
     '''Plotting the type of event (movement or infection).'''
-    ## necessary argument: type_event CSV file ##
+    ## necessary argument: event_type CSV file ##
     
     # Read the CSV file
     data = pd.read_csv(csv_file)
 
     # Map 'Type of Event' to numeric values for plotting
     type_mapping = {'infection': 1, 'movement': 2}
-    data['Type Value'] = data['Type of Event'].map(type_mapping)
+    data['Type Value'] = data['Event Type'].map(type_mapping)
+
+    # Define custom colors for each type of event
+    event_colors = {'infection': 'red', 'movement': 'blue'}
+    data['Color'] = data['Event Type'].map(event_colors)
 
     # Create a scatter plot of all data points
     plt.figure(figsize=(16, 6))  # Larger figure size for clarity
     scatter = plt.scatter(data['Event'], data['Type Value'], 
-                          c=data['Type Value'], cmap='viridis', 
+                          c=data['Color'], 
                           alpha=0.6, s=10)  # Use color mapping and transparency
 
     # Customize the plot
     plt.title('Type of Events (Infections VS Movements)', fontsize=14)
     plt.xlabel('Events', fontsize=12)
-    plt.ylabel('Type of Event', fontsize=12)
+    plt.ylabel('Event Type', fontsize=12)
     plt.yticks([1, 2], ['infection', 'movement'])
     plt.grid(True)
 
     # Display or save the plot
     if args.save_png:
-        plt.savefig("type_of_event.png", format="png")
+        plt.savefig("event_type.png", format="png")
     else:
         plt.show()
     plt.close()
@@ -244,13 +248,13 @@ def type_of_event(csv_file):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Plot simulation results over time from a CSV file.')
     parser.add_argument('-csv', '--csv_file', type=str, help='Path to a CSV file.')
-    parser.add_argument('-inf', '--infectors_file', type=str, help='Path to a CSV file containg the infectors.')
+    parser.add_argument('-inf', '--infectors_file', type=str, help='Path to a CSV file containg the infectors. (event_type CSV)')
     parser.add_argument('-spreaders', '--ns_ss_spreaders', action="store_true", help='Plotting the number of individuals with each mutation over time. (all_inf CSV)')
     parser.add_argument('-coords', '--coordinates_scatter_plot', action="store_true", help='Plotting (scatter plot) the coordinates and mutation label for all individuals. (coords CSV)')
     parser.add_argument('-hist', '--histogram', action="store_true", help='Plotting the distribution of x and y coordinates (separately) for all individuals. (coords CSV)')
     parser.add_argument('-time', '--time_over_events_plot', action="store_true", help='Plotting the number of events over the simulation time. (all_inf CSV)')
     parser.add_argument('-dist_time', '--distribution_of_time', action="store_true", help='Plotting the distribution of simulation time (time vs frequency). (all_inf CSV)')
-    parser.add_argument('-type', '--type_of_event', action="store_true", help='Plotting the type of events. (type_event CSV)')
+    parser.add_argument('-type', '--type_of_event', action="store_true", help='Plotting the type of events. (event_type CSV)')
     parser.add_argument('-s','--save_png', action="store_true", help='Flag to save the plot as an PNG file.')
     args = parser.parse_args()
 

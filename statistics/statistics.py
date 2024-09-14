@@ -219,6 +219,10 @@ def Fst(population_1, population_2):
     Ho_1 = observed_heterozygosity(population_1_array)
     Ho_2 = observed_heterozygosity(population_2_array)
 
+    # Check to avoid division by zero
+    if (He_1 + He_2) == 0:
+        return float('nan')  # Return NaN if heterozygosity is zero
+
     # Calculate Fst
     fst = (He_1 + He_2 - (Ho_1 + Ho_2)) / (He_1 + He_2)
 

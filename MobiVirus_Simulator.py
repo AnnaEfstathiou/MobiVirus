@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-#%% Import packages - functions
 """
 ================================
 |      ------------------      |
 |   | MobiVirus Simulator |    |
 |      ------------------      |
 ================================
-
 """
+
+#%% Import packages - functions
 
 ## Importing Packages ##
 import argparse
@@ -30,7 +30,7 @@ IMPORTING THE NECESSARY PYTHON FUNCTIONS
 ========================================
 """
 
-from mobifunctions import log_command, coords_func, infection_label, genome, ss_mutation_position, mutation, rec_probi, recombine_genomes, infectivity, probs, movement, ini_distm, new_dist, ind_probi
+from mobifunctions import log_command, coords_function, infection_label, msprime_genomes, ss_mutation_position, mutation, rec_probi, recombine_genomes, movement, initial_distances, new_distances, ind_probi
 from mobifunctions import sample_data, save_data
 
 #%% Parameters initialization (INI file)
@@ -73,8 +73,7 @@ bound_l = config.getfloat('Initial_Parameters', 'bound_l')          # Lower boun
 bound_h = config.getfloat('Initial_Parameters', 'bound_h')          # Upper bound for the plot
 ii = config.getint('Initial_Parameters', 'ii')                      # Number of infected individuals
 r_m = config.getfloat('Initial_Parameters', 'r_m')                  # Mutation rate for each position in genome
-n_i = config.getint('Initial_Parameters', 'n_i')                    # Important genome positions for the ss mutation
-                                                                    # If there are no super strains, n_i = 0
+n_i = config.getint('Initial_Parameters', 'n_i')                    # Important genome positions for the ss mutation; If there are no super strains, n_i = 0
 ri_n = config.getfloat('Initial_Parameters', 'ri_n')                # Rate of infection from normal/strain 
 ri_s = config.getfloat('Initial_Parameters', 'ri_s')                # Rate of infection from super/strain 
 rm_i = config.getfloat('Initial_Parameters', 'rm_i')                # Rate of movement for infected ind.
@@ -88,6 +87,8 @@ rec_t_ns = config.getfloat('Initial_Parameters', 'rec_t_ns')        # Recovery t
 rec_t_ss = config.getfloat('Initial_Parameters', 'rec_t_ss')        # Recovery time in simulation time (super strain)
 rim = config.getfloat('Initial_Parameters', 'rim')                  # Relative infection mobility
 sample_times = config.getint('Initial_Parameters', 'sample_times')  # Generations where we take samples of our simulation's output
+ss_form = config.getint('Super_strain_Parameters', 'ss_formation')  # Event that the super strain mutation is introduced for the 1st time
+ss_events = config.getint('Super_strain_Parameters', 'ss_events')   # Period of events when the super strain is introduced (if previously there are no individuals with a super strain)
 
 #%% Parsed arguments
 """
@@ -96,18 +97,21 @@ PARSE ARGUMENTS
 ===============
 """ 
 
-parser = argparse.ArgumentParser(description='Creating other possible senarios (e.g. super strain), break arguments, visualization options. All the arguments are optional!')
+parser = argparse.ArgumentParser(description='MobiVirus Simulation Script')
 ## String parsers ##
 parser.add_argument('-ratio', '--ratio_super_vs_normal', type=str, help='The simulation stops when the given ratio of super Strain individuals / normal Strain individuals becomes real.')
 parser.add_argument('-per_inf', '--percentage_infected', type=str, help='The simulation stops when the infected individuals in the population reach the given percentage.')
 parser.add_argument('-per_ss', '--percentage_super_strain', type=str, help='The simulation stops when the super spreaders in the population reach the given percentage.')
+parser.add_argument('-per_ns', '--percentage_normal_strain', type=str, help='The simulation stops when the normal spreaders in the population reach the given percentage.')
 parser.add_argument('-max_inf', '--max_infections', type=str, help='The simulation stops when the given number of infections happen.')
 parser.add_argument('-max_mv', '--max_movements', type=str, help='The simulation stops when the given number of movements happen.')
 parser.add_argument('-sus', '--percentage_susceptibility', type=str, help='The simulation stops when only the given number of individuals are susceptible to the virus.')
 parser.add_argument('-time', '--end_time', type=str, help='The simulation stops at the given simulation time.')
 parser.add_argument('-events', '--end_events', type=str, help='The simulation stops when the given number of events (movements+infections) happpens.')
-parser.add_argument('-ss_event', '--ss_formation_event', type=str, help='Event where the super strain is introduced.')
 ## Action parsers ##
+# group = parser.add_mutually_exclusive_group(required=True)
+parser.add_argument('-manual', '--manual_genomes', action="store_true", help='Begin the simulation with all-0 genomes. Introduce the super strain mutation at the "ss_form" event.')
+parser.add_argument('-msprime', '--msprime_genomes', action="store_true", help='Begin the simulation with genomes created by msprime. Introduce the super strain mutation at the "ss_form" event.')
 parser.add_argument('-all_inf', '--all_infected_once', action="store_true", help='The simulation stops when all the individuals are infected at least once.')
 parser.add_argument('-r', '--recombination', action="store_true", help='Provide the ability to recombinate genomes, if 2 infections happen.')
 parser.add_argument('-vis_data', '--visualize_data', action="store_true", help='Visualize the data table as a dataframe in the console.')
@@ -140,6 +144,13 @@ if args.percentage_super_strain:
         raise ValueError("The percentage of super spreaders in the population must be between 0 and 1!")
 else:
     percentage_super_strain = None
+
+if args.percentage_normal_strain:
+    percentage_normal_strain = float(args.percentage_normal_strain)
+    if not 0 <= percentage_normal_strain <= 1:
+        raise ValueError("The percentage of normal spreaders in the population must be between 0 and 1!")
+else:
+    percentage_normal_strain = None
 
 if args.max_infections:
     max_infections = int(args.max_infections)
@@ -176,30 +187,22 @@ if args.end_events:
 else:
     end_events = None
 
-if args.ss_formation_event:
-    ss_form = int(args.ss_formation_event)
-    if not ss_form >= 0:
-        raise ValueError("The event that the super strain is introduced must be a positive integer!")
-else:
-    ss_form = None
-
 """
 -------------------------------------
 Validate arguments from the .INI file
 -------------------------------------
 """
 
-if not args.ss_formation_event:
-    iss = config.getint('Initial_Parameters', 'iss') # Initial number of infected individuals with a super strain 
-    if iss == 0 and n_i != 0:
-        raise ValueError("The number of important genome positions (n_i) in the INI file must be 0, if there are no Super Strains (iss=0)!")
-    elif iss > ii:
-        raise ValueError("The initial number of infected individuals with a super strain cannot be bigger than all the initial infected individuals.")
+if not (args.manual_genomes or args.msprime_genomes) and n_i > 0:
+    raise ValueError("The number of important genome positions (n_i) in the INI file must be 0, if there are no Super Strains (neither args.manual_genomes nor args.msprime_genomes)!")
 
-if args.ss_formation_event:
-    ss_events = config.getint('Initial_Parameters', 'ss_events') # Period of events when the super strain is introduced (if previously there are no individuals with a super strain)
+if (args.manual_genomes or args.msprime_genomes) and n_i == 0:
+    raise ValueError("The number of important genome positions (n_i) in the INI file must a positive integer, in order for the Super Strains to exist (either args.manual_genomes or args.msprime_genomes)!")
 
-if n_i == 0 or n_i > l:
+if ss_form < 0 or ss_events < 0:
+    raise ValueError("The events regarding the formation of the super strain mutation must be positive integers!")
+
+if n_i > l:
     raise ValueError("The number of important genome positions (n_i) in the INI file must be postitive intiger, smaller than the genome length!")
 
 if ii > n:
@@ -251,7 +254,6 @@ flag_explanations = {
     '-sus': 'The simulation stops when only the given number of individuals are susceptible to the virus.',
     '-time': 'The simulation stops at the given simulation time.',
     '-events': 'The simulation stops when the given number of events (movements+infections) happpen.',
-    '-ss_event': 'Event where the super strain is introduced.',
     '-vis_data': 'Visualize the data table as a dataframe in the console.',
     '-g0': 'Save the initial genomes of the population in a CSV.',
     '-plots': 'Create scatter plots of the coordinates of the individuals.'
@@ -259,8 +261,7 @@ flag_explanations = {
 used_flags = {flag: explanation for flag, explanation in flag_explanations.items() if flag in command} # Filter the used flags and their explanations
 log_command(results_directory, command, used_flags)                                                    # Log the command and flags
 
-
-#%% Coords_2 initialization
+#%% Data table initialization
 """
 =======================================================
 CREATING A DATA TABLE WITH THE INFO FOR EACH INDIVIDUAL
@@ -280,36 +281,41 @@ The columns in Coords_(2 or t)
 ------------------------------
 """
 
-label_i = infection_label(n,ii)                                                     # Divide the people in infected and not infected
-coords_2 = np.concatenate([coords_func(n, bound_l, bound_h), label_i], axis =1)     # Initiate the array data table with the x,y coordinates and the infection label
-g, r_tot = genome(n, l, r_m)                                                        # Initialization of genome table (shape n*l, nan for not infected, all 0's for initially infected)
-probm = probs(coords_2,rm_i, rm_h)                                                  # Initialization of movement rate array
-probi = np.zeros(n)                                                                 # Initialization of infection rate array
-mut = np.zeros(n)                                                                   # Initialization of mutations array
-sus = np.ones(n)                                                                    # Initialization of susceptibility rate array
-
-if args.ss_formation_event:
-    ## Initially there are only infected individuals with the Normal Strain ##
-    infected_ind = np.where(coords_2[:, 2] == 1)[0]                                 # Indices of infected individuals
-    probi[infected_ind] = ri_n                                                      # All the infected individuals have the corresponding rate of infection
+'''Genomes'''
+label_i = infection_label(n,ii)                                                     # Divide the people in infected and healthy 
+g = pd.DataFrame(index=range(n), columns=range(l))                                  # Initialization of an empty data frame where the rows correspond to the genomes of different individuals and the columns to the genome positions.
+r_tot = r_m * l                                                                     # Total rate of mutation of genome
+if args.msprime_genomes or args.manual_genomes:
+    ss_pos = ss_mutation_position(n_i, l, "middle")                                 # For Super Strain(s): generate the random position in their important genome area where mutation will happen
+infected_ind = np.where(label_i == 1)[0]                                            # Indices of infected individuals
+healthy_ind = np.where(label_i == 0)[0]                                             # Indices of healthy individuals
+if args.msprime_genomes:
+    infected_g = msprime_genomes(ii,l,r_rec,r_m,ss_pos)                             # Generate the genomes of infected individuals using msprime simulator
+    for i, idx in enumerate(infected_ind):                                          # For each infected individual, copy the corresponding genome from msprime_genomes to g
+        g.iloc[idx] = infected_g.iloc[i]
 else:
-    ## Initially there is only iss individual infected with the Super Strain ##
-    infected_ind = np.where(coords_2[:, 2] == 1)[0]                                 # Indices of infected individuals
-    initial_ss = np.random.choice(infected_ind, iss, replace=False)                 # Randomly select iss infected individual to have a rate of infection of super strain 
-    probi[initial_ss] = ri_s                                                        # If there is only one strain (normal) all the individuals will have the corresponding rate of infection
-    for idx in infected_ind:                                                        # Set the rest of the infected individuals to have a rate of infection of super strain
-        if idx not in initial_ss:
-            probi[idx] = ri_n
+    # for i, idx in enumerate(infected_ind):
+    for idx in infected_ind:
+        g.iloc[idx] = 0.0                                                           # Infected individuals have all-0 genomes
 
-ss_pos = ss_mutation_position(n_i, l, "middle")                                     # For Super Strain(s): generate the random position in their important genome area where mutation will happen
-for i in range(n):
-    g.iloc[i] = np.where(coords_2[:,2][i]==1, np.zeros((1,l)), g.iloc[i])           # For the infected individuals, there is a row in g with the genome that they carry
-    sus[i] = np.where(coords_2[:,2][i]==1, 0, sus[i])                               # The infected individuals are not susceptibility to the virus
-    mut[i] = np.where(probi[i]==ri_s, 2, mut[i])                                    # For those with Super Strain, they are labeled as mutation 2
-    mut[i] = np.where(probi[i]==ri_n, 1, mut[i])                                    # For those with Normal Strain, they are labeled as mutation 1
-    g.loc[i,ss_pos] = np.where(mut[i]==2, 1, g.loc[i,ss_pos])                       # For the infected with mutation 2 (Super Strain), they have the value 1 in a random position in their important genome area
+'''Data Table'''
+coords_2 = np.concatenate([coords_function(n, bound_l, bound_h), label_i], axis =1) # Initiate the array data table with the x,y coordinates and the infection label
+# Rate of movement #
+probm = np.zeros(n)                                                                 # Initialization of movement rate array
+probm[infected_ind] = rm_i                                                          # All infected individuals have the corresponding rate of movement 
+probm[healthy_ind] = rm_h                                                           # All healthy individuals have the corresponding rate of movement 
+# Rate of infection #
+probi = np.zeros(n)                                                                 # Initialization of infection rate array
+probi[infected_ind] = ri_n                                                          # All the infected individuals have the corresponding rate of infection (initially there are only normal strains)
+# Susceptibility #
+sus = np.ones(n)                                                                    # Initialization of susceptibility rate array
+sus[infected_ind] = 0                                                               # The infected individuals are not susceptible to the virus
+# Mutation label #
+mut = np.zeros(n)                                                                   # Initialization of mutations array
+mut[infected_ind] = 1                                                               # For those with Normal Strain, they are labeled as mutation 1
 
-coords_2 = np.concatenate([coords_2, probm, np.column_stack(probi).T, np.column_stack(mut).T, np.column_stack(sus).T], axis=1) # Gather all the information in the final array table of info
+coords_2 = np.concatenate([coords_2, np.column_stack(probm).T, np.column_stack(probi).T, np.column_stack(mut).T, np.column_stack(sus).T], axis=1) # Gather all the information in the final array table of info
+coords_t = coords_2.copy()  # Create a copy of the data table, to use during the simulation
 
 # OPTIONAL: Save the initial genomes of the sample in a csv
 if args.initial_genomes:
@@ -326,15 +332,13 @@ INITIALIZATION OF THE SIMULATION VARIABLES AND OF THE INFORMATION THAT WE WANT T
 ======================================================================================
 """
 
-coord_time = time.time()-func_time                      # Time to run the functions
-coords_t = coords_2.copy()                              # Create a copy of the data table, to use during the simulation
-df_i = ini_distm(coords_t)                              # Initial Distance Matrix 
-distm_time = time.time()-coord_time                     # Time to calculate the distance matrix
+df_i = initial_distances(coords_t)                      # Initial distance matrix 
 rt_m = sum(coords_t[:, 3])                              # Total rate of movement 
 rt_i = sum(coords_t[:, 4])                              # Total rate of infection 
-mv = 0                                                  # Count for the movements
+mv = 0                                                  # Total number of movements
+inf = 0                                                 # Total number of infections
 un = 0                                                  # Total number of uninfections
-hah = np.zeros((1, 5))                                  # Empty array that will be the array of who infected who
+hah = np.zeros((1, 5))                                  # Empty array to store who infected who
 unin = []                                               # List that keeps who got uninfected 
 all_inf = np.zeros((1,5))                               # List with the number of Total infected, Super spreaders, Normal spreaders, Infextion times for each generation and total events (up to that point)
 if args.all_infected_once:
@@ -344,6 +348,8 @@ if args.all_infected_once:
         all_infected_once[j] = j                        # Add the initially infected
 event_type = np.zeros((1,3))                            # List with the type of each event
 '''Time'''
+coord_time = time.time()-func_time                      # Time to run the functions
+distm_time = time.time()-coord_time                     # Time to calculate the distance matrix
 t_s = 0                                                 # Event time (initialization)
 tt = 0                                                  # Time variable that runs the simulation (or number of generation)
 t_ss = []                                               # Array that saves the event time for every time step in the simulation
@@ -389,8 +395,13 @@ while sum(coords_t[:,2])!= 0:
         break
     
     ## If the number of individuals with Super Strain are more than a certain % (percentage_super_strain) of the individuals, stop the simulation! ##
-    if percentage_super_strain and (sum(coords_t[:, 5]==2) >= percentage_super_strain * n): # Ratio of # Super Strain ind / # Normal Strain ind
+    if percentage_super_strain and (sum(coords_t[:, 5]==2) >= percentage_super_strain * n): 
         print(f"The simulation ended because individuals with Super Strain are more than {percentage_super_strain*100}% of the individuals in the population.") 
+        break
+
+    ## If the number of individuals with Normal Strain are more than a certain % (percentage_normal_strain) of the individuals, stop the simulation! ##
+    if percentage_normal_strain and (sum(coords_t[:, 5]==1) >= percentage_normal_strain * n): 
+        print(f"The simulation ended because individuals with Normal Strain are more than {percentage_normal_strain*100}% of the individuals in the population.") 
         break
     
     ## If the total infections are more than a certain number (max_infections), stop the simulation! ##
@@ -446,7 +457,7 @@ while sum(coords_t[:,2])!= 0:
     ## If there are any infected individuals proceed with the recovery process ##
     if (coords_t[:,2] == 1).any() or (coords_t[:,2] == 2).any(): 
 
-        ## If the event time is bigger than the minimum recovery time and if there are infected people...                                  ##
+        ## If the simulation time is bigger than the minimum recovery time and if there are infected people...                                  ##
         ## Recovery takes place for specific individuals (according to their recovery time) according to their time of the 1st infection   ##
         ## The time of recombination is not taken into consideration                                                                       ##
         
@@ -484,6 +495,9 @@ while sum(coords_t[:,2])!= 0:
             ## Updating time and time related variables ##
             t_i[normal_idx] = 999999999               # Re-initialize the infection times for those that recover 
             t_im = np.min(t_i)                        # New minimum infection time
+            
+            ## Update the counter un to count the number or recoveries ##
+            un += len(normal_idx)
 
             ## Explicitly go back to while ... ## 
             continue 
@@ -524,6 +538,9 @@ while sum(coords_t[:,2])!= 0:
             t_i[super_idx] = 999999999                # Re-initialize the infection times for those that recover 
             t_im = np.min(t_i)                        # New minimum infection time
             
+            ## Update the counter un to count the number or recoveries ##
+            un += len(super_idx)
+
             ## Explicitly go back to while ... ## 
             continue 
 
@@ -571,7 +588,7 @@ while sum(coords_t[:,2])!= 0:
             coords_f = movement(coords_t, bound_l, bound_h, c, rim)
 
             ## Calculate the new distance matrix now with the updated position of the selected individual ##
-            df_f = new_dist(coords_t, coords_f, df_i, c)
+            df_f = new_distances(coords_t, coords_f, df_i, c)
             
             ## Store the newly computed distance matrix (df_f) into a variable df_i for further calculations ##
             df_i = df_f.copy()
@@ -637,12 +654,12 @@ while sum(coords_t[:,2])!= 0:
         ----------------------
         """ 
         
-        ## If 1. the parser for the creation of the super strain is used                  ##
+        ## If 1. the parser manual_genomes or msprime_genomes is used                     ##
         ##    2. time variable that runs the simulation (tt) is between the given numbers ## 
         ##    3. there are no infected individuals with the super strain                  ##
-        if args.ss_formation_event and (ss_form <= tt <= ss_form + ss_events) and len(coords_t[coords_t[:,5] == 2]) == 0:
+        if (args.manual_genomes or args.msprime_genomes) and (ss_form <= tt <= ss_form + ss_events) and len(coords_t[coords_t[:,5] == 2]) == 0:
         
-            print("Super Spreader's Formation Event:",tt)
+            print("Super Strain's Formation Event:",tt)
            
             ## Go through all the individuals (indexing them with j) ... ##
             for j in range(n): 
@@ -654,8 +671,8 @@ while sum(coords_t[:,2])!= 0:
                     s4 = np.random.random() 
 
                     ## Find those who:  1. Are not already infected                                   ## 
-                    ##                  2. Are susceptable to the virus                               ##
-                    ##                  3. The random number s4 is less than or equal to their ipi[j] ##
+                    ##                  2. Are susceptible to the virus                               ##
+                    ##                  3. The random number s4 is smaller or equal to their ipi[j] ##
                     if coords_t[j,2] == 0 and coords_t[j,6] == 1 and s4 <= ipi[j]: 
 
                         ## Updating genomes ##
@@ -700,8 +717,8 @@ while sum(coords_t[:,2])!= 0:
                     s4 = np.random.random() 
 
                     ## Find those who:  1. Are not already infected                                   ## 
-                    ##                  2. Are susceptable to the virus                               ##
-                    ##                  3. The random number s4 is less than or equal to their ipi[j] ##
+                    ##                  2. Are susceptible to the virus                               ##
+                    ##                  3. The random number s4 is smaller or equal to their ipi[j] ##
                     if coords_t[j,2] == 0 and coords_t[j,6] == 1 and s4 <= ipi[j]: 
 
                         ## Updating genomes ##
@@ -711,7 +728,7 @@ while sum(coords_t[:,2])!= 0:
                         ## Updating the data table ##                                                                       
                         coords_t[j,2] = 1             # Change the infection label to infected (1)
                         coords_t[j,3] = rm_i          # Change the rate of movement for the infected individuals
-                        if g.iloc[j,ss_pos] == 1.0:
+                        if n_i > 0 and g.iloc[j,ss_pos] == 1.0:
                             coords_t[j,4] = ri_s      # Change the rate of infection for the infected individuals with a super strain
                             coords_t[j,5] = 2         # Change the label of mutation (2:infected individuals with a super strain)
                         else:
@@ -737,8 +754,8 @@ while sum(coords_t[:,2])!= 0:
                     
                     #%% Genetic recombination
                     ## Find those who:  1. Are infected once                                                                         ## 
-                    ##                  2. Are susceptable to the virus                                                              ##
-                    ##                  3. The random number s4 is less than or equal to their ipi[j]                                ##
+                    ##                  2. Are susceptible to the virus                                                              ##
+                    ##                  3. The random number s4 is smaller or equal to their ipi[j]                                ##
                     elif args.recombination and (coords_t[j,2] == 1 and coords_t[j,6] == 1 and s4 <= ipi[j]) :
 
                         p = rec_probi(r_rec, l) # Number to determine whether recombination will take place 
@@ -757,7 +774,7 @@ while sum(coords_t[:,2])!= 0:
                             """ 
 
                             ## If the individual carries a super strain and their time for recovery hasn't come yet (event time < 1st infection time + recovery time) ... ##
-                            if (g.iloc[j,ss_pos] == 1.0) and (t_s <= t_i[j] + rec_t_ss):
+                            if coords_t[j,5] == 2 and (t_s <= t_i[j] + rec_t_ss):
                                 
                                 unin_ind.append(j) # List of the infected individuals (label:1) that their genome will get recombined
                                 
@@ -767,14 +784,14 @@ while sum(coords_t[:,2])!= 0:
 
                                 ## Updating the data table ## 
                                 # the rate of movement for the infected individuals remains the same (rm_i)
-                                coords_t[j,2] = 2             # Change the infection label to infected with a recombined strain (2)
-                                if g.iloc[j,ss_pos] == 1.0:   # Check if the genome, after recombination, is a super strain
-                                    coords_t[j,4] = ri_s      # Change the rate of infection for the infected individuals with a super strain
-                                    coords_t[j,5] = 2         # Change the label of mutation (2:infected individuals with a super strain)
-                                else:                         # Check if the genome, after recombination, is a normal strain
-                                    coords_t[j,4] = ri_n      # Change the rate of infection for the infected individuals with a normal strain
-                                    coords_t[j,5] = 1         # Change the label of mutation (1:infected individuals with a normal strain)
-                                coords_t[j,6] = 0             # Change the susceptibility label for the newly infected individual, as they are not susceptible anymore 
+                                coords_t[j,2] = 2                       # Change the infection label to infected with a recombined strain (2)
+                                if n_i > 0 and g.iloc[j,ss_pos] == 1.0: # Check if the genome, after recombination, is a super strain
+                                    coords_t[j,4] = ri_s                # Change the rate of infection for the infected individuals with a super strain
+                                    coords_t[j,5] = 2                   # Change the label of mutation (2:infected individuals with a super strain)
+                                else:                                   # Check if the genome, after recombination, is a normal strain
+                                    coords_t[j,4] = ri_n                # Change the rate of infection for the infected individuals with a normal strain
+                                    coords_t[j,5] = 1                   # Change the label of mutation (1:infected individuals with a normal strain)
+                                coords_t[j,6] = 0                       # Change the susceptibility label for the newly infected individual, as they are not susceptible anymore 
 
                                 ## Updating time and time related variables ##
                                 t_rec[j] = t_s                # Update the event time of recombination for the infected individual in the list t_rec
@@ -786,7 +803,7 @@ while sum(coords_t[:,2])!= 0:
                                 continue 
 
                             ## If the individual carries a normal strain and their time for recovery hasn't come yet (event time < 1st infection time + recovery time) ... ##
-                            elif (g.iloc[j,ss_pos] == 0.0) and (t_s <= t_i[j] + rec_t_ns):
+                            elif coords_t[j,5] == 1 and (t_s <= t_i[j] + rec_t_ns):
                                 
                                 unin_ind.append(j) # List of the infected individuals (label:1) that their genome will get recombined 
                                 
@@ -796,14 +813,14 @@ while sum(coords_t[:,2])!= 0:
 
                                 ## Updating the data table ##   
                                 # the rate of movement for the infected individuals remains the same (rm_i)
-                                coords_t[j,2] = 2             # Change the infection label to infected with a recombined strain (2)
-                                if g.iloc[j,ss_pos] == 1.0:   # Check if the genome, after recombination, is a super strain
-                                    coords_t[j,4] = ri_s      # Change the rate of infection for the infected individuals with a super strain
-                                    coords_t[j,5] = 2         # Change the label of mutation (2:infected individuals with a super strain)
-                                else:                         # Check if the genome, after recombination, is a normal strain
-                                    coords_t[j,4] = ri_n      # Change the rate of infection for the infected individuals with a normal strain
-                                    coords_t[j,5] = 1         # Change the label of mutation (1:infected individuals with a normal strain)
-                                coords_t[j,6] = 0             # Change the susceptibility label for the newly infected individual, as they are not susceptible anymore 
+                                coords_t[j,2] = 2                       # Change the infection label to infected with a recombined strain (2)
+                                if n_i > 0 and g.iloc[j,ss_pos] == 1.0: # Check if the genome, after recombination, is a super strain
+                                    coords_t[j,4] = ri_s                # Change the rate of infection for the infected individuals with a super strain
+                                    coords_t[j,5] = 2                   # Change the label of mutation (2:infected individuals with a super strain)
+                                else:                                   # Check if the genome, after recombination, is a normal strain
+                                    coords_t[j,4] = ri_n                # Change the rate of infection for the infected individuals with a normal strain
+                                    coords_t[j,5] = 1                   # Change the label of mutation (1:infected individuals with a normal strain)
+                                coords_t[j,6] = 0                       # Change the susceptibility label for the newly infected individual, as they are not susceptible anymore 
      
                                 ## Updating time and time related variables ##
                                 t_rec[j] = t_s                # Update the event time of recombination for the infected individual in the list t_rec
