@@ -10,142 +10,125 @@ if not os.path.exists('calc_stats.py'):
 
 from calc_stats import calculate_statistics 
 
+def extract_suffix(filename):
+
+    """
+    Extract the suffix from the filename.
+    For 'genomes_final.csv', return 'final'.
+    For other files like 'genomes_150.csv', return '150'.
+    """
+
+    if 'final' in filename:
+        return 'final'
+    match = re.search(r'_(\d+)\.csv$', filename)
+    return match.group(1) if match else None
 
 def calc_stats_for_dir(directory, sample_size=None):
 
     """
-    Process multiple CSV or FASTA files from the specified directory,
+    Process multiple CSV files from the specified directory,
     run statistical analysis on each, and compile results into a DataFrame.
-
-    INPUT
-    - directory (str): Directory containing the CSV or FASTA files to process.
-    OUTPUT
-    - stats_df: DataFrame with the statistics.
-    """
     
-    genome_dir = directory + 'genomes/'
-    samples_dir = directory + 'samples/'
+    Args: directory (str): Directory containing the CSV or FASTA files to process.
+    Returns: stats_df: DataFrame with the statistics.
+    """
+
+    genome_dir = os.path.join(directory, 'genomes/')
+    samples_dir = os.path.join(directory, 'samples/')
     results = {}
 
-
-    def extract_suffix(filename):
-    # Implement the logic to extract the suffix from the filename
-    # For example, if the suffix is everything after the last underscore:
-        parts = filename.split('_')
-        if len(parts) > 1:
-            return parts[-1].split('.')[0]
-        return None
-
-    # Create a dictionary to store genome files with their suffix as keys
-    genome_files = {}
-    for genome_filename in os.listdir(genome_dir):
-        if genome_filename.startswith('genomes') and (genome_filename.endswith('.csv') or genome_filename.endswith('.fasta') or genome_filename.endswith('.fa')):
-            suffix = extract_suffix(genome_filename)
-            if suffix:
-                genome_files[suffix] = genome_filename
-
-    # Match genome files with coordinates files based on suffix and process them
-    for coords_filename in os.listdir(samples_dir):
-        if coords_filename.startswith('coords') and coords_filename.endswith('.csv'):
-            suffix = extract_suffix(coords_filename)
-            if suffix and suffix in genome_files:
-                genome_file = genome_files[suffix]
-            
-                try:
-                    stats = calculate_statistics(genome_dir+genome_file, samples_dir+coords_filename, sample_size)
-                    if sample_size:
-                        if stats['total_sequences'] != 0:
-                            if stats['total_sequences'] > sample_size:
-                                num_unique_seqs = stats['unique_count'] / sample_size
-                                num_unique_seqs_formatted = f"{num_unique_seqs:.2f} ({stats['unique_count']}/{sample_size})"
-                            else: 
-                                num_unique_seqs = stats['unique_count'] / stats['total_sequences']
-                                num_unique_seqs_formatted = f"{num_unique_seqs:.2f} ({stats['unique_count']}/{stats['total_sequences']})"
-                        else:
-                            num_unique_seqs_formatted = "0.0 (0/0)"
-                    else:
-                        if stats['total_sequences'] != 0:
-                            num_unique_seqs = stats['unique_count'] / stats['total_sequences']
-                            num_unique_seqs_formatted = f"{num_unique_seqs:.2f} ({stats['unique_count']}/{stats['total_sequences']})"
-                        else:
-                            num_unique_seqs_formatted = "0.0 (0/0)"
-                    
-                    results[genome_file] = [
-                        stats['tajimas_d_score'],
-                        stats['pi_estimator_score'],
-                        stats['watterson_estimator_score'],
-                        num_unique_seqs_formatted,
-                        stats['haplotype_diversity'],
-                        stats['Fst_coords'],
-                        stats['Fst_inf_label'], # recombination  (recombined VS no recombined strains)
-                        stats['Fst_mut_label']  # mutation label (normal VS super strain)
-                    ]
-                except ValueError as e:
-                    fasta_file_to_remove = os.path.splitext(genome_file)[0] + "_processed.fa"
-                    if str(e) == "At least 2 sequences required!":
-                        results[genome_file] = [
-                            "Not enough sequences",
-                            "Not enough sequences",
-                            "Not enough sequences",
-                            "Not enough sequences",
-                            "Not enough sequences",
-                            "Not enough sequences",
-                            "Not enough sequences",
-                            "Not enough sequences"
-                        ]
-                        if os.path.exists(fasta_file_to_remove):
-                            os.remove(fasta_file_to_remove)
-                    else:
-                        print(f"Error processing {genome_file}: {e} \n")
-                        if os.path.exists(fasta_file_to_remove):
-                            os.remove(fasta_file_to_remove)
-                        continue  # Continue processing the next file
-                              
+    # Get the genome and sample files
+    genome_files = {extract_suffix(f): f for f in os.listdir(genome_dir) if f.startswith('genomes') and f.endswith('.csv')}
+    coords_files = {extract_suffix(f): f for f in os.listdir(samples_dir) if f.startswith('coords') and f.endswith('.csv')}
     
-    stats_df = pd.DataFrame.from_dict(results, orient='index', columns=['Tajima\'s D', 'Pi-Estimator', 'Watterson-Estimator', 'Number of unique sequences', 'Haplotype Diversity', 'Fst (coords)', 'Fst (label)', 'Fst (mutation)'])
-    # extract numbers from the filenames and sort accordingly
-    # the csv named as 'genomes_final.csv' will be the last one in the DataFrame
-    stats_df['sort_key'] = stats_df.index.map(
-        lambda x: float('inf') if x == 'genomes_final.csv' else (
-            int(re.search(r'(\d+)', x).group(1)) if re.search(r'(\d+)', x) else 0))
-    stats_df.sort_values('sort_key', inplace=True)
-    stats_df.drop(columns=['sort_key'], inplace=True)  # remove the auxiliary column after sorting ('sort_key' column)
+    # Process matching files by suffix, to get corresponding generations
+    for suffix, genome_file in genome_files.items():
+        if suffix in coords_files:
+            coords_file = coords_files[suffix]
+            genome_path = os.path.join(genome_dir, genome_file)
+            coords_path = os.path.join(samples_dir, coords_file)
+            
+            try:
+                stats = calculate_statistics(genome_path, coords_path, sample_size) # dictionary containg all statistics
+                total_sequences = stats['total_sequences']
+                unique_count = stats['unique_count']
+                
+                if total_sequences:
+                    if sample_size and total_sequences > sample_size:
+                        num_unique_seqs = f"{unique_count / sample_size:.2f} ({unique_count}/{sample_size})"
+                    else:
+                        num_unique_seqs = f"{unique_count / total_sequences:.2f} ({unique_count}/{total_sequences})"
+                else:
+                    num_unique_seqs = "0.0 (0/0)"
+                
+                results[suffix] = [
+                    stats['tajimas_d_score'],
+                    stats['pi_estimator_score'],
+                    stats['watterson_estimator_score'],
+                    num_unique_seqs,
+                    stats['haplotype_diversity'],
+                    stats['Fst_coords'],
+                    stats['Fst_inf_label'],
+                    stats['Fst_mut_label']
+                ]
+            except ValueError as e:
+                # Handle error cases
+                if str(e) == "At least 2 sequences required!":
+                    results[suffix] = ["Not enough sequences"] * 8
+                else:
+                    print(f"Error processing {genome_file}: {e}")
+                    continue
+
+    # Create DataFrame and sort by numeric suffix, with 'final' coming last
+    stats_df = pd.DataFrame.from_dict(results, orient='index', 
+                                      columns=['Tajima\'s D', 'Pi-Estimator', 'Watterson-Estimator', 'Number of unique sequences', 
+                                               'Haplotype Diversity', 'Fst (coords)', 'Fst (label)', 'Fst (mutation)'])
+
+    def sorting_key(suffix):
+
+        """ Convert index to ensure correct sorting: 'final' comes last, numeric suffixes sorted naturally """
+        
+        if suffix == 'final':
+            return float('inf') # Ensure 'final' comes last
+        return int(suffix)      # Sort numerically for other suffixes
+
+    stats_df.index = stats_df.index.map(sorting_key)
+    stats_df.sort_index(inplace=True)
+
+    # Convert the index back to string: remove decimals for numeric indices and retain 'final'
+    stats_df.index = stats_df.index.map(lambda x: 'final' if x == float('inf') else str(int(x)))
+
     return stats_df
 
-
 def main(directory, output_file, sample_size):
-
+    
     """
     Main function to create the DataFrame with the statistics.
-
-    INPUT
-    - directory (str): Directory containing the CSV files to process.
-    - output_file (str): Name of the stored CSV file with the statistics (default name: statistics_summary.csv).
-    OUTPUT
-    - standard output: DataFrame
-    - (OPTIONAL) saved CSV file with all the summary statistics for the files in the given directory.
-    - (OPTIONAL) plot the scores stored in the saved CSV file with all the summary statistics.
+    
+    Args: directory (str): Directory containing the CSV files to process.
+          output_file (str): Name of the stored CSV file with the statistics (default name: statistics_summary.csv).
+    Returns: standard output: DataFrame
+             (OPTIONAL) saved CSV file with all the summary statistics for the files in the given directory.
     """
 
     statistical_df = calc_stats_for_dir(directory, sample_size)
-    
-    # print the DataFrame to stdout
+
+    # Print the DataFrame to stdout
     print(f"Sample size: {sample_size}\n")
     print(statistical_df)
-    
-    if args.store_dataframe:
-        # save the DataFrame to a CSV file 
-        statistical_df.to_csv(output_file)
-        
-   
-if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Process multiple genome CSV or FASTA files to compute the following statistics: Tajima's D score, Pi-Estimator score, Watterson-Estimator score, number of unique sequences and haplotype diversity.")
+    # Save the DataFrame to a CSV file if specified
+    if args.store_dataframe:
+        statistical_df.to_csv(output_file)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Process multiple genome CSV or FASTA files to compute statistics.")
     parser.add_argument('directory', type=str, help='Directory containing CSV or FASTA files with genomes to process.')
     parser.add_argument('-o', '--output_filename', type=str, default='summary_statistics.csv', help='Output filename for the stored CSV file')
     parser.add_argument('-save', '--store_dataframe', action="store_true", help='Store the DataFrame in a CSV file')
-    parser.add_argument('-s', '--sample_size', type=int, help='Output filename for the stored CSV file')
-    args = parser.parse_args()
+    parser.add_argument('-s', '--sample_size', type=int, help='Sample size for the analysis')
     
-    # call main function with the specified directory
+    args = parser.parse_args()
+
+    # Call main function with the specified directory
     main(args.directory, args.output_filename, args.sample_size)
