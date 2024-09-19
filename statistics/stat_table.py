@@ -14,12 +14,9 @@ def extract_suffix(filename):
 
     """
     Extract the suffix from the filename.
-    For 'genomes_final.csv', return 'final'.
-    For other files like 'genomes_150.csv', return '150'.
+    e.g. 'genomes_150.csv' > '150'
     """
 
-    if 'final' in filename:
-        return 'final'
     match = re.search(r'_(\d+)\.csv$', filename)
     return match.group(1) if match else None
 
@@ -33,26 +30,31 @@ def calc_stats_for_dir(directory, sample_size=None):
     Returns: stats_df: DataFrame with the statistics.
     """
 
+    ## Define directory and file names
     genome_dir = os.path.join(directory, 'genomes/')
     samples_dir = os.path.join(directory, 'samples/')
-    results = {}
+    event_time_filename = os.path.join(samples_dir, 'event_type.csv')
+    
+    results = {} # Initialize a dictionary to store results
 
-    # Get the genome and sample files
+    ## Get the genome, sample and time files
     genome_files = {extract_suffix(f): f for f in os.listdir(genome_dir) if f.startswith('genomes') and f.endswith('.csv')}
     coords_files = {extract_suffix(f): f for f in os.listdir(samples_dir) if f.startswith('coords') and f.endswith('.csv')}
-    
-    # Process matching files by suffix, to get corresponding generations
+    time_file = pd.read_csv(event_time_filename)[['Event', 'Simulation Time']]
+    selected_times = time_file.set_index('Event')['Simulation Time'].to_dict() # get the corresponding simulation time for each event
+
+    ## Process matching files by suffix, to get corresponding generations
     for suffix, genome_file in genome_files.items():
         if suffix in coords_files:
             coords_file = coords_files[suffix]
             genome_path = os.path.join(genome_dir, genome_file)
             coords_path = os.path.join(samples_dir, coords_file)
-            
             try:
+                ## Calculate and handle statistics 
                 stats = calculate_statistics(genome_path, coords_path, sample_size) # dictionary containg all statistics
                 total_sequences = stats['total_sequences']
                 unique_count = stats['unique_count']
-                
+                # Handling data based on the sample size
                 if total_sequences:
                     if sample_size and total_sequences > sample_size:
                         num_unique_seqs = f"{unique_count / sample_size:.2f} ({unique_count}/{sample_size})"
@@ -60,7 +62,7 @@ def calc_stats_for_dir(directory, sample_size=None):
                         num_unique_seqs = f"{unique_count / total_sequences:.2f} ({unique_count}/{total_sequences})"
                 else:
                     num_unique_seqs = "0.0 (0/0)"
-                
+                # Dictionary with results
                 results[suffix] = [
                     stats['tajimas_d_score'],
                     stats['pi_estimator_score'],
@@ -69,35 +71,25 @@ def calc_stats_for_dir(directory, sample_size=None):
                     stats['haplotype_diversity'],
                     stats['Fst_coords'],
                     stats['Fst_inf_label'],
-                    stats['Fst_mut_label']
-                ]
+                    stats['Fst_mut_label']]
+            ## Handle error cases ##
             except ValueError as e:
-                # Handle error cases
                 if str(e) == "At least 2 sequences required!":
                     results[suffix] = ["Not enough sequences"] * 8
                 else:
                     print(f"Error processing {genome_file}: {e}")
                     continue
 
-    # Create DataFrame and sort by numeric suffix, with 'final' coming last
+    ## DataFrame ##
     stats_df = pd.DataFrame.from_dict(results, orient='index', 
-                                      columns=['Tajima\'s D', 'Pi-Estimator', 'Watterson-Estimator', 'Number of unique sequences', 
-                                               'Haplotype Diversity', 'Fst (coords)', 'Fst (label)', 'Fst (mutation)'])
-
-    def sorting_key(suffix):
-
-        """ Convert index to ensure correct sorting: 'final' comes last, numeric suffixes sorted naturally """
-        
-        if suffix == 'final':
-            return float('inf') # Ensure 'final' comes last
-        return int(suffix)      # Sort numerically for other suffixes
-
-    stats_df.index = stats_df.index.map(sorting_key)
-    stats_df.sort_index(inplace=True)
-
-    # Convert the index back to string: remove decimals for numeric indices and retain 'final'
-    stats_df.index = stats_df.index.map(lambda x: 'final' if x == float('inf') else str(int(x)))
-
+                                      columns=['Tajima\'s D', 'Pi-Estimator', 'Watterson-Estimator', 
+                                               'Number of unique sequences', 'Haplotype Diversity', 
+                                               'Fst (coords)', 'Fst (label)', 'Fst (mutation)'])   
+    stats_df = stats_df.reset_index().rename(columns={'index': 'Events'})  # Include the suffix (index) as a column
+    stats_df['Events'] = stats_df['Events'].astype(int)                    # Ensure the 'Events' column is treated as integers before sorting
+    stats_df['Time'] = stats_df['Events'].map(lambda x: selected_times.get(int(x), np.nan) if str(x).isdigit() else np.nan) # Add 'Time' as a column
+    stats_df = stats_df.sort_values(by='Events', ascending=True).reset_index(drop=True) # Sort the DataFrame based on the 'Events' column and modify the DataFrame in-place
+    
     return stats_df
 
 def main(directory, output_file, sample_size):

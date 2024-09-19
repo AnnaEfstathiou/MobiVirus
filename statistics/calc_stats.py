@@ -89,7 +89,7 @@ def print_statistics(results, sample_size=None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Calculate genomic statistics from a CSV file containing binary sequences.")
     parser.add_argument('-g', '--genome_file', type=str, required=True, help='The path to the input file (CSV).')
-    parser.add_argument('-coords', '--coords_file', type=str, required=True, help='The path to the coordinates file.')
+    parser.add_argument('-c', '--coords_file', type=str, required=True, help='The path to the coordinates file.')
     parser.add_argument('-s', '--sample_size', type=int, default=None, help='Number of sequences to sample. Defaults to all.')
     parser.add_argument('-p', '--population_size', action="store_true", help='Show the total population size.')
     args = parser.parse_args()

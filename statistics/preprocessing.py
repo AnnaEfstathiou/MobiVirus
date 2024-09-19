@@ -143,7 +143,6 @@ def __check_populations(population_1, population_2):
     if pop1_length != pop2_length:
         raise ValueError("Sequences in both populations must have the same length. Population 1 length: {}, Population 2 length: {}".format(pop1_length, pop2_length))
     
-
 def validate_files(genomes_file, coords_file):
 
     """ Ensure that inpur files come from the same simulation and generation. """

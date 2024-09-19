@@ -3,12 +3,12 @@ import pandas as pd
 import argparse
 import re
 
-def extract_numeric_value(name):
+# def extract_numeric_value(name):
     
-    """Extract numeric value from a string using regex."""
+#     """Extract numeric value from a string using regex."""
     
-    match = re.search(r'\d+', name)
-    return int(match.group()) if match else None
+#     match = re.search(r'\d+', name)
+#     return int(match.group()) if match else None
 
 def plot_summary_statistics(csv_file):
     
@@ -34,77 +34,78 @@ def plot_summary_statistics(csv_file):
         lambda x: float(x.split(' ')[0]) if 'Not enough sequences' not in x else None)
 
     # Convert the relevant columns to numeric, replacing non-numeric entries with NaN.
-    csv_df["Tajima's D"] = pd.to_numeric(csv_df["Tajima's D"], errors='coerce')
-    csv_df["Pi-Estimator"] = pd.to_numeric(csv_df["Pi-Estimator"], errors='coerce')
+    csv_df["Tajima's D"]          = pd.to_numeric(csv_df["Tajima's D"], errors='coerce')
+    csv_df["Pi-Estimator"]        = pd.to_numeric(csv_df["Pi-Estimator"], errors='coerce')
     csv_df["Watterson-Estimator"] = pd.to_numeric(csv_df["Watterson-Estimator"], errors='coerce')
     csv_df["Haplotype Diversity"] = pd.to_numeric(csv_df["Haplotype Diversity"], errors='coerce')
-    csv_df["Fst (coords)"] = pd.to_numeric(csv_df["Fst (coords)"], errors='coerce')
-    csv_df["Fst (label)"] = pd.to_numeric(csv_df["Fst (label)"], errors='coerce')
-    csv_df["Fst (mutation)"] = pd.to_numeric(csv_df["Fst (mutation)"], errors='coerce')
+    csv_df["Fst (coords)"]        = pd.to_numeric(csv_df["Fst (coords)"], errors='coerce')
+    csv_df["Fst (label)"]         = pd.to_numeric(csv_df["Fst (label)"], errors='coerce')
+    csv_df["Fst (mutation)"]      = pd.to_numeric(csv_df["Fst (mutation)"], errors='coerce')
+    csv_df['Time'] = pd.to_numeric(csv_df['Time'], errors='coerce').round(4) # Ensure 'Time' column is numeric or datetime
+    csv_df = csv_df.dropna(subset=['Time'])                                  # Filter out rows with missing Time values
 
-    # Extract numeric values from index (file names) for x-axis (e.g. genome_500.csv > 500)
-    numeric_labels = [extract_numeric_value(label) for label in csv_df.index]
+
     # Define a step size for x-axis labels (e.g., every 5th label)
-    step = 5
-    x_labels = [numeric_labels[i] if i % step == 0 else '' for i in range(len(numeric_labels))]
+    # step = 2
+    # x_labels = [csv_df['Time'][i] if i % step == 0 else '' for i in range(len(list(csv_df['Time'])))]
 
     # Create 6 subplots
     fig, ax = plt.subplots(6, 1, figsize=(12, 22)) 
 
     # Plot Tajima's D score
-    csv_df["Tajima's D"].plot(ax=ax[0], marker='o', color='orange')
+    ax[0].plot(csv_df["Time"], csv_df["Tajima's D"], marker='o', color='orange')
     ax[0].set_title("Tajima's D")
     ax[0].set_ylabel('Score')
     ax[0].grid(True)
-    ax[0].set_xticks(range(len(numeric_labels)))
-    ax[0].set_xticklabels(x_labels)
+    ax[0].set_xticks(csv_df["Time"])
+    # ax[0].set_xticklabels(csv_df["Time"], rotation=45, ha='right')
 
     # Plot Pi-Estimator score
-    csv_df["Pi-Estimator"].plot(ax=ax[1], marker='o', color='green')
+    ax[1].plot(csv_df["Time"], csv_df["Pi-Estimator"], marker='o', color='green')
     ax[1].set_title("Pi-Estimator")
     ax[1].set_ylabel('Score')
     ax[1].grid(True)
-    ax[1].set_xticks(range(len(numeric_labels)))
-    ax[1].set_xticklabels(x_labels)
+    ax[1].set_xticks(csv_df["Time"])
+    # ax[1].set_xticklabels(csv_df["Time"], rotation=45, ha='right')
 
     # Plot Watterson-Estimator score
-    csv_df["Watterson-Estimator"].plot(ax=ax[2], marker='o', color='blue')
+    ax[2].plot(csv_df["Time"], csv_df["Watterson-Estimator"], marker='o', color='blue')
     ax[2].set_title("Watterson-Estimator")
     ax[2].set_ylabel('Score')
     ax[2].grid(True)
-    ax[2].set_xticks(range(len(numeric_labels)))
-    ax[2].set_xticklabels(x_labels)
+    ax[2].set_xticks(csv_df["Time"])
+    # ax[2].set_xticklabels(csv_df["Time"], rotation=45, ha='right')
 
     # Plot Haplotype Diversity
-    csv_df["Haplotype Diversity"].plot(ax=ax[3], marker='o', color='brown')
+    ax[3].plot(csv_df["Time"], csv_df["Haplotype Diversity"], marker='o', color='brown')
     ax[3].set_title("Haplotype Diversity")
     ax[3].set_ylabel('Score')
     ax[3].grid(True)
-    ax[3].set_xticks(range(len(numeric_labels)))
-    ax[3].set_xticklabels(x_labels)
+    ax[3].set_xticks(csv_df["Time"])
+    # ax[3].set_xticklabels(csv_df["Time"], rotation=45, ha='right')
 
     # Plot Number of unique sequences
-    csv_df["Unique Sequences Value"].plot(ax=ax[4], marker='o', color='purple')
+    ax[4].plot(csv_df["Time"], csv_df["Unique Sequences Value"], marker='o', color='purple')
     ax[4].set_title("Number of unique sequences (Ratio)")
     ax[4].set_ylabel('Ratio')
     ax[4].grid(True)
-    ax[4].set_xticks(range(len(numeric_labels)))
-    ax[4].set_xticklabels(x_labels)
+    ax[4].set_xticks(csv_df["Time"])
+    # ax[4].set_xticklabels(csv_df["Time"], rotation=45, ha='right')
 
     # Plot Fst types on the same subplot with different colors
-    csv_df["Fst (coords)"].plot(ax=ax[5], marker='o', markersize=5, color='orangered', label='Fst (coords)')
-    csv_df["Fst (label)"].plot(ax=ax[5], marker='o', markersize=5, color='limegreen', label='Fst (label)')
-    csv_df["Fst (mutation)"].plot(ax=ax[5], marker='o', markersize=5, color='dimgrey', label='Fst (mutation)')
+    ax[5].plot(csv_df["Time"], csv_df["Fst (coords)"], marker='o', markersize=5, color='orangered', label='Fst (coords)')
+    ax[5].plot(csv_df["Time"], csv_df["Fst (label)"], marker='o', markersize=5, color='limegreen', label='Fst (label)')
+    ax[5].plot(csv_df["Time"], csv_df["Fst (mutation)"], marker='o', markersize=5, color='dimgrey', label='Fst (mutation)')
     ax[5].set_title("Fst (coords), Fst (label), Fst (mutation)")
     ax[5].set_ylabel('Scores')
     ax[5].grid(True)
-    ax[5].set_xticks(range(len(numeric_labels)))
-    ax[5].set_xticklabels(x_labels)
     ax[5].legend()  # Add legend to differentiate the lines
+    ax[5].set_xticks(csv_df["Time"])
+    # ax[5].set_xticklabels(csv_df["Time"], rotation=45, ha='right')
 
     plt.tight_layout(pad=4.0)
     if args.save_png:
-        plt.savefig("plot_statistics.png", format="png")
+        plt.savefig("summary_stats_plot.png", format="png")
     else:
         plt.show()
     plt.close(fig)

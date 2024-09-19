@@ -20,14 +20,14 @@ def process_window_chunk(chunk_info: Tuple[Dict[str, str], int, int, int]) -> Tu
     """
     
     sequences, start, end, window_size = chunk_info
+    step_size = 20 # step_size: Step size of the sliding window.
     theta_w_list = []
     pi_est_list = []
-
+    
     # Iterate over each window in the chunk
-    for i in range(start, end):
+    for i in range(start, end, step_size):
         # Extract the subsequence for each sequence
-        window_sequences = {key: seq[i:i+window_size] for key, seq in sequences.items()}
-        
+        window_sequences = {key: seq[i:(i+window_size)] for key, seq in sequences.items()}
         # Compute estimators and append results
         theta_w = watterson_estimator(window_sequences)
         theta_w_list.append(theta_w)
@@ -36,7 +36,7 @@ def process_window_chunk(chunk_info: Tuple[Dict[str, str], int, int, int]) -> Tu
 
     return theta_w_list, pi_est_list
 
-def sliding_window(sequences: Dict[str, str], window_size: int, num_processes: int = 8) -> Tuple[List[float], List[float], int]:
+def sliding_window(sequences: Dict[str, str], window_size: int, num_processes: int = 4) -> Tuple[List[float], List[float], int]:
     
     """
     Apply sliding window approach in parallel to compute Watterson and Pi estimators.
@@ -82,29 +82,27 @@ def plot_selective_sweep(theta_w: List[float], pi_est: List[float], window_size:
           save_png (str, optional): Path to save the plot as a PNG file.
     """
     
-    plt.figure(figsize=(10, 6))
+    step_size = 20 # step_size: Step size of the sliding window.
     
-    # Plot Watterson and Pi estimator values
+    plt.figure(figsize=(10, 6))
+    ## Plot Watterson and Pi estimator values ##
     plt.plot(theta_w, marker='.', linestyle='solid', color='navy', label='Watterson Estimator')
     plt.plot(pi_est, marker='.', linestyle='solid', color='firebrick', label='Pi Estimator')
-    
-    # Add a vertical line at a specific SNP position
+    ## Add a vertical line at a specific SNP position ##
     plt.axvline(x=(sequence_length/2), color='green', linestyle='dashed', label='SNP position')
-    
-    # Add metadata to the plot
-    plt.plot([], [], ' ', label=f'Number of Sequences: {num_sequences}')
-    plt.plot([], [], ' ', label=f'Sequence Length: {sequence_length}')
+    ## Add metadata to the plot ##
+    # plt.plot([], [], ' ', label=f'Number of Sequences: {num_sequences}')
+    # plt.plot([], [], ' ', label=f'Sequence Length: {sequence_length}')
     plt.xlabel('Window Position')
     plt.ylabel('Estimator Value')
-    plt.title(f'Selective Sweep with Window Size {window_size}')
+    plt.title('Selective Sweep', loc='left')
+    plt.title(f'Window size:{window_size}, Step size:{step_size}, Seqs length:{sequence_length}, Number of seqs: {num_sequences}', loc='right')
     plt.legend()
-    
-    # Save or display the plot
+    ## Save or display the plot ##
     if save_png:
         plt.savefig(save_png, format="png")
     else:
         plt.show()
-
     plt.close()
 
 def main(csv_file: str, window_size: int, save_png: str = None):
@@ -135,7 +133,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process a genome file (csv format) to compute various statistics and plot results.")
     parser.add_argument('-g', '--genome_file', type=str, required=True, help='The path to the input CSV file.')
     parser.add_argument('-w', '--window_size', type=int, required=True, help='Length of sliding window.')
-    parser.add_argument('-s', '--save_png', type=str, help='Path to save the plot as a PNG file.')
+    parser.add_argument('-save', '--save_png', type=str, help='Path to save the plot as a PNG file.')
     args = parser.parse_args()
 
     # Execute main function with parsed arguments

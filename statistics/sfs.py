@@ -23,7 +23,6 @@ def plot_sfs(num_snps, count_pos, pos, max_snps, save_png=None):
         plt.savefig(save_png, format="png")
     else:
         plt.show()
-    
     plt.close()
 
 def main(csv_file, save_png=None):
