@@ -39,7 +39,7 @@ def plot_spreaders(csv_file):
 
     # Display or save the plot
     if args.save_png:
-        plt.savefig("spreaders_plot.png", format="png")
+        plt.savefig("strains_plot.png", format="png")
     else:
         plt.show()
     plt.close()

@@ -103,8 +103,8 @@ parser.add_argument('-ratio', '--ratio_super_vs_normal', type=str, help='The sim
 parser.add_argument('-per_inf', '--percentage_infected', type=str, help='The simulation stops when the infected individuals in the population reach the given percentage.')
 parser.add_argument('-per_ss', '--percentage_super_strain', type=str, help='The simulation stops when the super spreaders in the population reach the given percentage.')
 parser.add_argument('-per_ns', '--percentage_normal_strain', type=str, help='The simulation stops when the normal spreaders in the population reach the given percentage.')
-parser.add_argument('-max_inf', '--max_infections', type=str, help='The simulation stops when the given number of infections happen.')
-parser.add_argument('-max_mv', '--max_movements', type=str, help='The simulation stops when the given number of movements happen.')
+parser.add_argument('-max_inf', '--max_infections', type=str, help='The simulation stops when the given number of infections happens.')
+parser.add_argument('-max_mv', '--max_movements', type=str, help='The simulation stops when the given number of movements happens.')
 parser.add_argument('-sus', '--percentage_susceptibility', type=str, help='The simulation stops when only the given number of individuals are susceptible to the virus.')
 parser.add_argument('-time', '--end_time', type=str, help='The simulation stops at the given simulation time.')
 parser.add_argument('-events', '--end_events', type=str, help='The simulation stops when the given number of events (movements+infections) happpens.')
@@ -249,11 +249,11 @@ flag_explanations = {
     '-ratio': 'The simulation stops when the given ratio of super Strain individuals / normal Strain individuals becomes real.',
     '-per_inf': 'The simulation stops when the infected individuals in the population reach the given percentage.',
     '-per_ss': 'The simulation stops when the super spreaders in the population reach the given percentage.',
-    '-max_inf': 'The simulation stops when the given number of infections happen.',
-    '-max_mv': 'The simulation stops when the given number of movements happen.',
+    '-max_inf': 'The simulation stops when the given number of infections happens.',
+    '-max_mv': 'The simulation stops when the given number of movements happens.',
     '-sus': 'The simulation stops when only the given number of individuals are susceptible to the virus.',
     '-time': 'The simulation stops at the given simulation time.',
-    '-events': 'The simulation stops when the given number of events (movements+infections) happpen.',
+    '-events': 'The simulation stops when the given number of events (movements+infections) happpens.',
     '-vis_data': 'Visualize the data table as a dataframe in the console.',
     '-g0': 'Save the initial genomes of the population in a CSV.',
     '-plots': 'Create scatter plots of the coordinates of the individuals.'
@@ -346,12 +346,12 @@ if args.all_infected_once:
     all_infected_once[:] = np.nan                       # Using NaN to signify empty positions
     for j in infected_ind:
         all_infected_once[j] = j                        # Add the initially infected
-event_type = np.zeros((1,3))                            # List with the type of each event
+event_type = np.zeros((1,4))                            # List with the type of each event
 '''Time'''
 coord_time = time.time()-func_time                      # Time to run the functions
 distm_time = time.time()-coord_time                     # Time to calculate the distance matrix
 t_s = 0                                                 # Event time (initialization)
-tt = 0                                                  # Time variable that runs the simulation (or number of generation)
+tt = -1                                                 # Variable that corresponds to the event number (1st event = 0)
 t_ss = []                                               # Array that saves the event time for every time step in the simulation
 t_i = np.full((n,1), 999999999, dtype=float)            # Array that keeps the event time when an individual (or more) get infected 
                                                         # We initialise it with a really big value
@@ -373,9 +373,105 @@ print(f"The simulation contains 2 types of strains, a normal strain with {ri_n} 
 
 ## Run the simulation until everyone becomes healthy ##
 while sum(coords_t[:,2])!= 0: 
-
-    print("Event-Loop:", tt)
     
+    #%% Recovery
+    """
+    --------
+    RECOVERY
+    --------
+    """
+
+    ## If there are any infected individuals proceed with the recovery process ##
+    if (coords_t[:,2] == 1).any() or (coords_t[:,2] == 2).any(): 
+
+        ## If the simulation time is bigger than the minimum recovery time and if there are infected people...                                  ##
+        ## Recovery takes place for specific individuals (according to their recovery time) according to their time of the 1st infection   ##
+        ## The time of recombination is not taken into consideration                                                                       ##
+        
+        uninfection_idx = np.where(t_i == t_im)[0]                       # Individuals who are about to recover (indices where t_i equals t_im)  
+        normal_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 1]  # Normal spreaders to recover
+        super_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 2]   # Super spreaders to recover
+
+        ## Recovery of normal spreaders ##
+        if normal_idx.any() and t_s >= rec_t_ns + t_im:
+            print(t_s,tt)
+            print("Recovered individuals (normal spreaders): " + ", ".join(map(str, [int(x) for x in normal_idx])))
+            
+            ## Create a table with the individuals that get uninfected ##                                                    
+            unin = np.concatenate([unin, normal_idx]) # List that keeps who got uninfected
+            un+=len(list(normal_idx))                 # Keep count of the uninfections
+            
+            ## Recovery time ##
+            for i in range(len(list(normal_idx))):
+                t_un.append(t_s)                      # Save the simulation time of uninfection   
+            
+            ## Updating the data table ##                                                                       
+            coords_t[normal_idx,2] = 0                # Change the infection label to uninfected (0)
+            coords_t[normal_idx,3] = rm_h             # Change the rate of movement back to the one for uninfected individuals
+            coords_t[normal_idx,4] = 0                # Change the rate of infection back to 0
+            coords_t[normal_idx,5] = 0                # Change the label of mutation back to 0
+            coords_t[normal_idx,6] = 1                # Change the susceptibility label back to 1
+            
+            ## Updating genomes ##
+            g.iloc[normal_idx] = np.nan               # Remove the genome of the recovered individual, meanining make all of the positions nan again
+            
+            ## Updating rates (movement & infection) ##
+            rt_m = sum(coords_t[:,3])                 # New rate of movement
+            rt_i = sum(coords_t[:,4])                 # New rate of infection
+            
+            ## Updating time and time related variables ##
+            t_i[normal_idx] = 999999999               # Re-initialize the infection times for those that recover 
+            t_im = np.min(t_i)                        # New minimum infection time
+            
+            ## Update the counter un to count the number or recoveries ##
+            un += len(normal_idx)
+
+            ## Explicitly go back to while ... ## 
+            continue 
+
+        ## Recovery of super spreaders ##
+        elif super_idx.any() and t_s >= rec_t_ss + t_im:
+            print(t_s,tt)
+            print("Recovered individuals (super spreaders): " + ", ".join(map(str, [int(x) for x in super_idx])))
+            
+            ## Create a table with the individuals that get uninfected ##                                                    
+            unin = np.concatenate([unin, super_idx])  # List that keeps who got uninfected
+            un+=len(list(super_idx))                  # Keep count of the uninfections
+            
+            ## Recovery time ##
+            for i in range(len(list(super_idx))):
+                t_un.append(t_s)                      # Save the simulation time of uninfection   
+            
+            ## Updating the data table ##                                                                        
+            coords_t[super_idx,2] = 0                 # Change the infection label to uninfected (0)
+            coords_t[super_idx,3] = rm_h              # Change the rate of movement back to the one for uninfected individuals
+            coords_t[super_idx,4] = 0                 # Change the rate of infection back to 0
+            coords_t[super_idx,5] = 0                 # Change the label of mutation back to 0
+            if percentage_susceptibility:
+                # For those with a super strain (mutation label 2), the susceptibility label remains 0
+                # The super spreders that their genome didn't recombine, will have sus = 1, so it needs to change explicitly
+                coords_t[super_idx,6] = 0       
+            else:
+                coords_t[super_idx,6] = 1             # Change the susceptibility label back to 1 to all recovered individuals 
+            
+            ## Updating genomes ##
+            g.iloc[super_idx] = np.nan                # Remove the genome of the recovered individual, meanining make all of the positions nan again
+            
+            ## Updating rates (movement & infection) ##
+            rt_m = sum(coords_t[:,3])                 # New rate of movement
+            rt_i = sum(coords_t[:,4])                 # New rate of infection
+        
+            ## Updating time and time related variables ##
+            t_i[super_idx] = 999999999                # Re-initialize the infection times for those that recover 
+            t_im = np.min(t_i)                        # New minimum infection time
+            
+            ## Update the counter un to count the number or recoveries ##
+            un += len(super_idx)
+
+            ## Explicitly go back to while ... ## 
+            continue 
+ 
+    #%% Break scenarios
     """
     ---------------
     BREAK SCENARIOS
@@ -426,7 +522,7 @@ while sum(coords_t[:,2])!= 0:
 
     ## If events (movements+infections) is equal or higher than the one given, stop the simulation! ##
     if args.end_events and tt >= end_events:
-        print(f"The simulation ended because {end_events} (movements+infections) happened during the simulation.")
+        print(f"\nThe simulation ended because {end_events} (movements+infections) happened during the simulation.")
         break
 
     ## If all the individuals got infected at least once, stop the simulation! ##
@@ -434,115 +530,21 @@ while sum(coords_t[:,2])!= 0:
         print("The simulation ended because all the individuals got infected at least once!")
         break
 
-    #%% Event Time
+
+
+    #%% Simulation Time
     """
     ----------
     EVENT TIME
     ----------
     """ 
+    print("----------------------------------")
     ## Calculate the time that an event will happen ##
     t_s += np.random.exponential(scale=(1/(rt_i+rt_m))) # t_s: time when an event will happen
                                                         # The scale is 1/rate, because of how the exponential function is defined! 
     t_ss.append(t_s)                                    # Keep the event times in a list
-    
-    print("Simulation Time:",t_s)
-
-    #%% Recovery
-    """
-    --------
-    RECOVERY
-    --------
-    """
-
-    ## If there are any infected individuals proceed with the recovery process ##
-    if (coords_t[:,2] == 1).any() or (coords_t[:,2] == 2).any(): 
-
-        ## If the simulation time is bigger than the minimum recovery time and if there are infected people...                                  ##
-        ## Recovery takes place for specific individuals (according to their recovery time) according to their time of the 1st infection   ##
-        ## The time of recombination is not taken into consideration                                                                       ##
-        
-        uninfection_idx = np.where(t_i == t_im)[0]                       # Individuals who are about to recover (indices where t_i equals t_im)  
-        normal_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 1]  # Normal spreaders to recover
-        super_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 2]   # Super spreaders to recover
-
-        ## Recovery of normal spreaders ##
-        if normal_idx.any() and t_s >= rec_t_ns + t_im:
-            
-            print("Recovered individuals (normal spreaders): " + ", ".join(map(str, [int(x) for x in normal_idx])))
-            
-            ## Create a table with the individuals that get uninfected ##                                                    
-            unin = np.concatenate([unin, normal_idx]) # List that keeps who got uninfected
-            un+=len(list(normal_idx))                 # Keep count of the uninfections
-            
-            ## Recovery time ##
-            for i in range(len(list(normal_idx))):
-                t_un.append(t_s)                      # Save the simulation time of uninfection   
-            
-            ## Updating the data table ##                                                                       
-            coords_t[normal_idx,2] = 0                # Change the infection label to uninfected (0)
-            coords_t[normal_idx,3] = rm_h             # Change the rate of movement back to the one for uninfected individuals
-            coords_t[normal_idx,4] = 0                # Change the rate of infection back to 0
-            coords_t[normal_idx,5] = 0                # Change the label of mutation back to 0
-            coords_t[normal_idx,6] = 1                # Change the susceptibility label back to 1
-            
-            ## Updating genomes ##
-            g.iloc[normal_idx] = np.nan               # Remove the genome of the recovered individual, meanining make all of the positions nan again
-            
-            ## Updating rates (movement & infection) ##
-            rt_m = sum(coords_t[:,3])                 # New rate of movement
-            rt_i = sum(coords_t[:,4])                 # New rate of infection
-            
-            ## Updating time and time related variables ##
-            t_i[normal_idx] = 999999999               # Re-initialize the infection times for those that recover 
-            t_im = np.min(t_i)                        # New minimum infection time
-            
-            ## Update the counter un to count the number or recoveries ##
-            un += len(normal_idx)
-
-            ## Explicitly go back to while ... ## 
-            continue 
-
-        ## Recovery of super spreaders ##
-        elif super_idx.any() and t_s >= rec_t_ss + t_im:
-            
-            print("Recovered individuals (super spreaders): " + ", ".join(map(str, [int(x) for x in super_idx])))
-            
-            ## Create a table with the individuals that get uninfected ##                                                    
-            unin = np.concatenate([unin, super_idx])  # List that keeps who got uninfected
-            un+=len(list(super_idx))                  # Keep count of the uninfections
-            
-            ## Recovery time ##
-            for i in range(len(list(super_idx))):
-                t_un.append(t_s)                      # Save the simulation time of uninfection   
-            
-            ## Updating the data table ##                                                                        
-            coords_t[super_idx,2] = 0                 # Change the infection label to uninfected (0)
-            coords_t[super_idx,3] = rm_h              # Change the rate of movement back to the one for uninfected individuals
-            coords_t[super_idx,4] = 0                 # Change the rate of infection back to 0
-            coords_t[super_idx,5] = 0                 # Change the label of mutation back to 0
-            if percentage_susceptibility:
-                # For those with a super strain (mutation label 2), the susceptibility label remains 0
-                # The super spreders that their genome didn't recombine, will have sus = 1, so it needs to change explicitly
-                coords_t[super_idx,6] = 0       
-            else:
-                coords_t[super_idx,6] = 1             # Change the susceptibility label back to 1 to all recovered individuals 
-            
-            ## Updating genomes ##
-            g.iloc[super_idx] = np.nan                # Remove the genome of the recovered individual, meanining make all of the positions nan again
-            
-            ## Updating rates (movement & infection) ##
-            rt_m = sum(coords_t[:,3])                 # New rate of movement
-            rt_i = sum(coords_t[:,4])                 # New rate of infection
-        
-            ## Updating time and time related variables ##
-            t_i[super_idx] = 999999999                # Re-initialize the infection times for those that recover 
-            t_im = np.min(t_i)                        # New minimum infection time
-            
-            ## Update the counter un to count the number or recoveries ##
-            un += len(super_idx)
-
-            ## Explicitly go back to while ... ## 
-            continue 
+    tt += 1                                             # Event number
+    print("Event:", tt, "Simulation Time:",t_s)
 
     #%% Choose event
     """
@@ -600,7 +602,7 @@ while sum(coords_t[:,2])!= 0:
             mv += 1
 
             ## Store the type of event (movement) and the individual that moved ##
-            event_type = np.concatenate([event_type, np.column_stack((np.array([tt]), np.array(['movement']), np.array([c])))])
+            event_type = np.concatenate([event_type, np.column_stack((np.array([tt]), np.array([t_s]), np.array(['movement']), np.array([c])))])
             
             ## Optional: Print the event that just happened ##
             print("Movement of:", c)
@@ -626,9 +628,8 @@ while sum(coords_t[:,2])!= 0:
         c = np.amin(np.where(change)) # First one to have cum_sum > s3, therefore the one that infects
 
         ## Store the type of event (infection) and the infector  ##
-        event_type = np.concatenate([event_type, np.column_stack((np.array([tt]), np.array(['infection']), np.array([c])))])
+        event_type = np.concatenate([event_type, np.column_stack((np.array([tt]), np.array([t_s]), np.array(['infection']), np.array([c])))])
 
-        
         """
         ---------
         INFECTION
@@ -879,15 +880,14 @@ while sum(coords_t[:,2])!= 0:
     sample_data(samples, genomes, g, tt, coords_t, all_inf, sample_times)
     
     print(f"Totally infected:{len(coords_t[coords_t[:,2]==1])+len(coords_t[coords_t[:,2]==2])} (ns:{len(coords_t[coords_t[:,5]==1])},ss:{len(coords_t[coords_t[:,5]==2])})")
-    print("----------------------------------")
+    
 
     ## Time to run the simulation loop ##
     loop_t = time.time()-time_bfloop 
     
-    tt += 1 # Moving on in the simulation loop
         
 ## Save the data from the simulation in the correct directory ##
-save_data(samples, genomes, coords_2, coords_t, g, all_inf, unin, hah, t_un, event_type)
+save_data(samples, genomes, coords_2, coords_t, g, all_inf, unin, hah, t_un, event_type, tt)
 
 print("\nEvents-Loops:", tt)
 
