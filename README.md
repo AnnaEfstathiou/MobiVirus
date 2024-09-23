@@ -5,7 +5,7 @@
 - [Abstract](#Abstract)
 - [Requirements](#Requirements)
 - [Main code](#Main-code)
-  - [All about the strains... ](#All-about-the-strains...)
+  - [All about the strains...](#All-about-the-strains...)
   - [Output](#Output)
 - [Examples](#Examples)
 
