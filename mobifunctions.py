@@ -13,9 +13,9 @@ import random
 import matplotlib.pyplot as plt
 import pandas as pd
 import statistics
-import msprime
 import os
 import sys
+import msprime
 from configparser import ConfigParser
 
 """
@@ -154,10 +154,11 @@ Genome Function
 ---------------
 '''
 
-def msprime_genomes(ii,l,r_rec,r_m, ss_pos):
+def msprime_genomes(n,ii,l,r_rec,r_m, ss_pos):
 
     ## Generate genomes using msprime simulator ##
 
+    # n = population size
     # ii = number of genomes (infected individuals)
     # l = genomes length
     # r_rec = recombination rate
@@ -177,6 +178,7 @@ def msprime_genomes(ii,l,r_rec,r_m, ss_pos):
 
     # STEP 1: Simulate a tree sequence
     tree_sequence = msprime.sim_ancestry( 
+        population_size = n,        # population size
         samples = ii,               # number of genomes
         sequence_length = l,        # genomes length
         recombination_rate = r_rec, # recombination rate
@@ -184,7 +186,7 @@ def msprime_genomes(ii,l,r_rec,r_m, ss_pos):
         random_seed = 8273)         # seed for reproducibility
     
     # STEP 2: Introduce mutations on the simulated ancestry
-    mutated_tree_sequence = msprime.sim_mutations(tree_sequence, rate=r_m, random_seed=8273)
+    mutated_tree_sequence = msprime.sim_mutations(tree_sequence, rate=r_m, random_seed=8673)
 
     """ Process the simulated sequences """
 

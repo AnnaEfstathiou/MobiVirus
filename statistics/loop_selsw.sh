@@ -1,11 +1,13 @@
 #!/bin/bash
 
 # List of values
-values=(0 1000 2000 3000 4000 5000 6000 7000 8000 9000)
+values=(5000)
 
 # Loop over each value
 for i in "${values[@]}"; do
-    echo "genomes_${i}.csv"
-    # Run the command with the current value
-    python3 sfs.py -g "/home/anna/mobivirus/files/simulation_16_09_2024_19_15/genomes/genomes_${i}.csv" -s "sfs_${i}.png"
+    echo "Processing file: genomes_${i}.csv"
+    echo "Running 'selective_sweep.py' script for a sample of the viral strains."
+    python3 selective_sweep.py -g "/home/anna/mobivirus/files/simulation_20_09_2024_13_30/genomes_${i}.csv" -w 500 -s 20 -sample 100 -save "selsw_${i}.png"
+    echo "Running 'selective_sweep.py' script for all super strains."
+    python3 selective_sweep.py -g "/home/anna/mobivirus/files/simulation_20_09_2024_13_30/genomes_${i}.csv" -w 500 -s 20 -ss_sample -save "selsw_ss_${i}.png"
 done

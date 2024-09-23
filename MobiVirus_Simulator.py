@@ -290,7 +290,7 @@ if args.msprime_genomes or args.manual_genomes:
 infected_ind = np.where(label_i == 1)[0]                                            # Indices of infected individuals
 healthy_ind = np.where(label_i == 0)[0]                                             # Indices of healthy individuals
 if args.msprime_genomes:
-    infected_g = msprime_genomes(ii,l,r_rec,r_m,ss_pos)                             # Generate the genomes of infected individuals using msprime simulator
+    infected_g = msprime_genomes(n,ii,l,r_rec,r_m,ss_pos)                           # Generate the genomes of infected individuals using msprime simulator
     for i, idx in enumerate(infected_ind):                                          # For each infected individual, copy the corresponding genome from msprime_genomes to g
         g.iloc[idx] = infected_g.iloc[i]
 else:
@@ -394,7 +394,7 @@ while sum(coords_t[:,2])!= 0:
 
         ## Recovery of normal spreaders ##
         if normal_idx.any() and t_s >= rec_t_ns + t_im:
-            print(t_s,tt)
+            
             print("Recovered individuals (normal spreaders): " + ", ".join(map(str, [int(x) for x in normal_idx])))
             
             ## Create a table with the individuals that get uninfected ##                                                    
@@ -431,7 +431,7 @@ while sum(coords_t[:,2])!= 0:
 
         ## Recovery of super spreaders ##
         elif super_idx.any() and t_s >= rec_t_ss + t_im:
-            print(t_s,tt)
+            
             print("Recovered individuals (super spreaders): " + ", ".join(map(str, [int(x) for x in super_idx])))
             
             ## Create a table with the individuals that get uninfected ##                                                    
@@ -544,7 +544,7 @@ while sum(coords_t[:,2])!= 0:
                                                         # The scale is 1/rate, because of how the exponential function is defined! 
     t_ss.append(t_s)                                    # Keep the event times in a list
     tt += 1                                             # Event number
-    print("Event:", tt, "Simulation Time:",t_s)
+    print(f"Event:{tt}, Simulation Time:{t_s}")
 
     #%% Choose event
     """
@@ -605,7 +605,7 @@ while sum(coords_t[:,2])!= 0:
             event_type = np.concatenate([event_type, np.column_stack((np.array([tt]), np.array([t_s]), np.array(['movement']), np.array([c])))])
             
             ## Optional: Print the event that just happened ##
-            print("Movement of:", c)
+            print(f"Movement of:{c}")
 
         ## Updating rates (movement & infection) ##
         rt_m = sum(coords_t[:,3])                 # New rate of movement
@@ -711,8 +711,6 @@ while sum(coords_t[:,2])!= 0:
 
                 ## Find those who have a non-zero probability to get infected due to their distance ##           
                 if ipi[j] != 0:
-
-                    # print(f"Distance of {j}:{df_i[j,c]} with coordinates: {coords_t[j,0],coords_t[j,1]} and state: {coords_t[j,5]}")
 
                     ## Pick a random number s4 ##
                     s4 = np.random.random() 
@@ -847,7 +845,6 @@ while sum(coords_t[:,2])!= 0:
         ia = len(coords_t[coords_t[:,2] == 1])
 
         if ib >= ia:
-            # print("Nobody got infected.")
             if not unin_ind or not args.recombination:
                 # Perform the action if the list is empty
                 print("Nobody got infected.")
@@ -889,7 +886,7 @@ while sum(coords_t[:,2])!= 0:
 ## Save the data from the simulation in the correct directory ##
 save_data(samples, genomes, coords_2, coords_t, g, all_inf, unin, hah, t_un, event_type, tt)
 
-print("\nEvents-Loops:", tt)
+print(f"\nEvents-Loops:{tt}")
 
 ## Time for the whole simulation to run ##
 end=time.time()-initial

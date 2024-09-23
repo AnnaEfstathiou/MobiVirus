@@ -46,7 +46,7 @@ def plot_summary_statistics(csv_file):
 
 
     # Define a step size for x-axis labels (e.g., every 5th label)
-    step = 5
+    step = 10
     x_labels = csv_df["Time"].iloc[::step]
 
     # Create 6 subplots
