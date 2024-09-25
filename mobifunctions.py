@@ -10,7 +10,7 @@ Functions for MobiVirus Simulator
 #Packages
 import numpy as np
 import random
-import matplotlib.pyplot as plt
+from datetime import datetime
 import pandas as pd
 import statistics
 import os
@@ -178,15 +178,15 @@ def msprime_genomes(n,ii,l,r_rec,r_m, ss_pos):
 
     # STEP 1: Simulate a tree sequence
     tree_sequence = msprime.sim_ancestry( 
-        population_size = n,        # population size
-        samples = ii,               # number of genomes
-        sequence_length = l,        # genomes length
-        recombination_rate = r_rec, # recombination rate
-        ploidy = 1,                 # haplotypes
-        random_seed = 8273)         # seed for reproducibility
+        population_size = n,                            # population size
+        samples = ii,                                   # number of genomes
+        sequence_length = l,                            # genomes length
+        recombination_rate = r_rec,                     # recombination rate
+        ploidy = 1,                                     # haplotypes
+        random_seed = int(datetime.now().timestamp()))  # seed for reproducibility
     
     # STEP 2: Introduce mutations on the simulated ancestry
-    mutated_tree_sequence = msprime.sim_mutations(tree_sequence, rate=r_m, random_seed=8673)
+    mutated_tree_sequence = msprime.sim_mutations(tree_sequence, rate=r_m, random_seed=int(datetime.now().timestamp()))
 
     """ Process the simulated sequences """
 
