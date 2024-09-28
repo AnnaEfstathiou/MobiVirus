@@ -320,11 +320,11 @@ if __name__ == "__main__":
     ## Fst ##
     if args.fst_statistics:
         if args.ss_and_ns_strains:
-            all_fst = libsequence.Fst(all_sd,[500,500])
-            print(f'Normal & Super Strains --> {all_fst.hsm()}, {all_fst.slatkin()}, {all_fst.hbk()}')
+            all_fst = libsequence.Fst(all_sd,[int(args.sample_size/2),int(args.sample_size/2)])
+            print(f'Normal & Super Strains --> Hudson, Slatkin & Maddison FST:{all_fst.hsm()}, Slatkin FST: {all_fst.slatkin()}, Hudson, Boos & Kaplan FST: {all_fst.hbk()}')
         if args.ss_strains:
-            ss_fst = libsequence.Fst(ss_sd,[500,500])
-            print(f'Super Strains --> {ss_fst.hsm()}, {ss_fst.slatkin()}, {ss_fst.hbk()}')
+            ss_fst = libsequence.Fst(ss_sd,[int(args.sample_size/2),int(args.sample_size/2)])
+            print(f'Super Strains --> Hudson, Slatkin & Maddison FST:{ss_fst.hsm()}, Slatkin FST: {ss_fst.slatkin()}, Hudson, Boos & Kaplan FST: {ss_fst.hbk()}')
         if args.ns_strains:
-            ns_fst = libsequence.Fst(ns_sd,[500,500])
-            print(f'Normal Strains --> {ns_fst.hsm()}, {ns_fst.slatkin()}, {ns_fst.hbk()}')
+            ns_fst = libsequence.Fst(ns_sd,[int(args.sample_size/2),int(args.sample_size/2)])
+            print(f'Normal Strains --> Hudson, Slatkin & Maddison FST:{ns_fst.hsm()}, Slatkin FST: {ns_fst.slatkin()}, Hudson, Boos & Kaplan FST: {ns_fst.hbk()}')
