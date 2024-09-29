@@ -11,6 +11,7 @@ Functions for MobiVirus Simulator
 import numpy as np
 import random
 from datetime import datetime
+from scipy.spatial.distance import pdist, squareform
 import pandas as pd
 import statistics
 import os
@@ -232,23 +233,16 @@ Initial Distance Matrix Function
 '''
 
 def initial_distances(coords):
-    
+
     ## Creates a dataframe containing the distance between all the individuals in the sample ##
     ## The rows and the columns of the dataframe both correspond to the individuals          ##
-    
-    # coords = dataframne of the individual's spacial coordinates
-    
-    n = len(coords)
-    df = np.zeros((n, n))
-    for i in range(n):
-        for j in range(i+1, n):
-            x1, y1 = coords[i, :2]
-            x2, y2 = coords[j, :2]
-            df[j,i] = np.sqrt((x2-x1)**2 + (y2-y1)**2) # Euclidean distance
-            df[i,j] = df[j,i]
-    
-    return df
 
+    # coords: numpy array of the individual's spatial coordinates
+
+    distances = pdist(coords[:, :2], metric='euclidean') # Compute the pairwise distances using scipy's pdist, which is optimized
+    distance_matrix = squareform(distances) # Convert the condensed distance matrix into a square form
+
+    return distance_matrix
 
 """
 ================================================
@@ -324,25 +318,27 @@ Distance Matrix After Movement Function
 ---------------------------------------
 '''
 
-def new_distances(coords, coords_f, distances, c): 
-    
-    ## Changes only the column of the initial distance matrix that coresponds to the individual that moved ##
+def new_distances(coords, coords_f, distances, c):
+
+    ## Changes only the column of the initial distance matrix that coresponds to the individual that moved       ##
     ## For that column only, it calculates the new distances between the individual c and the rest in the sample ##
 
     # coords = the full coordinate table in order to get the standard deviations
     # coords_f = full data table with coordinates after movement
     # distances = distance matrix
     # c = the individual that will move
-
-    n = len(coords)
-    df = distances.copy()
-    for i in range(n):
-        for j in range(i+1, n):
-            x1, y1 = coords_f[0,:2]
-            x2, y2 = coords[j, :2]
-            df[j,i] = np.where((i==c or j==c), np.sqrt((x2-x1)**2 + (y2-y1)**2), df[j,i])  # Change only the distance matrix cells of the individual that moved
-            df[i,j] = df[j,i]  
     
+    x1, y1 = coords_f[0, :2] # Extract moved individual's new coordinates
+    x2, y2 = coords[:, :2].T # Calculate distances from the moved individual to all others
+    
+    new_dist = np.sqrt((x2 - x1)**2 + (y2 - y1)**2) # Euclidean distance
+
+    # Update distance matrix
+    df = distances.copy()
+    df[c, :] = new_dist  # Update row for individual c
+    df[:, c] = new_dist  # Update column for individual c to maintain symmetry
+    df[c, c] = 0.0       # Set distance of the infector to themselves to 0
+
     return df
 
 '''
@@ -495,3 +491,12 @@ def save_data(samples_directory, genomes_directory, coords_2, coords_t, g, all_i
     event_type = event_type[1:, :] # Remove the first row of zeros using numpy slicing
     event_type = pd.DataFrame(data=event_type, columns=['Event', 'Simulation Time', 'Event Type','Individual'])
     event_type.to_csv(samples_directory+'/event_type.csv', header=True, index=False)
+
+
+
+
+
+
+
+
+
