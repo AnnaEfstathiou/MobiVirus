@@ -53,49 +53,71 @@ def filter_middle_column(df):
 def simulated_data(csv_file, sample):
 
     ## Read the dataset ##
-    all_seqs_data = pd.read_csv(csv_file, header=None) # CSV file --> DataFrame
-    all_seqs_data = all_seqs_data.dropna()             # Drop rows with NaN values
-    all_seqs_data = all_seqs_data.astype(int)          # Turn values to integers
-    l = len(all_seqs_data.columns)                     # Genome length
+    all_seqs_data = pd.read_csv(csv_file, header=None)  # CSV file --> DataFrame
+    all_seqs_data = all_seqs_data.dropna()              # Drop rows with NaN values
+    all_seqs_data = all_seqs_data.astype(int)           # Turn values to integers
+    l = len(all_seqs_data.columns)                      # Genome length
 
     ## Split the dataset ##
-    ss_seqs_data = filter_middle_column(all_seqs_data)    # super strains
-    ns_seqs_data = all_seqs_data.drop(ss_seqs_data.index) # normal strains
+    ss_seqs_data = filter_middle_column(all_seqs_data)     # super strains
+    ns_seqs_data = all_seqs_data.drop(ss_seqs_data.index)  # normal strains
 
     n = len(all_seqs_data)   # Total number of all sequences
     n_ss = len(ss_seqs_data) # Total number of super strains
     n_ns = len(ns_seqs_data) # Total number of normal strains
 
     ## Sampling ##
-    all_sampled = all_seqs_data.sample(n=sample, random_state=int(datetime.now().timestamp())) # sampling from all sequences
-    ss_sampled  = ss_seqs_data.sample(n=sample, random_state=int(datetime.now().timestamp()))  # sampling from all super strains
-    ns_sampled  = ns_seqs_data.sample(n=sample, random_state=int(datetime.now().timestamp()))  # sampling from all normal strains
+    all_sampled = all_seqs_data.sample(n=sample, random_state=int(datetime.now().timestamp()))  # sampling from all sequences
+    # Super strains sampling
+    if not ss_seqs_data.empty:
+        ss_sampled = ss_seqs_data.sample(n=sample, random_state=int(datetime.now().timestamp()))  # sampling from super strains
+    else:
+        ss_sampled = None
+    # Normal strains sampling
+    if not ns_seqs_data.empty:
+        ns_sampled = ns_seqs_data.sample(n=sample, random_state=int(datetime.now().timestamp()))  # sampling from normal strains
+    else:
+        ns_sampled = None
 
     ## Polymorphic sites ##
     # All sequences
     all_polym_sites = all_sampled.loc[:, (all_sampled != 0).any(axis=0)]
-    all_pos  = [(col / l) for col in list(all_polym_sites.columns)] 
+    all_pos = [(col / l) for col in list(all_polym_sites.columns)]
     all_seqs = [''.join(map(str, row)) for row in all_polym_sites.values]
-    # All super strains
-    ss_polym_sites = ss_sampled.loc[:, (ss_sampled != 0).any(axis=0)]
-    ss_pos  = [(col / l) for col in list(ss_polym_sites.columns)] 
-    ss_seqs = [''.join(map(str, row)) for row in ss_polym_sites.values]
-    # All normal strains
-    ns_polym_sites = ns_sampled.loc[:, (ns_sampled != 0).any(axis=0)]
-    ns_pos  = [(col / l) for col in list(ns_polym_sites.columns)] 
-    ns_seqs = [''.join(map(str, row)) for row in ns_polym_sites.values]
+    # Super strains
+    if ss_sampled is not None:
+        ss_polym_sites = ss_sampled.loc[:, (ss_sampled != 0).any(axis=0)]
+        ss_pos = [(col / l) for col in list(ss_polym_sites.columns)]
+        ss_seqs = [''.join(map(str, row)) for row in ss_polym_sites.values]
+    else:
+        ss_pos = None
+        ss_seqs = None
+    # Normal strains
+    if ns_sampled is not None:
+        ns_polym_sites = ns_sampled.loc[:, (ns_sampled != 0).any(axis=0)]
+        ns_pos = [(col / l) for col in list(ns_polym_sites.columns)]
+        ns_seqs = [''.join(map(str, row)) for row in ns_polym_sites.values]
+    else:
+        ns_pos = None
+        ns_seqs = None
 
     ## Simulate Data for further analysis ##
     # All sequences
     all_sd = libsequence.SimData()
     all_sd.assign(all_pos, all_seqs)
-    # All super strains
-    ss_sd = libsequence.SimData()
-    ss_sd.assign(ss_pos, ss_seqs)
-    # All normal strains
-    ns_sd = libsequence.SimData()
-    ns_sd.assign(ns_pos, ns_seqs)
-    
+    # Super strains
+    if ss_pos is not None and ss_seqs is not None:
+        ss_sd = libsequence.SimData()
+        ss_sd.assign(ss_pos, ss_seqs)
+    else:
+        ss_sd = None
+    # Normal strains
+    if ns_pos is not None and ns_seqs is not None:
+        ns_sd = libsequence.SimData()
+        ns_sd.assign(ns_pos, ns_seqs)
+    else:
+        ns_sd = None
+
     return all_sd, ss_sd, ns_sd, l, n, n_ss, n_ns
 
 #%% Statistics Functions
@@ -258,10 +280,10 @@ if __name__ == "__main__":
         if args.ss_and_ns_strains:
             all_tajimasd_stats, all_pi_stats, all_thetaw_stats = summary_stats(all_sd) # Total sequences
             print(f'Normal & Super Strains --> Tajimas D: {all_tajimasd_stats}, Pi-estimator: {all_pi_stats}, Theta Watterson: {all_thetaw_stats}')
-        if args.ss_strains:
+        if args.ss_strains and ss_sd is not None:
             ss_tajimasd_stats,  ss_pi_stats,  ss_thetaw_stats  = summary_stats(ss_sd)  # Super strains
             print(f'Super Strains --> Tajimas D: {ss_tajimasd_stats}, Pi-estimator: {ss_pi_stats}, Theta Watterson: {ss_thetaw_stats}')
-        if args.ns_strains:
+        if args.ns_strains and ns_sd is not None:
             ns_tajimasd_stats,  ns_pi_stats,  ns_thetaw_stats  = summary_stats(ns_sd)  # Normal strains
             print(f'Normal Strains --> Tajimas D: {ns_tajimasd_stats}, Pi-estimator: {ns_pi_stats}, Theta Watterson: {ns_thetaw_stats}')
 
@@ -274,13 +296,13 @@ if __name__ == "__main__":
                 plot_ld(all_LDstats, custom_title='Normal & Super strains', save_png = f'ld_{suffix}.png')
             else:
                 plot_ld(all_LDstats, custom_title='Normal & Super strains', save_png = None)
-        if args.ss_strains:
+        if args.ss_strains and ss_sd is not None:
             ss_LDstats  = pd.DataFrame(libsequence.ld(ss_sd))  # Super strains
             if args.save_png:
                 plot_ld(ss_LDstats,  custom_title='Super strains',  save_png = f'ld_ss_{suffix}.png')
             else:
                 plot_ld(ss_LDstats,  custom_title='Super strains',  save_png = None)
-        if args.ns_strains:
+        if args.ns_strains and ns_sd is not None:
             ns_LDstats  = pd.DataFrame(libsequence.ld(ns_sd))  # Normal strains
             if args.save_png:
                 plot_ld(ns_LDstats,  custom_title='Normal strains', save_png = f'ld_ns_{suffix}.png')
@@ -304,13 +326,13 @@ if __name__ == "__main__":
                 plot_selectice_sweep(all_tajimasd_selsw, all_pi_selsw, all_thetaw_selsw, args.window_size, args.step_size, l, len(all_sd), custom_title='Normal & Super strains', save_png = f'selsw_{suffix}.png')
             else:
                 plot_selectice_sweep(all_tajimasd_selsw, all_pi_selsw, all_thetaw_selsw, args.window_size, args.step_size, l, len(all_sd), custom_title='Normal & Super strains', save_png = None) 
-        if args.ss_strains:
+        if args.ss_strains and ss_sd is not None:
             ss_tajimasd_selsw,  ss_pi_selsw,  ss_thetaw_selsw  = selectice_sweep(ss_sd, args.window_size, args.step_size)  # Super strains
             if args.save_png:
                 plot_selectice_sweep(ss_tajimasd_selsw,  ss_pi_selsw,  ss_thetaw_selsw,  args.window_size, args.step_size, l, len(ss_sd),  custom_title='Super strains',  save_png = f'selsw_ss_{suffix}.png')
             else:
                 plot_selectice_sweep(ss_tajimasd_selsw,  ss_pi_selsw,  ss_thetaw_selsw,  args.window_size, args.step_size, l, len(ss_sd),  custom_title='Super strains',  save_png = None)
-        if args.ns_strains:
+        if args.ns_strains and ns_sd is not None:
             ns_tajimasd_selsw,  ns_pi_selsw,  ns_thetaw_selsw  = selectice_sweep(ns_sd, args.window_size, args.step_size)  # Normal strains
             if args.save_png:
                 plot_selectice_sweep(ns_tajimasd_selsw,  ns_pi_selsw,  ns_thetaw_selsw,  args.window_size, args.step_size, l, len(ns_sd),  custom_title='Normal strains', save_png = f'selsw_ns_{suffix}.png')
@@ -322,9 +344,9 @@ if __name__ == "__main__":
         if args.ss_and_ns_strains:
             all_fst = libsequence.Fst(all_sd,[int(args.sample_size/2),int(args.sample_size/2)])
             print(f'Normal & Super Strains --> Hudson, Slatkin & Maddison FST:{all_fst.hsm()}, Slatkin FST: {all_fst.slatkin()}, Hudson, Boos & Kaplan FST: {all_fst.hbk()}')
-        if args.ss_strains:
+        if args.ss_strains and ss_sd is not None:
             ss_fst = libsequence.Fst(ss_sd,[int(args.sample_size/2),int(args.sample_size/2)])
             print(f'Super Strains --> Hudson, Slatkin & Maddison FST:{ss_fst.hsm()}, Slatkin FST: {ss_fst.slatkin()}, Hudson, Boos & Kaplan FST: {ss_fst.hbk()}')
-        if args.ns_strains:
+        if args.ns_strains and ns_sd is not None:
             ns_fst = libsequence.Fst(ns_sd,[int(args.sample_size/2),int(args.sample_size/2)])
             print(f'Normal Strains --> Hudson, Slatkin & Maddison FST:{ns_fst.hsm()}, Slatkin FST: {ns_fst.slatkin()}, Hudson, Boos & Kaplan FST: {ns_fst.hbk()}')
