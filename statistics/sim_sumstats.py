@@ -73,68 +73,9 @@ def sumstats_directory(directory, sample_size, strain_type, sampling_type):
         'Fst_slatkin': [fst['slatkin'] for fst in fst_stats.values()],
         'Fst_hbk': [fst['hbk'] for fst in fst_stats.values()]
 }
-
     stats = pd.DataFrame(data)
 
-    # return tajimasd_stats, pi_stats, thetaw_stats, uniq_stats, hp_div, fst_stats
     return stats
-
-# def plotting(dict_tajimasd_stats, dict_pi_stats, dict_thetaw_stats, dict_fst_stats, uniq_stats, hp_div, save_png = None):
-
-#     # Create 6 subplots
-#     fig, ax = plt.subplots(5, 1, figsize=(12, 28)) 
-
-#     # Plot Tajima's D
-#     ax[0].plot(list(dict_tajimasd_stats.keys()), list(dict_tajimasd_stats.values()), marker='.', color='green')
-#     ax[0].set_title("Tajima's D", fontsize=12)
-#     ax[0].set_ylabel('Scores')
-#     ax[0].set_xlabel('Simulation Time')
-#     ax[0].grid(True) 
-
-#     # Plot Pi & θw scores
-#     ax[1].plot(list(dict_pi_stats.keys()), list(dict_pi_stats.values()), marker='.', color='orange', label = "Pi-Estimator")
-#     ax[1].plot(list(dict_thetaw_stats.keys()), list(dict_thetaw_stats.values()), marker='.', color='blue', label = "Watterson-Estimator")
-#     ax[1].set_title("Pi and Theta Waterson Estimators", fontsize=12)
-#     ax[1].set_ylabel('Scores')
-#     ax[1].set_xlabel('Simulation Time')
-#     ax[1].grid(True)
-#     ax[1].legend()
-
-#     # Plot Fst scores
-#     simulation_times = list(dict_fst_stats.keys())
-#     hsm_values = [dict_fst_stats[time]['hsm'] for time in simulation_times]
-#     slatkin_values = [dict_fst_stats[time]['slatkin'] for time in simulation_times]
-#     hbk_values = [dict_fst_stats[time]['hbk'] for time in simulation_times]
-#     ax[2].plot(simulation_times, hsm_values, marker='.', color='orangered', label='HSM')
-#     ax[2].plot(simulation_times, slatkin_values, marker='.', color='limegreen', label='Slatkin')
-#     ax[2].plot(simulation_times, hbk_values, marker='.', color='dimgrey', label='HBK')
-#     ax[2].set_title("Fst", fontsize=12)
-#     ax[2].set_ylabel('Scores')
-#     ax[2].set_xlabel('Simulation Time')
-#     ax[2].grid(True)
-#     ax[2].legend() 
-
-#     # Plot Haplotype Diversity
-#     ax[3].plot(list(hp_div.keys()), list(hp_div.values()), marker='.', color='steelblue')
-#     ax[3].set_title("Haplotype Diversity", fontsize=12)
-#     ax[3].set_ylabel('Scores')
-#     ax[3].set_xlabel('Simulation Time')
-#     ax[3].grid(True)
-
-#     # Plot number of unique sequences
-#     ax[4].plot(list(uniq_stats.keys()), list(uniq_stats.values()), marker='.', color='rebeccapurple')
-#     ax[4].set_title("Unique Sequences", fontsize=12)
-#     ax[4].set_ylabel('Number')
-#     ax[4].set_xlabel('Simulation Time')
-#     ax[4].grid(True)
-
-#     plt.tight_layout(pad=5.0)
-#     plt.subplots_adjust(hspace=0.5)  # Manually set height space between plots
-#     if save_png:
-#         plt.savefig(save_png, format="png")
-#     else:
-#         plt.show()
-#     plt.close(fig)
 
 if __name__ == "__main__":
     # Set up command-line argument parsing
@@ -142,7 +83,6 @@ if __name__ == "__main__":
     parser.add_argument('-d', '--directory', type=str, required=True, help='The path to the input CSV file.')
     parser.add_argument('-sample', '--sample_size', type=int, required=True, help='Sample size.')
     parser.add_argument('-sample_type', '--sampling_technique', type=str, required=True, help='Define the way the sampling of 2 populations will happen. 3 ways: "rdm","str","coords"')
-    parser.add_argument('-save', '--save_png', action="store_true", help='Save the plot in a PNG format.')
     # Adding mutually exclusive group for strain type options
     strain_group = parser.add_mutually_exclusive_group(required=True)
     strain_group.add_argument('-mix', '--ss_and_ns_strains', action="store_true", help='Calculate statistics for both strains.')
@@ -150,7 +90,6 @@ if __name__ == "__main__":
     strain_group.add_argument('-ns', '--ns_strains', action="store_true", help='Calculate statistics for normal strains.')
     args = parser.parse_args()
 
-    
 
     # Determine strain_type based on command-line arguments
     if args.ss_and_ns_strains:
@@ -175,23 +114,10 @@ if __name__ == "__main__":
     if strain_type is None:
         print("Error: Please specify a strain type to calculate statistics (use -mix, -ss, or -ns).")
     else:
-        # tajimasd_stats, pi_stats, thetaw_stats, uniq_stats, hp_div, fst_stats = sumstats_directory(args.directory, args.sample_size, strain_type, sampling_type)
         stats = sumstats_directory(args.directory, args.sample_size, strain_type, sampling_type)
-
+        # Saving statistics in a csv format
         directory = os.path.normpath(args.directory)
         directory_name = os.path.basename(directory)
         datetime_part = "_".join(directory_name.split('_')[1:])
-        csv_filename = f"stats_{datetime_part}.csv" # Form the CSV filename using the extracted datetime part of the simulation directory
-        stats.to_csv(csv_filename) # Save the stats to a CSV file
-        
-        # if args.save_png:
-        #     # Determine png title based on command-line arguments
-        #     if args.ss_and_ns_strains:
-        #         png_title = f'sim_stats.png'
-        #     elif args.ss_strains:
-        #         png_title = f'sim_stats_ss.png'
-        #     elif args.ns_strains:
-        #         png_title = f'sim_stats_ns.png'
-        #     plotting(tajimasd_stats, pi_stats, thetaw_stats, fst_stats, uniq_stats, hp_div, save_png = png_title)
-        # else:
-        #     plotting(tajimasd_stats, pi_stats, thetaw_stats, fst_stats, uniq_stats, hp_div, save_png = None)
+        csv_filename = f"stats_{datetime_part}.csv"
+        stats.to_csv(csv_filename)              
