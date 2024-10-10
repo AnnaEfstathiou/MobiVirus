@@ -383,17 +383,17 @@ while sum(coords_t[:,2])!= 0:
 
     ## If there are any infected individuals proceed with the recovery process ##
     if (coords_t[:,2] == 1).any() or (coords_t[:,2] == 2).any(): 
-
-        ## If the simulation time is bigger than the minimum recovery time and if there are infected people...                                  ##
+        
+        ## If the simulation time is bigger than the minimum recovery time and if there are infected people...                             ##
         ## Recovery takes place for specific individuals (according to their recovery time) according to their time of the 1st infection   ##
         ## The time of recombination is not taken into consideration                                                                       ##
         
-        uninfection_idx = np.where(t_i == t_im)[0]                       # Individuals who are about to recover (indices where t_i equals t_im)  
+        uninfection_idx = np.where(t_i <= t_im)[0]                       # Individuals who are about to recover (indices where t_i equals t_im) 
         normal_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 1]  # Normal spreaders to recover
         super_idx = uninfection_idx[coords_t[uninfection_idx, 5] == 2]   # Super spreaders to recover
-
+        
         ## Recovery of normal spreaders ##
-        if normal_idx.any() and t_s >= rec_t_ns + t_im:
+        if (len(normal_idx) > 0) and (t_s >= (rec_t_ns + t_im)):
             
             print("Recovered individuals (normal spreaders): " + ", ".join(map(str, [int(x) for x in normal_idx])))
             
@@ -430,7 +430,7 @@ while sum(coords_t[:,2])!= 0:
             continue 
 
         ## Recovery of super spreaders ##
-        elif super_idx.any() and t_s >= rec_t_ss + t_im:
+        elif (len(super_idx) > 0) and (t_s >= (rec_t_ss + t_im)):
             
             print("Recovered individuals (super spreaders): " + ", ".join(map(str, [int(x) for x in super_idx])))
             
