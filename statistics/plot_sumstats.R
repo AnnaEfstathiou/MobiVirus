@@ -69,22 +69,16 @@ plot.UniqueSeqs <- line_plot(data = data,
 
 ## Pi & Theta Waterson Estimators Plot
 plot.ThetawPi <- ggplot(data, aes(x = Time)) +
-  geom_line(aes(y = Pi, color = "Pi")) +   
-  geom_line(aes(y = Theta_w, color = "Theta_w")) +  
+  geom_line(aes(y = Pi, color = "Pi")) +
+  geom_line(aes(y = Theta_w, color = "Theta Waterson")) +
   labs(title = "Pi & Theta Waterson Estimators over Time",
        subtitle = paste("Sample =", sample_size, ", Genome length =", genome_length),
        x = "Simulation Time",
        y = "Values") +
-  scale_color_manual(values = c("Pi" = "#0E7175FF", "Theta_w" = "#FD7901FF")) +
-  theme_minimal() +
-  theme(
-    legend.position = c(.95, .95),
-    legend.justification = c("right", "top"),
-    legend.box.just = "right",
-    legend.margin = margin(6, 6, 6, 6)
-  )
+  scale_color_manual(values = c("Pi" = "#0E7175FF", "Theta Waterson" = "#FD7901FF")) +
+  theme_minimal()
 
-## Fst PLot
+## Fst Plot
 plot.Fst <- ggplot(data, aes(x = Time)) +
   geom_line(aes(y = Fst_hsm,
                 color = "HSM Fst")) +
@@ -97,17 +91,10 @@ plot.Fst <- ggplot(data, aes(x = Time)) +
        x = "Simulation Time",
        y = "Value") +
   scale_colour_paletteer_d("ltc::trio3") +
-  theme_minimal() +
-  theme(
-    legend.position = c(.95, .95),
-    legend.justification = c("right", "top"),
-    legend.box.just = "right",
-    legend.margin = margin(6, 6, 6, 6)
-  )
+  theme_minimal()
 
-################################################
-################## Save plots ##################
-################################################
+
+## Save plots ##
 
 ## Generic function for saving plots as png files
 save_plot <- function(plot, filename, width = 8, height = 6, dpi = 300) {

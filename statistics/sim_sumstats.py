@@ -3,7 +3,7 @@ import argparse
 import pandas as pd
 import os
 
-from statistics import statistics, Fst, __event_number
+from statistics import statistics, Fst, event_number
 
 def sumstats_directory(directory, sample_size, strain_type, sampling_type):
 
@@ -13,10 +13,10 @@ def sumstats_directory(directory, sample_size, strain_type, sampling_type):
     event_time_filename = os.path.join(samples_dir, 'event_type.csv')
     
     ## Get the genome, sample and time files
-    genome_files = {__event_number(f): f for f in os.listdir(genome_dir) if f.startswith('genomes') and f.endswith('.csv')}
+    genome_files = {event_number(f): f for f in os.listdir(genome_dir) if f.startswith('genomes') and f.endswith('.csv')}
     simulation_times = pd.read_csv(event_time_filename, usecols=['Event', 'Simulation Time'], index_col='Event').squeeze().to_dict() # Convert simulation time and events into a dictionary
     if sampling_type == "coordinates_sampling":
-         coords_files = {__event_number(f): f for f in os.listdir(samples_dir) if f.startswith('coords') and f.endswith('.csv')}
+         coords_files = {event_number(f): f for f in os.listdir(samples_dir) if f.startswith('coords') and f.endswith('.csv')}
     
     ## Initialize directories to store statistics ##
     tajimasd_stats = {} # Initialize a dictionary to store Tajima's D values for every simulation time
@@ -120,4 +120,5 @@ if __name__ == "__main__":
         directory_name = os.path.basename(directory)
         datetime_part = "_".join(directory_name.split('_')[1:])
         csv_filename = f"stats_{datetime_part}.csv"
-        stats.to_csv(csv_filename)              
+        stats.to_csv(csv_filename)      
+        print(f"The results are stored in the file: {csv_filename}")

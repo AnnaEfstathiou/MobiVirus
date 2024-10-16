@@ -1,13 +1,11 @@
 import pandas as pd
 import libsequence
-import matplotlib.pyplot as plt
 import argparse
 import pandas as pd
 from datetime import datetime
 from collections import Counter
 import re
 import os
-from ld_plot.ld_plot import ld_plot
 
 ## mix is refered to the whole pool of sequences aka super and normal strains ##
 ## ss is refered to super strains                                             ##
@@ -57,7 +55,7 @@ def __retrieve_super_strains(df):
 
     return ss_df
 
-def __event_number(csv_file):
+def event_number(csv_file):
     ## Isolate suffix number from the csv file ##
     ## Suffix represents the event number      ##
 
@@ -215,99 +213,6 @@ def simulated_data(sampled_data, l):
     
     return sd
 
-#%% Plotting Functions
-
-def plot_selectice_sweep(tajimas_d_dict, pi_est_dict, theta_w_dict, window_size, step_size, seq_length, num_seqs, custom_title=None, save_png = None):
-
-    # Extract the keys (x values) and values (y values)
-    window_pos = list(theta_w_dict.keys())
-    tajimas_d_values = list(tajimas_d_dict.values())
-    pi_est_values = list(pi_est_dict.values())
-    theta_w_values = list(theta_w_dict.values())
-    
-    # Create the plot
-    plt.figure(figsize=(10, 6))
-    plt.plot(window_pos, tajimas_d_values, marker='.', linestyle='solid', color='darkmagenta', label='Tajima s D')
-    plt.plot(window_pos, pi_est_values, marker='.', linestyle='solid', color='darkslategrey', label='Pi Estimator')
-    plt.plot(window_pos, theta_w_values, marker='.', linestyle='solid', color='orangered', label='Watterson Estimator')
-
-    plt.suptitle('Selective Sweep', fontsize=15, fontweight='bold')
-    plt.xlabel("Window position")
-    plt.ylabel("Estimator value")
-    if custom_title:
-        plt.title(custom_title, loc='left')
-    plt.title(f'Window size:{int(window_size*seq_length)}, Step size:{int(step_size*seq_length)}, l:{seq_length}, seqs:{num_seqs}', loc='right')
-    plt.legend()
-    plt.grid(True)
-    ## Save or display the plot ##
-    if save_png:
-        plt.savefig(save_png, format="png")
-    else:
-        plt.show()
-    plt.close()
-
-def plot_ld(LD, custom_title=None, save_png = None):
-
-    # Creating the pivot tables
-    rsq_ld_table = LD.pivot(index='i', columns='j', values='rsq')
-    d_table = LD.pivot(index='i', columns='j', values='D')
-    dprime_table = LD.pivot(index='i', columns='j', values='Dprime')
-
-    # Calculating means
-    meanrsq = LD['rsq'].mean()
-    meanD = LD['D'].mean()
-    meanDprime = LD['Dprime'].mean()
-
-    # Creating subplots
-    fig, ax = plt.subplots(3, 1, figsize=(16, 24)) 
-    
-    # Adding a general title for the figure
-    fig.suptitle('Linkage Disequilibrium Heatmaps', fontsize=15, fontweight='bold')
-
-    # Plotting r^2 heatmap
-    cax0 = ax[0].imshow(rsq_ld_table, cmap="viridis", aspect='auto', origin='lower')
-    fig.colorbar(cax0, ax=ax[0], label='$r^2$') 
-    ax[0].set_title('Heatmap of $r^2$ Values')
-    if custom_title:
-        ax[0].set_title(custom_title, loc='left')
-    ax[0].set_xlabel('position j')
-    ax[0].set_ylabel('position i')
-    ax[0].text(0.02, 0.98, f'Mean $r^2$: {meanrsq:.2f}', 
-               verticalalignment='top', horizontalalignment='left',
-               transform=ax[0].transAxes, color='black', fontsize=12)
-
-    # Plotting D heatmap
-    cax1 = ax[1].imshow(d_table, cmap="viridis", aspect='auto', origin='lower')
-    fig.colorbar(cax1, ax=ax[1], label='D') 
-    ax[1].set_title('Heatmap of D Values')
-    if custom_title:
-        ax[1].set_title(custom_title, loc='left')
-    ax[1].set_xlabel('position j')
-    ax[1].set_ylabel('position i')
-    ax[1].text(0.02, 0.98, f'Mean D: {meanD:.2f}', 
-               verticalalignment='top', horizontalalignment='left',
-               transform=ax[1].transAxes, color='black', fontsize=12)
-
-    # Plotting D' heatmap
-    cax2 = ax[2].imshow(dprime_table, cmap="viridis", aspect='auto', origin='lower')
-    fig.colorbar(cax2, ax=ax[2], label="D'")  
-    ax[2].set_title("Heatmap of D' Values")
-    if custom_title:
-        ax[2].set_title(custom_title, loc='left')
-    ax[2].set_xlabel('position j')
-    ax[2].set_ylabel('position i')
-    ax[2].text(0.02, 0.98, f"Mean D': {meanDprime:.2f}", 
-               verticalalignment='top', horizontalalignment='left',
-               transform=ax[2].transAxes, color='black', fontsize=12)
-
-    plt.tight_layout(rect=[0, 0, 1, 0.94])  
-    plt.subplots_adjust(top=0.92, hspace=0.4)
-    ## Save or display the plot ##
-    if save_png:
-        plt.savefig(save_png, format="png")
-    else:
-        plt.show()
-    plt.close()
 #%% Statistics Functions
 
 def __summary_stats(simulated_data):
@@ -382,110 +287,6 @@ def statistics(sequences, strain_type, sample):
 
     return tajimasd, pi, thetaw, uniq_haplo, haplo_div
 
-def LD(sequences, strain_type, sample, save_plot=None):
-    ## Calculate linkage_disequilibrium                                    ##
-    ## Calculations can be done to either super or normal strains, or both ##
-    ## Results are presented via a plot                                    ##
-
-    # 1) Import data
-    all_seqs_data, ss_seqs_data, ns_seqs_data, l, pop, pop_ss, pop_ns = import_data(sequences)
-    suffix = __event_number(sequences)
-
-    # 2) Sampling
-    if strain_type == "mix_strains":
-        sampled_data = __sampling(all_seqs_data, sample, pop)
-    elif strain_type == "ss_strains":
-        sampled_data = __sampling(ss_seqs_data, sample, pop_ss)
-    elif strain_type == "ns_strains":
-        sampled_data = __sampling(ns_seqs_data, sample, pop_ns)
-        
-    # 3) Simulating sampled data
-    sim_data = simulated_data(sampled_data, l)
-
-    if sim_data is not None:
-
-        # 4) LD values
-        ld = pd.DataFrame(libsequence.ld(sim_data))
-
-        # 5) Plotting
-        if strain_type == "mix_strains":
-            custom_title='Normal & Super strains'
-            if save_plot is not None:
-                save_png = f'ld_{suffix}.png'
-            else:
-                save_png = None
-        elif strain_type == "ss_strains":
-            custom_title='Super strains'
-            if save_plot is not None:
-                save_png = f'ld_ss_{suffix}.png'
-            else:
-                save_png = None
-        elif strain_type == "ns_strains":
-            custom_title='Normal strains'
-            if save_plot is not None:
-                save_png = f'ld_ns_{suffix}.png'
-            else:
-                save_png = None
-
-        plot_ld(ld, custom_title, save_png)
-
-def selective_sweep(sequences, window_size, step_size, strain_type, sample, save_plot=None):
-    ## Calculate Tajima's D, Pi & θw for every sliding window              ##
-    ## Calculations can be done to either super or normal strains, or both ##
-    ## Results are presented via a plot                                    ##
-
-    # Validation for window_size and step_size
-    if not isinstance(window_size, float):
-        return print("Window size must be a float between 0 and 1.")
-    if not isinstance(step_size, float):
-        return print("Step size must be a float between 0 and 1.")
-    if not (0 < window_size <= 1):
-        return print("Window size must be a float between 0 and 1.")
-    if not (0 < step_size <= 1):
-        return print("Step size must be a float between 0 and 1.")
-    
-    # 1) Import data
-    all_seqs_data, ss_seqs_data, ns_seqs_data, l, pop, pop_ss, pop_ns = import_data(sequences)
-    suffix = __event_number(sequences)
-
-    # 2) Sampling
-    if strain_type == "mix_strains":
-        sampled_data = __sampling(all_seqs_data, sample, pop)
-    elif strain_type == "ss_strains":
-        sampled_data = __sampling(ss_seqs_data, sample, pop_ss)
-    elif strain_type == "ns_strains":
-        sampled_data = __sampling(ns_seqs_data, sample, pop_ns)
-        
-    # 3) Simulating sampled data
-    sim_data = simulated_data(sampled_data, l)
-
-    if sim_data is not None:
-
-        # 4) Tajima's D, Pi & θw for every sliding window
-        tajimas_d, pi_est, theta_w = __selectice_sweep(sim_data, window_size, step_size)
-
-        # 5) Plotting
-        if strain_type == "mix_strains":
-            custom_title='Normal & Super strains'
-            if save_plot is not None:
-                save_png = f'selsw_{suffix}.png'
-            else:
-                save_png = None
-        elif strain_type == "ss_strains":
-            custom_title='Super strains'
-            if save_plot is not None:
-                save_png = f'selsw_ss_{suffix}.png'
-            else:
-                save_png = None
-        elif strain_type == "ns_strains":
-            custom_title='Normal strains'
-            if save_plot is not None:
-                save_png = f'selsw_ns_{suffix}.png'
-            else:
-                save_png = None
-
-        plot_selectice_sweep(tajimas_d, pi_est, theta_w, window_size, step_size, l, len(sim_data), custom_title, save_png)
-
 def Fst(sequences, sampling_type, strain_type, sample, coords_file = None):
     ## Calculate Fst between 2 populations                                                                                                     ##
     ## Three Sampling techniques:                                                                                                              ##
@@ -525,11 +326,105 @@ def Fst(sequences, sampling_type, strain_type, sample, coords_file = None):
     sim_data = simulated_data(edited_samples, l)
     
     if sim_data is not None:
+
         # 4) Fst
         fst = libsequence.Fst(sim_data,[n_pop1,n_pop2])
 
-    return fst       
+    return fst  
 
+def LD(sequences, strain_type, sample):
+    ## Calculate linkage_disequilibrium                                    ##
+    ## Calculations can be done to either super or normal strains, or both ##
+
+    # 1) Import data
+    all_seqs_data, ss_seqs_data, ns_seqs_data, l, pop, pop_ss, pop_ns = import_data(sequences)
+
+    # 2) Sampling
+    if strain_type == "mix_strains":
+        sampled_data = __sampling(all_seqs_data, sample, pop)
+    elif strain_type == "ss_strains":
+        sampled_data = __sampling(ss_seqs_data, sample, pop_ss)
+    elif strain_type == "ns_strains":
+        sampled_data = __sampling(ns_seqs_data, sample, pop_ns)
+        
+    # 3) Simulating sampled data
+    sim_data = simulated_data(sampled_data, l)
+
+    if sim_data is not None:
+
+        # 4) LD values
+        ld = pd.DataFrame(libsequence.ld(sim_data))
+
+        return ld
+
+def selective_sweep(sequences, window_size, step_size, strain_type, sample):
+    ## Calculate Tajima's D, Pi & θw for every sliding window              ##
+    ## Calculations can be done to either super or normal strains, or both ##
+
+    # Validation for window_size and step_size
+    if not isinstance(window_size, float):
+        return print("Window size must be a float between 0 and 1.")
+    if not isinstance(step_size, float):
+        return print("Step size must be a float between 0 and 1.")
+    if not (0 < window_size <= 1):
+        return print("Window size must be a float between 0 and 1.")
+    if not (0 < step_size <= 1):
+        return print("Step size must be a float between 0 and 1.")
+    
+    # 1) Import data
+    all_seqs_data, ss_seqs_data, ns_seqs_data, l, pop, pop_ss, pop_ns = import_data(sequences)
+
+    # 2) Sampling
+    if strain_type == "mix_strains":
+        sampled_data = __sampling(all_seqs_data, sample, pop)
+    elif strain_type == "ss_strains":
+        sampled_data = __sampling(ss_seqs_data, sample, pop_ss)
+    elif strain_type == "ns_strains":
+        sampled_data = __sampling(ns_seqs_data, sample, pop_ns)
+        
+    # 3) Simulating sampled data
+    sim_data = simulated_data(sampled_data, l)
+
+    if sim_data is not None:
+
+        # 4) Tajima's D, Pi & θw for every sliding window
+        tajimas_d, pi_est, theta_w = __selectice_sweep(sim_data, window_size, step_size)
+    
+    # DataFrame with the results
+    selsw_data = {
+        "Window": tajimas_d.keys(),
+        "Tajima's D": tajimas_d.values(),
+        "Pi": pi_est.values(),
+        "Theta W": theta_w.values()
+    }
+    selsw_df = pd.DataFrame(selsw_data)
+    
+    return selsw_df
+
+def site_frequency_spectrum(sequences, strain_type, sample):
+    
+    # 1) Import data
+    all_seqs_data, ss_seqs_data, ns_seqs_data, l, pop, pop_ss, pop_ns = import_data(sequences)
+
+    # 2) Sampling
+    sampled_data = None  # Initialize sampled_data to avoid unbound error
+    if strain_type   == "mix_strains":
+        sampled_data = __sampling(all_seqs_data, sample, pop)
+    elif strain_type == "ss_strains":
+        sampled_data = __sampling(ss_seqs_data, sample, pop_ss)
+    elif strain_type == "ns_strains":
+        sampled_data = __sampling(ns_seqs_data, sample, pop_ns)
+
+    if sampled_data is None:
+        raise ValueError(f"Invalid strain_type '{strain_type}' or sampling failed.") # Handle the case where strain_type is invalid or sampling fails
+
+    # 3) Calculating Site Frequency Spectrum
+    allele_counts = sampled_data.sum(axis=0)           # Sum the number of SNP's for each genomic position 
+    sfs = allele_counts.value_counts().sort_index()    # Count occurrences and sort by SNP count
+    sfs_dataframe = sfs.reset_index()                  # Convert Series to DataFrame
+    sfs_dataframe.columns = ['SNP Count', 'Frequency'] # Rename columns for clarity
+
+    return sfs_dataframe
 #%% 
 if __name__ == "__main__":
 
@@ -538,29 +433,29 @@ if __name__ == "__main__":
     ## General Parsers
     parser = argparse.ArgumentParser(description="Process a genome file (csv format) to compute various statistics and plot results.")
     parser.add_argument('-g', '--genome_file', type=str, required=True, help='The path to the input CSV file.')
-    parser.add_argument('-sample', '--sample_size', type=int, help='Sample size.')
+    parser.add_argument('-sample', '--sample_size', required=True, type=int, help='Sample size.')
     parser.add_argument('-p', '--population_size', action="store_true", help='Population size.')
 
     ## Parsers that define which statistics and metrics will be calculated
-    parser.add_argument('-sumstats', '--summary_statistics', action="store_true", help='Calculate summary statistics.')
-    parser.add_argument('-ld', '--linkage_disequilibrium', action="store_true", help='Calculate Linkage Disequilibrium.')
-    # Parsers for Fst
-    parser.add_argument('-fst', '--fst_statistics', action="store_true", help='Calculate Fst.')
+    # Parsers for summary statistics & Fst
+    parser.add_argument('-sumstats', '--summary_statistics', action="store_true", help='Calculate summary statistics & Fst.')
     parser.add_argument('-sample_type', '--sampling_technique', type=str, help='Define the way the sampling of 2 populations will happen. 3 ways: "rdm","str","coords"')
     parser.add_argument('-c', '--coords_file', type=str, help='The path to the coordinates file. Required if -sampling_techning == "coords".')
-    # Parsers for selective sweep
+    # Parsers for Linkage Disequilibrium
+    parser.add_argument('-ld', '--linkage_disequilibrium', action="store_true", help='Calculate Linkage Disequilibrium.')
+    # Parsers for Selective Sweep
     parser.add_argument('-selsw', '--selective_sweep', action="store_true", help='Search for Selective Sweep.')
     parser.add_argument('-winsize', '--window_size', type=float, help='Length of sliding window.')
     parser.add_argument('-stepsize', '--step_size', type=float, help='Step size.')
-    
+    # Parsers for site frequency spectrum
+    parser.add_argument('-sfs', '--site_frequency_spectrum', action="store_true", help='Calculate Site Frequency Spectrum.')
+
     ## Mutually exclusive group for strain statistics
     strain_group = parser.add_mutually_exclusive_group(required=True)
     strain_group.add_argument('-mix', '--ss_and_ns_strains', action="store_true", help='Calculate statistics for both strains.')
     strain_group.add_argument('-ss', '--ss_strains', action="store_true", help='Calculate statistics for super strains.')
     strain_group.add_argument('-ns', '--ns_strains', action="store_true", help='Calculate statistics for normal strains.')
     
-    ## Parser for plots
-    parser.add_argument('-save', '--save_png', action="store_true", help='Save the plot in a PNG format.')
     args = parser.parse_args()
 
 
@@ -570,10 +465,10 @@ if __name__ == "__main__":
     if args.selective_sweep and (args.window_size is None or args.step_size is None):
         parser.error("--selective_sweep requires --window_size and --step_size to be specified.")
     # Check if a sampling technique is specified, when Fst is calculated
-    if args.fst_statistics and args.sampling_technique is None:
-        parser.error("--fst_statistics requires --sampling_technique to be specified.")
+    if args.summary_statistics and args.sampling_technique is None:
+        parser.error("--summary_statistics requires --sampling_technique to be specified.")
     # Check if the file containing the coordinates is required
-    if (args.fst_statistics and args.sampling_technique == "coords") and not args.coords_file:
+    if (args.summary_statistics and args.sampling_technique == "coords") and not args.coords_file:
         parser.error('--coords_file is required when --sampling_technique is set to "coords"')
     
     ''' Results '''
@@ -596,27 +491,24 @@ if __name__ == "__main__":
     else:
         strain_type = None
 
-    ## Summary Statistics ##
+    # Determine suffix (e.g. File:genomes_100.csv -> suffix:100)
+    try:
+        genome_file = args.genome_file
+        sample_size = args.sample_size
+        suffix = event_number(genome_file)
+    except UnboundLocalError:
+        suffix = None 
+        genome_file = None
+        sample_size = None
+
+    # Deternine names
+    ld_filename = f"ld_{suffix}.csv"
+    selsw_filename = f"selsw_{suffix}.csv"
+    sfs_filename = f"sfs_{suffix}.csv"
+
+    ## Summary Statistics & Fst ##
     if args.summary_statistics:
         tajimasd, pi, thetaw, uniq_haplo, haplo_div = statistics(args.genome_file, strain_type, args.sample_size)
-        print(f'Tajimas D: {tajimasd}\nPi-estimator: {pi}\nTheta Watterson: {thetaw}\nNumber of unique haplotypes: {uniq_haplo}\nHaplotype Diversity: {haplo_div}')
-    
-    ## Linkage Disequilibrium ##
-    if args.linkage_disequilibrium:
-        if args.save_png:
-            LD(args.genome_file, strain_type, args.sample_size, save_plot=args.save_png)
-        else:
-            LD(args.genome_file, strain_type, args.sample_size, save_plot=None)
-
-    ## Selective Sweep ##
-    if args.selective_sweep:
-        if args.save_png:
-            selective_sweep(args.genome_file, args.window_size, args.step_size, strain_type, args.sample_size, save_plot=args.save_png)
-        else:
-            selective_sweep(args.genome_file, args.window_size, args.step_size, strain_type, args.sample_size, save_plot=None)
-
-    ## Fst ##
-    if args.fst_statistics:
         if args.sampling_technique == "rdm":
             sampling_type = "simple_random_sampling"
             fst = Fst(args.genome_file, sampling_type, strain_type, args.sample_size, coords_file = None)
@@ -627,4 +519,44 @@ if __name__ == "__main__":
             sampling_type = "coordinates_sampling"
             __validate_files(args.genome_file, args.coords_file)
             fst = Fst(args.genome_file, sampling_type, strain_type, args.sample_size, coords_file = args.coords_file)
-        print(f'Hudson, Slatkin & Maddison FST:{fst.hsm()}\nSlatkin FST: {fst.slatkin()}\nHudson, Boos & Kaplan FST: {fst.hbk()}')
+        
+        hsm_fst = fst.hsm()         # Hudson, Slatkin & Maddison Fst
+        slatkin_fst = fst.slatkin() # Slatkin Fst
+        hbk_fst = fst.hbk()         # Hudson, Boos & Kaplan Fst
+
+        # DataFrame with the results
+        sumstats = {
+            'Tajimas D': [tajimasd],
+            'Pi-estimator': [pi],
+            'Theta Watterson': [thetaw],
+            'Number of unique haplotypes': [uniq_haplo],
+            'Haplotype Diversity': [haplo_div],
+            'HSM Fst': [hsm_fst],
+            'Slatkin Fst': [slatkin_fst],
+            'HBK Fst': [hbk_fst]}
+        sumstats_df = pd.DataFrame(sumstats)
+
+        # Save the DataFrame to a CSV file
+        sumstats_df.to_csv(f"sumstats_{suffix}.csv", index=False)
+        print(f"The results are stored in the file: sumstats_{suffix}.csv")
+
+    ## Linkage Disequilibrium ##
+    if args.linkage_disequilibrium:
+        
+        ld_df = LD(genome_file, strain_type, sample_size)
+        ld_df.to_csv(ld_filename, index=False) 
+        print(f"The results are stored in the file: ld_{suffix}.csv")
+
+    ## Selective Sweep ##
+    if args.selective_sweep:
+        
+        selsw_df = selective_sweep(args.genome_file, args.window_size, args.step_size, strain_type, args.sample_size)
+        selsw_df.to_csv(selsw_filename, index=False)
+        print(f"The results are stored in the file: selsw_{suffix}.csv")
+
+    ## Site Frequency Spectrum ##
+    if args.site_frequency_spectrum:
+
+        sfs_df = site_frequency_spectrum(args.genome_file, strain_type, args.sample_size)
+        sfs_df.to_csv(sfs_filename, index=False)
+        print(f"The results are stored in the file: sfs_{suffix}.csv")

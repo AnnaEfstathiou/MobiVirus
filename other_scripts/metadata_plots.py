@@ -165,7 +165,6 @@ def plot_time_events(csv_file):
     plt.xlabel('Events')
     plt.ylabel('Simulation Time')
     plt.title('Events over simulation time')
-    plt.legend()
 
     # Display or save the plot
     if args.save_png:
@@ -249,7 +248,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Plot simulation results over time from a CSV file.')
     parser.add_argument('-csv', '--csv_file', type=str, help='Path to a CSV file.')
     parser.add_argument('-inf', '--infectors_file', type=str, help='Path to a CSV file containg the infectors. (event_type CSV)')
-    parser.add_argument('-spreaders', '--ns_ss_spreaders', action="store_true", help='Plotting the number of individuals with each mutation over time. (all_inf CSV)')
+    parser.add_argument('-strains', '--ns_ss_strains', action="store_true", help='Plotting the number of individuals with each mutation over time. (all_inf CSV)')
     parser.add_argument('-coords', '--coordinates_scatter_plot', action="store_true", help='Plotting (scatter plot) the coordinates and mutation label for all individuals. (coords CSV)')
     parser.add_argument('-hist', '--histogram', action="store_true", help='Plotting the distribution of x and y coordinates (separately) for all individuals. (coords CSV)')
     parser.add_argument('-time', '--time_over_events_plot', action="store_true", help='Plotting the number of events over the simulation time. (all_inf CSV)')
@@ -258,7 +257,7 @@ if __name__ == "__main__":
     parser.add_argument('-s','--save_png', action="store_true", help='Flag to save the plot as an PNG file.')
     args = parser.parse_args()
 
-    if args.ns_ss_spreaders:
+    if args.ns_ss_strains:
         plot_spreaders(args.csv_file)
     elif args.coordinates_scatter_plot:
         plot_coordinates(args.csv_file, args.infectors_file)
