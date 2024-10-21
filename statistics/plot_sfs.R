@@ -29,7 +29,9 @@ plot.SFS <- ggplot(sfs_data, aes(x = factor(SNP.Count), y = Frequency)) +
   xlab("SNP Count") +
   ylab("Frequency") +
   ggtitle("Site Frequency Spectrum") +
-  theme_minimal()
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 8)) +
+  scale_x_discrete(breaks = seq(0, max(sfs_data$SNP.Count), by = 5))  
 
 ### Save plots ##
 save_plot <- function(plot, prefix, suffix, extension = ".png", width = 8, height = 6, dpi = 300) {

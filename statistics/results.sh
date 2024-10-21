@@ -3,8 +3,8 @@
 # Load the config file
 source results.cfg
 
-# Create the figures subdirectory inside the directory
-mkdir -p "${directory}/figures"
+# Create the results subdirectory inside the directory
+mkdir -p "${directory}/results_${strain_type}"
 
 # Assign the subdirectory path based on the directory
 samples_dir="$directory/samples"
@@ -39,5 +39,6 @@ for event in "${simulation_events[@]}"; do
     Rscript plot_sfs.R -csv sfs_${event}.csv 
 done
 
-# Move all .png and .csv files from the current directory to the figures subdirectory
-mv *.png *.csv *.pdf "${directory}/figures"
+# Move all .png and .csv files from the current directory to the results subdirectory
+mv *.png *.csv *.pdf results.cfg "${directory}/results_${strain_type}"
+cp results.cfg "${directory}/results_${strain_type}"

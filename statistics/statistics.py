@@ -419,10 +419,11 @@ def site_frequency_spectrum(sequences, strain_type, sample):
         raise ValueError(f"Invalid strain_type '{strain_type}' or sampling failed.") # Handle the case where strain_type is invalid or sampling fails
 
     # 3) Calculating Site Frequency Spectrum
-    allele_counts = sampled_data.sum(axis=0)           # Sum the number of SNP's for each genomic position 
-    sfs = allele_counts.value_counts().sort_index()    # Count occurrences and sort by SNP count
-    sfs_dataframe = sfs.reset_index()                  # Convert Series to DataFrame
-    sfs_dataframe.columns = ['SNP Count', 'Frequency'] # Rename columns for clarity
+    allele_counts = sampled_data.sum(axis=0)                       # Sum the number of SNP's for each genomic position 
+    sfs = allele_counts.value_counts().sort_index()                # Count occurrences and sort by SNP count
+    sfs_dataframe = sfs.reset_index()                              # Convert Series to DataFrame
+    sfs_dataframe.columns = ['SNP Count', 'Frequency']             # Rename columns for clarity
+    sfs_dataframe = sfs_dataframe[sfs_dataframe['SNP Count'] != 0] # Exclude rows where 'SNP Count' is 0
 
     return sfs_dataframe
 #%% 
