@@ -36,23 +36,25 @@ def sumstats_directory(directory, sample_size, strain_type, sampling_type):
             tajimasd, pi, thetaw, uniq_haplo, haplo_div = statistics(genome_data, strain_type, sample_size)
             time = simulation_times[int(suffix)] # Get the simulation time the current event happened
 
-            if (sampling_type == "coordinates_sampling") and (suffix in coords_files):
-                coords_file = coords_files[suffix]
-                coords_data = os.path.join(samples_dir, coords_file)
-                fst = Fst(genome_data, sampling_type, strain_type, sample_size, coords_file = coords_data)
-            else:
-                 fst = Fst(genome_data, sampling_type, strain_type, sample_size, coords_file = None)
-            
             tajimasd_stats[time] = tajimasd
             pi_stats[time] = pi
             thetaw_stats[time] = thetaw
             uniq_stats[time] = uniq_haplo
             hp_div[time] = haplo_div
+
+            if (sampling_type == "coordinates_sampling") and (suffix in coords_files):
+                coords_file = coords_files[suffix]
+                coords_data = os.path.join(samples_dir, coords_file)
+                fst = Fst(genome_data, sampling_type, strain_type, sample_size, coords_file = coords_data)
+            else:
+                fst = Fst(genome_data, sampling_type, strain_type, sample_size, coords_file = None)
+            
             fst_stats[time] = {'hsm': fst.hsm(), 'slatkin': fst.slatkin(), 'hbk': fst.hbk()}
                   
         except ValueError as e:
-                    print(f"Error processing {genome_file}: {e}")
-                    continue
+            print(f"Error processing {genome_file}: {e}")
+            continue
+
     # Sort dictionaries according to simulation time (keys)
     tajimasd_stats = dict(sorted(tajimasd_stats.items()))
     pi_stats       = dict(sorted(pi_stats.items()))
@@ -62,17 +64,18 @@ def sumstats_directory(directory, sample_size, strain_type, sampling_type):
     fst_stats      = dict(sorted(fst_stats.items()))
 
     # Convert to DataFrame
+    all_times = sorted(tajimasd_stats.keys())
     data = {
-        'Time': list(tajimasd_stats.keys()),
-        'TajimasD': list(tajimasd_stats.values()),
-        'Pi': list(pi_stats.values()),
-        'Theta_w': list(thetaw_stats.values()),
-        'Unique_seqs': list(uniq_stats.values()),
-        'Hp_Diversity': list(hp_div.values()),
-        'Fst_hsm': [fst['hsm'] for fst in fst_stats.values()],
-        'Fst_slatkin': [fst['slatkin'] for fst in fst_stats.values()],
-        'Fst_hbk': [fst['hbk'] for fst in fst_stats.values()]
-}
+    'Time': all_times,
+    'TajimasD': [tajimasd_stats.get(time, None) for time in all_times],
+    'Pi': [pi_stats.get(time, None) for time in all_times],
+    'Theta_w': [thetaw_stats.get(time, None) for time in all_times],
+    'Unique_seqs': [uniq_stats.get(time, None) for time in all_times],
+    'Hp_Diversity': [hp_div.get(time, None) for time in all_times],
+    'Fst_hsm': [fst_stats.get(time, {}).get('hsm', None) for time in all_times],
+    'Fst_slatkin': [fst_stats.get(time, {}).get('slatkin', None) for time in all_times],
+    'Fst_hbk': [fst_stats.get(time, {}).get('hbk', None) for time in all_times]}
+
     stats = pd.DataFrame(data)
 
     return stats
@@ -89,7 +92,6 @@ if __name__ == "__main__":
     strain_group.add_argument('-ss', '--ss_strains', action="store_true", help='Calculate statistics for super strains.')
     strain_group.add_argument('-ns', '--ns_strains', action="store_true", help='Calculate statistics for normal strains.')
     args = parser.parse_args()
-
 
     # Determine strain_type based on command-line arguments
     if args.ss_and_ns_strains:

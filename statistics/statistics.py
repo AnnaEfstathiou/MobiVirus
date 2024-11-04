@@ -119,7 +119,7 @@ def __sampling(data, sample, pop):
             raise ValueError("Sampled data contains only one entry, which is insufficient.")
     else:
         sampled_data = None
-        raise ValueError("No data to sample from.") # Raise an error if sampled_data is None
+        raise ValueError("LALA No data to sample from.") # Raise an error if sampled_data is None
     
     return sampled_data
 
@@ -319,11 +319,11 @@ def Fst(sequences, sampling_type, strain_type, sample, coords_file = None):
             sampled_data = __sampling(ns_seqs_data, sample, pop_ns)
         edited_samples, n_pop1, n_pop2 = __space_sampling(sampled_data, filtered_coords)
     if edited_samples is None:
-        raise ValueError(f"ANNA Invalid strain_type '{strain_type}' or sampling failed.") # Handle the case where strain_type is invalid or sampling fails
-            
+        raise ValueError(f"Invalid strain_type '{strain_type}' or sampling failed.") # Handle the case where strain_type is invalid or sampling fails
+    
     # 3) Simulating sampled data
     sim_data = simulated_data(edited_samples, l)
-    
+
     if sim_data is not None:
 
         # 4) Fst
@@ -394,8 +394,8 @@ def selective_sweep(sequences, window_size, step_size, strain_type, sample):
         "Window": tajimas_d.keys(),
         "Tajima's D": tajimas_d.values(),
         "Pi": pi_est.values(),
-        "Theta W": theta_w.values()
-    }
+        "Theta W": theta_w.values()}
+        
     selsw_df = pd.DataFrame(selsw_data)
     
     return selsw_df
