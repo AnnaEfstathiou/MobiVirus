@@ -85,7 +85,8 @@ prob_inf_ss = config.getfloat('Initial_Parameters', 'prob_inf_ss')  # Probabilit
 r_rec = config.getfloat('Initial_Parameters', 'r_rec')              # Rate of recombination
 rec_t_ns = config.getfloat('Initial_Parameters', 'rec_t_ns')        # Recovery time in simulation time (normal strain)
 rec_t_ss = config.getfloat('Initial_Parameters', 'rec_t_ss')        # Recovery time in simulation time (super strain)
-rim = config.getfloat('Initial_Parameters', 'rim')                  # Relative infection mobility
+rim_ns = config.getfloat('Initial_Parameters', 'rim_ns')            # Relative infection mobility (normal strain)
+rim_ss = config.getfloat('Initial_Parameters', 'rim_ss')            # Relative infection mobility (super strain)
 sample_times = config.getint('Initial_Parameters', 'sample_times')  # Generations where we take samples of our simulation's output
 ss_form = config.getint('Super_strain_Parameters', 'ss_formation')  # Event that the super strain mutation is introduced for the 1st time
 ss_events = config.getint('Super_strain_Parameters', 'ss_events')   # Period of events when the super strain is introduced (if previously there are no individuals with a super strain)
@@ -560,7 +561,7 @@ while sum(coords_t[:,2])!= 0:
     p_m = rt_m/(rt_i+rt_m) # Probability of movement   (rt_m = sum(coords_t[:, 3]))
   
     s1 = np.random.random() # Random number in [0,1]
-
+    
     #%% Movement Event
     ## If s1 is smaller than p_m, the event that will happen is movement ##
     if s1 <= p_m: 
@@ -587,7 +588,10 @@ while sum(coords_t[:,2])!= 0:
             c = np.amin(np.where(change)) 
             
             ## Calculate the new position (in coordinates) for the selected individual ##
-            coords_f = movement(coords_t, bound_l, bound_h, c, rim)
+            if coords_t[c,5] == 2: 
+                coords_f = movement(coords_t, bound_l, bound_h, c, rim_ss) # Individual with a Super Strain
+            else: 
+                coords_f = movement(coords_t, bound_l, bound_h, c, rim_ns) # Individual with a Normal Strain or healthy individuals
 
             ## Calculate the new distance matrix now with the updated position of the selected individual ##
             df_f = new_distances(coords_t, coords_f, df_i, c)
@@ -659,8 +663,6 @@ while sum(coords_t[:,2])!= 0:
         ##    2. time variable that runs the simulation (tt) is between the given numbers ## 
         ##    3. there are no infected individuals with the super strain                  ##
         if (args.manual_genomes or args.msprime_genomes) and (ss_form <= tt <= ss_form + ss_events) and len(coords_t[coords_t[:,5] == 2]) == 0:
-        
-            print("Super Strain's Formation Event:",tt)
            
             ## Go through all the individuals (indexing them with j) ... ##
             for j in range(n): 

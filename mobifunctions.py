@@ -61,7 +61,7 @@ def log_command(directory, command, flags):
         log_file.write(f"Probability that the infector infects an individual in their infection distance (prob_inf): {config.getfloat('Initial_Parameters', 'prob_inf_ns')} (ns), {config.getfloat('Initial_Parameters', 'prob_inf_ss')} (ss)\n")
         log_file.write(f"Rate of recombination (r_rec): {config.getfloat('Initial_Parameters', 'r_rec')}\n")
         log_file.write(f"Recovery time (rec_t): {config.getfloat('Initial_Parameters', 'rec_t_ns')} (ns), {config.getfloat('Initial_Parameters', 'rec_t_ss')} (ss)\n")
-        log_file.write(f"Relative infected mobility (rim): {config.getfloat('Initial_Parameters', 'rim')}\n")
+        log_file.write(f"Relative infected mobility (rim): {config.getfloat('Initial_Parameters', 'rim_ns')} (ns), {config.getfloat('Initial_Parameters', 'rim_ss')} (ss)\n")
         log_file.write(f"Generations to get a sample (sample_times): {config.getint('Initial_Parameters', 'sample_times')}\n")
         log_file.write("\nSuper_strain_Parameters:\n")
         log_file.write(f"Event that the super strain mutation is introduced for the 1st time: {config.getint('Super_strain_Parameters', 'ss_formation')}\n")   
