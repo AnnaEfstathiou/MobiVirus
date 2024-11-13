@@ -274,11 +274,11 @@ The columns in Coords_(2 or t)
 ------------------------------
 # 0 = x coords
 # 1 = y coords
-# 2 = label (not infected = 0, one infection = 1, two infections (if recombination) = 2)
-# 3 = rate of movement
-# 4 = rate of infection
+# 2 = label (not infected = 0, one infection = 1, two infections (recombination) = 2)
+# 3 = movement rate
+# 4 = infection rate
 # 5 = mutation label (normal strain = 1, super strain = 2)
-# 6 = susceptibility
+# 6 = susceptibility (susceptible to the virus = 1, not susceptible to the virus = 0)
 ------------------------------
 """
 
