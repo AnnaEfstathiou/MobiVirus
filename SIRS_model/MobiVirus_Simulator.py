@@ -290,31 +290,31 @@ g = pd.DataFrame(index=range(n), columns=range(l))                              
 total_rate = r_m * l                                                                # Total rate of mutation of genome
 if args.msprime_genomes or args.manual_genomes:
     ss_pos = ss_mutation_position(n_i, l, "middle")                                 # For Super Strain(s): generate the random position in their important genome area where mutation will happen
-infected_ind = np.where(label_i == 1)[0]                                            # Indices of infected individuals
+initially_infected_ind = np.where(label_i == 1)[0]                                  # Indices of infected individuals
 healthy_ind = np.where(label_i == 0)[0]                                             # Indices of healthy individuals
 if args.msprime_genomes:
     infected_g = msprime_genomes(n,ii,l,r_rec,r_m,ss_pos)                           # Generate the genomes of infected individuals using msprime simulator
-    for i, idx in enumerate(infected_ind):                                          # For each infected individual, copy the corresponding genome from msprime_genomes to g
+    for i, idx in enumerate(initially_infected_ind):                                # For each infected individual, copy the corresponding genome from msprime_genomes to g
         g.iloc[idx] = infected_g.iloc[i]
 else:
-    for idx in infected_ind:
+    for idx in initially_infected_ind:
         g.iloc[idx] = 0.0                                                           # Infected individuals have all-0 genomes
 
 '''Data Table'''
 coords_2 = np.concatenate([coords_function(n, bound_l, bound_h), label_i], axis =1) # Initiate the array data table with the x,y coordinates and the infection label
 # Rate of movement #
 probm = np.zeros(n)                                                                 # Initialization of movement rate array
-probm[infected_ind] = rm_i                                                          # All infected individuals have the corresponding rate of movement 
+probm[initially_infected_ind] = rm_i                                                # All infected individuals have the corresponding rate of movement 
 probm[healthy_ind] = rm_h                                                           # All healthy individuals have the corresponding rate of movement 
 # Rate of infection #
 probi = np.zeros(n)                                                                 # Initialization of infection rate array
-probi[infected_ind] = ri_n                                                          # All the infected individuals have the corresponding rate of infection (initially there are only normal strains)
+probi[initially_infected_ind] = ri_n                                                # All the infected individuals have the corresponding rate of infection (initially there are only normal strains)
 # Susceptibility #
 sus = np.ones(n)                                                                    # Initialization of susceptibility rate array
-sus[infected_ind] = 0                                                               # The infected individuals are not susceptible to the virus
+sus[initially_infected_ind] = 0                                                     # The infected individuals are not susceptible to the virus
 # Mutation label #
 mut = np.zeros(n)                                                                   # Initialization of mutations array
-mut[infected_ind] = 1                                                               # For those with Normal Strain, they are labeled as mutation 1
+mut[initially_infected_ind] = 1                                                     # For those with Normal Strain, they are labeled as mutation 1
 
 coords_2 = np.concatenate([coords_2, np.column_stack(probm).T, np.column_stack(probi).T, np.column_stack(mut).T, np.column_stack(sus).T], axis=1) # Gather all the information in the final array table of info
 coords_t = coords_2.copy() # Create a copy of the data table, to use during the simulation
@@ -346,7 +346,7 @@ all_inf = np.zeros((1,5))                           # List with the number of To
 if args.all_infected_once:
     all_infected_once = np.empty((n, 1))            # Initiate the array to store the individuals that got infected at least once
     all_infected_once[:] = np.nan                   # Using NaN to signify empty positions
-    for j in infected_ind:
+    for j in initially_infected_ind:
         all_infected_once[j] = j                    # Add the initially infected
 event_type = np.zeros((1,4))                        # List with the type of each event
 '''Time'''
@@ -361,10 +361,11 @@ t_recomb = np.full((n,1), 999999999, dtype=float)   # Array that keeps the time 
 t_immunity = np.full((n,1), 999999999, dtype=float) # Array that keeps the time an individual is supposed to loose their immunity after recovery (initialization with a big value)
 t_recovery = np.full((n,1), 999999999, dtype=float) # Array that keeps the time an individual is supposed to recover based on their infection and recovery time (initialization with a big value)
 
-for i in range(n):
-    t_i[i] = np.where(coords_t[:,2][i]==1, 0, t_i[i])                      # Add 0 as the infection time for those initially infected   
-    t_recovery[i] = np.where(coords_t[:,2][i]==1, rec_t_ns, t_recovery[i]) # Add the time of recovery for those initially infected (0 + recovery time = recovery time)
-t_minrec = np.min(t_recovery)                                              # The minimum of the list of the times that individuals are supposed to recover
+## Initially infected ##
+for j in initially_infected_ind:
+    t_i[j] = 0                 # Add 0 as the infection time for those initially infected   
+    t_recovery[j] = rec_t_ns   # Add the time of recovery for those initially infected (0 + recovery time = recovery time)
+t_minrec = np.min(t_recovery)  # The minimum of the list of the times that individuals are supposed to recover
 
 #%% Beggining of simulation - Break Scenarios
 """
@@ -437,16 +438,18 @@ while sum(coords_t[:,2])!= 0:
     SUSCEPTIBILITY
     --------------
     """ 
+
     ## If there are any healthy individuals that are not susceptible to the virus proceed with the susceptibility process ##
     if ((coords_t[:, 2] == 0) & (coords_t[:, 6] == 0)).any():
 
-        ## Go through all the individuals (indexing them with j) ... ##
-        for j in range(n):
+        ## Find the indices of the individuals that are healthy and not susceptible ##
+        h_not_sus = np.where((coords_t[:, 2] == 0) & (coords_t[:, 6] == 0))[0]
+        
+        ## Go through the individuals that are healthy and not susceptible (indexing them with j) ... ##
+        for j in h_not_sus:
             
-            ## If 1. the individual is healthy and not susceptible to the virus              ##
-            ##    2. the current simulation time is bigger that the recovery + immunity time ##
-            if ((coords_t[j, 2] == 0) & (coords_t[j, 6] == 0)) and (t_s >= t_immunity[j]):
-                
+            ## If the current simulation time is bigger that the recovery + immunity time ##
+            if t_s >= t_immunity[j]:
                 coords_t[j,6] = 1          # Change the susceptibility label to 1 (susceptible to the virus) 
                 t_immunity[j] = 999999999  # Re-initialize the time an individual is supposed to loose their immunity after recovery
 
