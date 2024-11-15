@@ -672,7 +672,6 @@ while sum(coords_t[:,2])!= 0:
                         ## Updating time-related variables ##
                         t_i[j] = t_s                      # Update the event time of infection for the infected individual in the list t_i 
                         t_recovery[j] = t_s + rec_t_ss    # Update the recovery time for the infected individual in the list t_recovery 
-                        t_minrec = np.min(t_recovery)     # Update minimum recovery time
 
                         ## Update the total_inf counter of infections ##
                         total_inf += 1
@@ -725,7 +724,6 @@ while sum(coords_t[:,2])!= 0:
 
                         ## Updating time-related variables ##
                         t_i[j] = t_s                                # Change the event time of infection for the infected individual in the list t_i 
-                        t_minrec = np.min(t_recovery)               # Change minimum recovery time 
                             
                         ## Update the total_inf counter of infections ##
                         total_inf += 1
