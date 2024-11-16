@@ -448,7 +448,7 @@ while sum(coords_t[:,2])!= 0:
         ## Go through the individuals that are healthy and not susceptible (indexing them with j) ... ##
         for j in h_not_sus:
             
-            ## If the current simulation time is bigger that the recovery + immunity time ##
+            ## If the current simulation time is bigger than the recovery + immunity time ##
             if t_s >= t_immunity[j]:
                 coords_t[j,6] = 1          # Change the susceptibility label to 1 (susceptible to the virus) 
                 t_immunity[j] = 999999999  # Re-initialize the time an individual is supposed to loose their immunity after recovery
