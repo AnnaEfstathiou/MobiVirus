@@ -387,10 +387,11 @@ while sum(coords_t[:,2])!= 0:
     ## If there are any infected individuals proceed with the recovery process ##
     if (coords_t[:,2] == 1).any() or (coords_t[:,2] == 2).any(): 
         
-        ## If there are infected people anf the simulation time is bigger than the minimum recovery time ...                 ##
+        ## If there are infected people and the simulation time is bigger than the minimum recovery time ...                 ##
         ## Recovery takes place for specific individuals according to their recovery time and the time of the 1st infection  ##
         ## The time of recombination is not taken into consideration                                                         ##
 
+        t_minrec = np.min(t_recovery)                      # Minimum recovery time
         recovery_idx = np.where(t_recovery <= t_minrec)[0] # Individuals who are about to recover (indices where t_recovery equals t_minrec)
         
         if (len(recovery_idx) > 0) and (t_s >= t_minrec):
@@ -411,8 +412,7 @@ while sum(coords_t[:,2])!= 0:
             t_immunity[super_idx] = t_s + imm_t_ss    # Time super spreaders will stop having immunity
             t_i[recovery_idx] = 999999999             # Re-initialize the infection times for those that recover 
             t_recomb[recovery_idx] = 999999999        # Re-initialize the recombination times for those that recover 
-            t_recovery[recovery_idx] = 999999999      # Re-initialize the times individuals are supposed to recover 
-            t_minrec = np.min(t_recovery)             # New minimum recovery time        
+            t_recovery[recovery_idx] = 999999999      # Re-initialize the times individuals are supposed to recover         
 
             ## Updating the data table ##                                                                       
             coords_t[recovery_idx,2] = 0              # Change the infection label to healthy (0)
