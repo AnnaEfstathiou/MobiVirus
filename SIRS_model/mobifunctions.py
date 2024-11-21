@@ -113,7 +113,7 @@ Coordinates Function
 def coords_function(n, bound_l, bound_h):
     
     ## Creates a stacked column array of the (x,y) 2D coordinates of each individual in the dataset. ##
-    ## The coordinates are assingned randomly using a uniform distribution.                          ##
+    ## The coordinates are assigned randomly using a uniform distribution.                           ##
     
     # n = total number of individuals in the sample
     # bound_l =  lower bound of the spacial axes
