@@ -11,7 +11,7 @@
 
 ## Abstract
 
-The MobiVirus Simulator simulates a virus infecting individuals in a population as they move around in a two-dimensional (2D) space.
+The MobiVirus Simulator simulates the spread of a virus within a population of individuals moving in a two-dimensional (2D) space. The purpose of the simulator is to study the evolution of viral genomes, diversity patterns, and adaptations of viruses as they evolve. The simulation resembles an epidemiological model, but the focus is solely on the evolution of the viral genome rather than its interaction with the human organism.
 
 ## Requirements
 

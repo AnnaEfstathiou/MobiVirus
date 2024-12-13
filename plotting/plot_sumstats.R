@@ -18,6 +18,7 @@ args <- parser$parse_args()
 csv_file <- args$csv_file
 sample_size <- args$sample_size
 genome_length <- args$genome_length
+suffix <- sub(".*(_\\d{2}_\\d{2}_\\d{4}_\\d{2}_\\d{2}).*", "\\1", csv_file)
 
 # Read the data from the CSV file
 data <- read.csv(csv_file, sep = ",", header = TRUE)
@@ -108,16 +109,16 @@ save_plot <- function(plot, filename, width = 8, height = 6, dpi = 300) {
 
 ## Saving plots as png files
 if (!is.null(args$save_png)) {
-  save_plot(plot.TajimasD, "plotTajimasD.png")
-  save_plot(plot.ThetawPi, "plotThetawPi.png")
-  save_plot(plot.HaplotypeDiv, "plotHaplotypeDiv.png")
-  save_plot(plot.UniqueSeqs, "plotUniqueSeqs.png")
-  save_plot(plot.Fst, "plotFst.png")
+  save_plot(plot.TajimasD, paste0("plotTajimasD", suffix, ".png"))
+  save_plot(plot.ThetawPi, paste0("plotThetawPi", suffix, ".png"))
+  save_plot(plot.HaplotypeDiv, paste0("plotHaplotypeDiv", suffix, ".png"))
+  save_plot(plot.UniqueSeqs, paste0("plotUniqueSeqs", suffix, ".png"))
+  save_plot(plot.Fst, paste0("plotFst", suffix, ".png"))
 }
 
 ## Saving plots in pdf file
 if (!is.null(args$save_pdf)) {
-  pdf("PlotStatistics.pdf", width = 8, height = 10)
+  pdf(paste0("PlotStatistics", suffix, ".pdf"), width = 8, height = 10)
   grid.arrange(plot.TajimasD, plot.ThetawPi,
               ncol = 1, nrow = 2,
               padding = unit(1, "lines"))
