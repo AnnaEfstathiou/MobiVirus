@@ -108,7 +108,6 @@ parser.add_argument('-per_ss', '--percentage_super_strain', type=str, help='The 
 parser.add_argument('-per_ns', '--percentage_normal_strain', type=str, help='The simulation stops when the normal spreaders in the population reach the given percentage.')
 parser.add_argument('-max_inf', '--max_infections', type=str, help='The simulation stops when the given number of infections happens.')
 parser.add_argument('-max_mv', '--max_movements', type=str, help='The simulation stops when the given number of movements happens.')
-parser.add_argument('-sus', '--percentage_susceptibility', type=str, help='The simulation stops when only the given number of individuals are susceptible to the virus.')
 parser.add_argument('-time', '--end_time', type=str, help='The simulation stops at the given simulation time.')
 parser.add_argument('-events', '--end_events', type=str, help='The simulation stops when the given number of events (movements+infections) happpens.')
 ## Action parsers ##
@@ -168,13 +167,6 @@ if args.max_movements:
         raise ValueError("The number of maximum movements must be a positive integer!")
 else:
     max_movements = None
-
-if args.percentage_susceptibility:
-    percentage_susceptibility = float(args.percentage_susceptibility)
-    if not 0 <= percentage_susceptibility <= 1:
-        raise ValueError("The percentage of susceptable individuals in the population must be between 0 and 1!")   
-else:
-    percentage_susceptibility = None
 
 if args.end_time:
     end_time = float(args.end_time)
@@ -468,7 +460,7 @@ while sum(coords_t[:,2])!= 0:
         break
     
     ## If the number of the infected individuals is more than a certain % (percentage_infected) of the population, stop the simulation! ##
-    if percentage_infected and (sum(coords_t[:, 2]==1) > (percentage_infected * n)): 
+    if percentage_infected and (sum(coords_t[:, 2]==1) >= (percentage_infected * n)): 
         print(f"The simulation ended because the {percentage_infected*100}% of the population is infected.")
         break
     
@@ -490,11 +482,6 @@ while sum(coords_t[:,2])!= 0:
     ## If the total movemets are more than a certain number (max_movements), stop the simulation! ##
     if max_movements and (total_mv >= max_movements): 
         print(f"The simulation ended because {max_movements} movements happended, totally, in the population.")
-        break
-
-    ## If the number of the susceptable individuals is less than a certain % (percentage_susceptibility) of the population, stop the simulation! ##
-    if percentage_susceptibility and (sum(coords_t[:, 6]==1) < (percentage_susceptibility * n)):
-        print(f"The simulation ended because less than {percentage_susceptibility*100}% of the population is susceptable to the virus.")
         break
     
     ## If simulation time is equal or higher than the one given, stop the simulation! ##
