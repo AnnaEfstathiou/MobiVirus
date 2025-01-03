@@ -29,7 +29,9 @@ csv_file <- args$csv_file
 genome_length <- args$genome_length
 suffix <- event_number(csv_file)
 
-ld_data <- read.csv(csv_file, sep = ",", header = TRUE)
+original_ld_data <- read.csv(csv_file, sep = ",", header = TRUE)
+# Filter the data around the position 0.4999 (from 0.4499 to 0.5499)
+ld_data <- subset(original_ld_data, i >= 0.4499 & i <= 0.5499)
 
 ld_data$i_scaled <- as.numeric(as.factor(ld_data$i * genome_length))
 ld_data$j_scaled <- as.numeric(as.factor(ld_data$j * genome_length))
@@ -68,12 +70,12 @@ save_plot <- function(plot, filename, width = 8, height = 6, dpi = 300) {
 
 ## Saving plots as png files
 if (!is.null(args$save_png)) {
-  save_plot(plot.RSQ, paste0("plotLD_rsq_", suffix, ".png"))
-  save_plot(plot.D, paste0("plotLD_d_", suffix, ".png"))
-  save_plot(plot.Dprime, paste0("plotLD_dprime_", suffix, ".png"))
+  save_plot(plot.RSQ, paste0("plotLD_rsq_modified", suffix, ".png"))
+  save_plot(plot.D, paste0("plotLD_d_modified", suffix, ".png"))
+  save_plot(plot.Dprime, paste0("plotLD_dprime_modified", suffix, ".png"))
 } else {
   # Save all plots in a single PDF file
-  pdf("PlotsLD.pdf", width = 8, height = 6)
+  pdf("PlotsLD_modified.pdf", width = 8, height = 6)
   print(plot.RSQ)
   print(plot.D)
   print(plot.Dprime)
