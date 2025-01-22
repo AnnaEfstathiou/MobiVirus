@@ -116,6 +116,7 @@ parser.add_argument('-manual', '--manual_genomes', action="store_true", help='Be
 parser.add_argument('-msprime', '--msprime_genomes', action="store_true", help='Begin the simulation with genomes created by msprime. Introduce the super strain mutation at the "ss_form" event.')
 parser.add_argument('-all_inf', '--all_infected_once', action="store_true", help='The simulation stops when all the individuals are infected at least once.')
 parser.add_argument('-r', '--recombination', action="store_true", help='Provide the ability to recombinate genomes, if 2 infections happen.')
+parser.add_argument('-sample_inf', '--sample_infection', action="store_true", help='Ignore sample times from the INI file and sample every time an infection happens.')
 parser.add_argument('-vis_data', '--visualize_data', action="store_true", help='Visualize the data table as a dataframe in the console.')
 parser.add_argument('-g0', '--initial_genomes', action="store_true", help='Save the initial genomes of the population in a CSV.')
 args = parser.parse_args()
@@ -799,13 +800,22 @@ while sum(coords_t[:,2])!= 0:
                 print("Nobody got infected.")
             else:
                 print("Nobody got newly infected but this individual's genome got recombined:", ", ".join(map(str, recombined_g)))
+                if args.sample_infection: # Sample when an infection happens
+                    ## Save a sample of data from the simulation, according to the conditions of the sample_data() function##
+                    sample_data(samples, genomes, g, tt, coords_t, all_inf, tt)
         else:
             
             if not recombined_g or not args.recombination:
                 print("This/These individuals got newly infected: " + ", ".join(map(str, [int(x) for x in hah[-int(ia-ib):,1]]))) # array hah[-int(ia-ib):,1]: contains the newly infected individuals 
+                if args.sample_infection: # Sample when an infection happens
+                    ## Save a sample of data from the simulation, according to the conditions of the sample_data() function##
+                    sample_data(samples, genomes, g, tt, coords_t, all_inf, tt)
             else:
                 print("This/These individuals got newly infected: " + ", ".join(map(str, [int(x) for x in hah[-int(ia-ib):,1]]))) # array hah[-int(ia-ib):,1]: contains the newly infected individuals 
                 print("This/These individuals' genome got recombined: ", ", ".join(map(str, recombined_g)))
+                if args.sample_infection: # Sample when an infection happens
+                    ## Save a sample of data from the simulation, according to the conditions of the sample_data() function##
+                    sample_data(samples, genomes, g, tt, coords_t, all_inf, tt)
         
         ## Collect the data for the number of Total infected, Super spreaders, Normal spreaders, Infection times for each event and total events (up to that point) ##
         all_inf = np.concatenate([all_inf, np.column_stack(np.array((sum(coords_t[:,2] != 0), sum(coords_t[:,5]==2), sum(coords_t[:,5]==1), float(t_s), int(tt)), dtype=float))], axis=0)    
@@ -813,8 +823,10 @@ while sum(coords_t[:,2])!= 0:
     #%% Save data - Info per event
 
     ## Save a sample of data from the simulation, according to the conditions of the sample_data() function##
-    sample_data(samples, genomes, g, tt, coords_t, all_inf, sample_times)
-        
+    if not args.sample_infection:
+        sample_data(samples, genomes, g, tt, coords_t, all_inf, sample_times)
+    else:
+        pass
     ## Time to run the simulation loop ##
     loop_t = time.time()-time_bfloop 
 
@@ -826,5 +838,5 @@ save_data(samples, genomes, coords_2, coords_t, g, all_inf, recovered_ind, hah, 
 ## Time for the whole simulation to run ##
 end=time.time()-initial
 
-print(f"\nEvents-Loops:{tt}")
+print(f"\nEvents: {tt}")
 print("Total simulation time (minutes):", end/60)   
