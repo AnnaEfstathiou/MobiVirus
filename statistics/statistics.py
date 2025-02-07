@@ -119,7 +119,7 @@ def __sampling(data, sample, pop):
             raise ValueError("Sampled data contains only one entry, which is insufficient.")
     else:
         sampled_data = None
-        raise ValueError("LALA No data to sample from.") # Raise an error if sampled_data is None
+        raise ValueError("No data to sample from.") # Raise an error if sampled_data is None
     
     return sampled_data
 

@@ -52,7 +52,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process a genome file (csv format) to compute various statistics and plot results.")
     parser.add_argument('-csv', '--csv_file', type=str, required=True, help='The path to the input CSV file.')
     parser.add_argument('-sample', '--sample_size',type=int, required=True, help='Sample size.')    
-    parser.add_argument('-o', '--output_filename',type=str, required=True, help='Output filenameeeeee.')   
+    parser.add_argument('-o', '--output_filename',type=str, required=True, help='Output filename.')   
     args = parser.parse_args()
 
     suffix = event_number(args.csv_file)

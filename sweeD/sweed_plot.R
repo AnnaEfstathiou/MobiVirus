@@ -7,10 +7,14 @@ library(argparse)
 parser <- ArgumentParser(description="Example R script using argparse")
 parser$add_argument("-f", "--file", type="character", help="Csv file with strain info", required=TRUE)
 parser$add_argument("-s", "--suffix", type="character", help="Suffix for file naming", required=TRUE)
+parser$add_argument("-sample", "--sample_size", type="character", help="Sample Size", required=TRUE)
+parser$add_argument("-event", "--event_number", type="character", help="Event", required=TRUE)
 args <- parser$parse_args()
 
 data_file <- args$file
 suffix <- args$suffix
+sample_size <- args$sample_size
+event_number <- args$event_number
 
 # Read the data from the CSV file
 data <- read.table(data_file, sep = "\t", header = TRUE, skip = 2) # skip the first 2 lines because the table starts in line 3
@@ -18,7 +22,7 @@ data <- read.table(data_file, sep = "\t", header = TRUE, skip = 2) # skip the fi
 # Use ggplot directly on the dataframe without creating a separate variable
 plot.SelectiveSweep <- ggplot(data, aes(x = Position, y = Likelihood)) +
   geom_line(color = "#492406") +
-  labs(x = 'Positions', y = 'Likelihood', title = 'Selective Sweep') +
+  labs(x = 'Positions', y = 'Likelihood', title = 'Selective Sweep', subtitle = paste("Event:", event_number, "| Sample Size:", sample_size)) +
   theme_minimal()
 
 ## Generic function for saving plots as png files

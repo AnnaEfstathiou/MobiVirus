@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # File parameters
-path="/home/anna/mobivirus/simulation/selsw/simulation_02_01_2025_17_45/genomes"
-sample_size=100
+path="/home/anna/mobivirus/simulation/selsw/r2/simulation_07_02_2025_11_29/genomes"
+sample_size=10
 # SweeD parameters
 sweed_grid=1000
 genome_length=10000
@@ -10,7 +10,7 @@ genome_length=10000
 monomorphic=TRUE
 
 # List of suffixes to process
-suffix_list=(20000 30000 40000 50000 60000 70000 80000 90000 100000) # Add more suffixes as needed
+suffix_list=(5500 5600 5700 5800 5900 6000)
 
 # Loop through each suffix
 for suffix in "${suffix_list[@]}"; do
@@ -28,7 +28,6 @@ for suffix in "${suffix_list[@]}"; do
     SweeD -input ${output_filename} -name ${sweed_name} -grid ${sweed_grid} -length ${genome_length} ${sweed_mono_flag}
 
     # Plot likelihood for Selective Sweep detection
-    Rscript sweed_plot.R -f "SweeD_Report.${sweed_name}" -s ${sweed_name}
+    Rscript sweed_plot.R -f "SweeD_Report.${sweed_name}" -s ${sweed_name} -sample ${sample_size} -event ${suffix}
     
-    echo "Finished processing suffix: ${suffix}"
 done
