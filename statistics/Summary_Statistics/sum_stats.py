@@ -4,7 +4,6 @@ import argparse
 from datetime import datetime
 from collections import Counter
 import re
-import os
 
 #%% Data manipulation
 
