@@ -1,9 +1,6 @@
-<p align="left">
-  <img src="MobiVirus_Logo.png" alt="MobiVirus Logo" width="40"/>
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <strong style="font-size: 2em;">MobiVirus Simulator</strong>
-</p>
+# MobiVirus Simulator
 
+![MobiVirus Logo](MobiVirus_Logo.png)
 
 ## Table of contents
 
