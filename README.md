@@ -1,13 +1,26 @@
 # MobiVirus Simulator
 
+<table>
+<tr>
+<td style="vertical-align: top; width: 50%;">
+
+<img src="MobiVirus_Logo.png" alt="MobiVirus Logo" width="250"/>
+
+</td>
+<td style="vertical-align: top;">
+
 ## Table of contents
 
-- [Abstract](#Abstract)
-- [Requirements](#Requirements)
-- [Main code](#Main-code)
-  - [All about the strains](#All-about-the-strains)
-  - [Output](#Output)
+- [Abstract](#Abstract)  
+- [Requirements](#Requirements)  
+- [Main code](#Main-code)  
+  - [All about the strains](#All-about-the-strains)  
+  - [Output](#Output)  
 - [Examples](#Examples)
+
+</td>
+</tr>
+</table>
 
 ## Abstract
 
