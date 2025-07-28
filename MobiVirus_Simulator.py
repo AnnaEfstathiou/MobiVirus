@@ -34,7 +34,7 @@ from mobifunctions import log_command, coords_function, infection_label, msprime
 from mobifunctions import sample_data, save_data
 
 #%% Parameters initialization (INI file)
-"""
+""" 
 ===================
 PARSE THE .INI FILE
 ===================
