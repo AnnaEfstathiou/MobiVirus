@@ -96,6 +96,11 @@ sample_times = config.getint('Initial_Parameters', 'sample_times')  # Generation
 ss_form = config.getint('Super_strain_Parameters', 'ss_formation')  # Event that the super strain mutation is introduced for the 1st time
 ss_events = config.getint('Super_strain_Parameters', 'ss_events')   # Period of events when the super strain is introduced (if previously there are no individuals with a super strain)
 
+use_demography = config.getboolean('msprime_Parameters', 'use_demography') # Parameter defining whether to simulate with population demography (exponential growth) or not
+initial_pop = config.getint('msprime_Parameters', 'initial_pop')           # Present-day population size
+past_pop = config.getint('msprime_Parameters', 'past_pop')                 # Past population size (population t generation ago)
+t_gen = config.getint('msprime_Parameters', 't_gen')                       # Time (in generations) at which population growth stops and becomes constant
+
 #%% Parsed arguments
 """
 ===============
@@ -289,24 +294,19 @@ label_i = infection_label(n,ii)                                                 
 g = pd.DataFrame(index=range(n), columns=range(l))                                  # Initialization of an empty data frame where the rows correspond to the genomes of different individuals and the columns to the genome positions
 total_rate = r_m * l                                                                # Total rate of mutation of genome
 if super_strain == True:
-    ss_pos = ss_mutation_position(n_i, l, region_pos)                                 # For Super Strain(s): generate the random position in their important genome area where mutation will happen
-    print(ss_pos)
+    ss_pos = ss_mutation_position(n_i, l, region_pos)                               # For Super Strain(s): generate the random position in their important genome area where mutation will happen
 initially_infected_ind = np.where(label_i == 1)[0]                                  # Indices of infected individuals
 healthy_ind = np.where(label_i == 0)[0]                                             # Indices of healthy individuals
 if args.msprime_genomes:
-    infected_g = msprime_genomes(n,ii,l,r_rec,r_m)                                  # Generate the genomes of infected individuals using msprime simulator
-    print(infected_g)
+    infected_g = msprime_genomes(n, ii, l, r_rec, r_m, use_demography, initial_pop, past_pop, t_gen) # Generate genomes using msprime simulator with or without population expansion
     if super_strain == True:
-        infected_g = ss_msprime_genomes(infected_g, ss_pos)
-    print(infected_g)
+        infected_g = ss_msprime_genomes(infected_g, ss_pos)                         # Set super strain position all to 0.0 to reassure initial genomes are all normal viruses
     for i, idx in enumerate(initially_infected_ind):                                # For each infected individual, copy the corresponding genome from msprime_genomes to g
         g.iloc[idx] = infected_g.iloc[i]
 else:
     for idx in initially_infected_ind:
         g.iloc[idx] = 0.0                                                           # Infected individuals have all-0 genomes
 
-print("------------------------------------------------------------")
-print(g)
 '''Data Table'''
 coords_2 = np.concatenate([coords_function(n, bound_l, bound_h), label_i], axis =1) # Initiate the array data table with the x,y coordinates and the infection label
 # Rate of movement #
@@ -641,7 +641,7 @@ while sum(coords_t[:,2])!= 0:
         ----------------------
         """ 
         
-        ## If 1. the parser manual_genomes or msprime_genomes is used                     ##
+        ## If 1. super strains are enabled in the simulation                              ##
         ##    2. time variable that runs the simulation (tt) is between the given numbers ## 
         ##    3. there are no infected individuals with the super strain                  ##
         if super_strain == True and (ss_form <= tt <= ss_form + ss_events) and len(coords_t[coords_t[:,5] == 2]) == 0:
@@ -663,6 +663,7 @@ while sum(coords_t[:,2])!= 0:
                         ## Updating genomes ##
                         g.iloc[j] = g.iloc[c].copy()     # The individual's genome is passed from the infector (c) to the newly infected individual (j)
                         g.loc[j, ss_pos] = 1.0           # Set the value at 1.0 in the selected positions in the beneficial area
+                        
                         ## Updating the data table ##                                                                       
                         coords_t[j,2] = 1                # Change the infection label to infected (1)
                         coords_t[j,3] = rm_i             # Change the rate of movement for the infected individuals
@@ -670,11 +671,11 @@ while sum(coords_t[:,2])!= 0:
                         coords_t[j,5] = 2                # Change the label of mutation (2:infected individuals with a super strain)
                         if not args.recombination:
                             ## If the parser for recombination is used, the sus remains equal to 1 because they are prone to 2nd infection ##
-                            coords_t[j,6] = 0             # Change the susceptibility label to 0 (not susceptible)             
+                            coords_t[j,6] = 0            # Change the susceptibility label to 0 (not susceptible)             
 
                         ## Updating time-related variables ##
-                        t_i[j] = t_s                      # Update the event time of infection for the infected individual in the list t_i 
-                        t_recovery[j] = t_s + rec_t_ss    # Update the recovery time for the infected individual in the list t_recovery 
+                        t_i[j] = t_s                     # Update the event time of infection for the infected individual in the list t_i 
+                        t_recovery[j] = t_s + rec_t_ss   # Update the recovery time for the infected individual in the list t_recovery 
 
                         ## Update the total_inf counter of infections ##
                         total_inf += 1
@@ -709,7 +710,7 @@ while sum(coords_t[:,2])!= 0:
                         ## Updating genomes ##
                         g.iloc[j] = g.iloc[c].copy()                # The individual's genome is passed from the infector (c) to the newly infected individual (j)
                         g.iloc[j] = mutation(g.iloc[j], total_rate) # The individual's (j) genome goes through the mutation procedure
-
+                        
                         ## Updating the data table and recovery time ##                                                                       
                         coords_t[j,2] = 1                           # Change the infection label to infected (1)
                         coords_t[j,3] = rm_i                        # Change the rate of movement for the infected individuals
@@ -770,6 +771,7 @@ while sum(coords_t[:,2])!= 0:
                                 ## Updating genomes ##
                                 g.iloc[j] = recombine_genomes(g.iloc[c], g.iloc[j], p) # The individual's genome is recombined with the infector's (c) 
                                 g.iloc[j] = mutation(g.iloc[j], total_rate)            # The individual's (j) genome goes through the mutation procedure 
+                                
                                 ## Updating the data table ## 
                                 # the rate of movement for the infected individuals remains the same (rm_i)
                                 coords_t[j,2] = 2                       # Change the infection label to infected with a recombined strain (2)

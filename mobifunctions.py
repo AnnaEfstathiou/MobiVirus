@@ -14,6 +14,7 @@ from datetime import datetime
 from scipy.spatial.distance import pdist, squareform
 import pandas as pd
 import statistics
+import math
 import os
 import sys
 import msprime
@@ -68,6 +69,10 @@ def log_command(directory, command, flags):
         log_file.write(f"Generations to get a sample (sample_times): {config.getint('Initial_Parameters', 'sample_times')}\n")        
         log_file.write(f"Event that the super strain mutation is introduced for the 1st time: {config.getint('Super_strain_Parameters', 'ss_formation')}\n")   
         log_file.write(f"Period of events when the super strain is introduced (if previously there are no individuals with a super strain): {config.getint('Super_strain_Parameters', 'ss_events')}\n")       
+        log_file.write(f"msprime parameter: Parameter defining whether to simulate with population demography or not (use_demography): {config.getboolean('msprime_Parameters', 'use_demography')}\n") 
+        log_file.write(f"msprime parameter: Present-day population size (initial_pop): {config.getint('msprime_Parameters', 'initial_pop')}\n")    
+        log_file.write(f"msprime parameter: Past population size (past_pop): {config.getint('msprime_Parameters', 'past_pop')}\n") 
+        log_file.write(f"msprime parameter: Time (in generations) at which population growth stops and becomes constant (t_gen): {config.getint('msprime_Parameters', 't_gen')}\n")
 
 """
 ==================================
@@ -157,15 +162,25 @@ Genome Function
 ---------------
 '''
 
-def msprime_genomes(n,ii,l,r_rec,r_m):
+def msprime_genomes(n,ii,l,r_rec,r_m,use_demography,initial_pop,past_pop,t_gen):
 
-    ## Generate genomes using msprime simulator ##
+    ## Generate genomes using msprime simulator with or without population expansion ##
 
     # n = population size
     # ii = number of genomes (infected individuals)
     # l = genomes length
     # r_rec = recombination rate
     # r_m = mutation rate for each genome position
+    # use_demography = Parameter defining whether to simulate with population demography (exponential growth) or not
+    #                  true = use demography, false = constant population size
+    # initial_pop = Present-day population size (used as the final size after growth if demography is enabled)
+    # past_pop = Past population size (population t generation ago)
+    # t_gen = Time (in generations) at which population growth stops and becomes constant
+
+    ## Note in case population demography is used
+    # If pop_initial_size < pop_past_size → negative growth rate
+    # If pop_initial_size > pop_past_size → positive growth rate
+    # If pop_initial_size = pop_past_size → zero growth rate (no growth)
 
     # Function to apply the transformation: turn even numbers to 0.0 and odd (>1) to 1.0 to make the genome binary
     def transform_value(x):
@@ -176,31 +191,64 @@ def msprime_genomes(n,ii,l,r_rec,r_m):
                 return 1.0
         return x
     
-    """ msprime simulation """
+    if use_demography == True:
 
-    # STEP 1: Simulate a tree sequence
-    tree_sequence = msprime.sim_ancestry( 
-        population_size = n,                            # population size
-        samples = ii,                                   # number of genomes
-        sequence_length = l,                            # genomes length
-        recombination_rate = r_rec,                     # recombination rate
-        ploidy = 1,                                     # haplotypes
-        random_seed = int(datetime.now().timestamp()))  # seed for reproducibility
+        """ Calculate Growth Rate"""
+        a = (1 / t_gen) * math.log(initial_pop / past_pop) # Note: math.log(x) returns the natural logarithm, i.e., ln(x) (base e)
+
+        """ Define Demography with Expansion """
+        demography = msprime.Demography()
+        
+        # Assume population expanded from 100 to n over 500 generations
+        demography.add_population(
+            name = "source", 
+            initial_size = initial_pop, # present-day size after growth
+            growth_rate = a)            # exponential growth from the past
+
+        # The past population size gets smaller and smaller, approaching zero as 𝑡 → ∞
+        # Else...
+        demography.add_population_parameters_change(
+            time = t_gen,                                   # 'time' generations ago
+            growth_rate = 0.0,                              # stop growth at 'time' generations behind
+            population = "source")
+
+        """ Simulate ancestry with demography """
+        tree_sequence = msprime.sim_ancestry(
+            samples = {"source": ii},                       # number of genomes
+            demography = demography,                        # specified demography
+            sequence_length = l,                            # genomes length
+            recombination_rate = r_rec,                     # recombination rate
+            ploidy = 1,                                     # haplotypes
+            random_seed = int(datetime.now().timestamp()))  # seed for reproducibility
+
+    else:
+
+        """ Simulate ancestry without demography """
+        tree_sequence = msprime.sim_ancestry( 
+            population_size = n,                            # population size
+            samples = ii,                                   # number of genomes
+            sequence_length = l,                            # genomes length
+            recombination_rate = r_rec,                     # recombination rate
+            ploidy = 1,                                     # haplotypes
+            random_seed = int(datetime.now().timestamp()))  # seed for reproducibility
     
-    # STEP 2: Introduce mutations on the simulated ancestry
-    mutated_tree_sequence = msprime.sim_mutations(tree_sequence, rate=r_m, random_seed=int(datetime.now().timestamp()))
+    """ Introduce mutations on the simulated ancestry """
+    mutated_tree_sequence = msprime.sim_mutations(
+        tree_sequence, 
+        rate = r_m, 
+        random_seed = int(datetime.now().timestamp()))
 
     """ Process the simulated sequences """
-
     initial_genomes = np.zeros((ii, l)) # initialize an array for the initial viral genomes 
 
     # Loop through each variant in the mutated tree sequence
     for var in mutated_tree_sequence.variants():
-        pos_index = int(var.site.position)            # convert the site position to an integer index (column in initial_genomes)
-        initial_genomes[:, pos_index] = var.genotypes # insert the variants into the corresponding column of initial_genomes
+        pos_index = int(var.site.position)                # convert the site position to an integer index (column in initial_genomes)
+        if pos_index < l:                                 # safeguard for floating-point position errors
+            initial_genomes[:, pos_index] = var.genotypes # insert the variants into the corresponding column of initial_genomes
 
-    viral_genomes = pd.DataFrame(initial_genomes)      # convert the genomes into a DataFrame
-    viral_genomes = viral_genomes.map(transform_value) # munipulate the mutations
+    viral_genomes = pd.DataFrame(initial_genomes)         # convert the genomes into a DataFrame
+    viral_genomes = viral_genomes.map(transform_value)    # munipulate the mutations
     
     return viral_genomes
 
