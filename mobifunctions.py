@@ -7,7 +7,7 @@ Functions for MobiVirus Simulator
 ---------------------------------
 """
 
-#Packages
+# Packages
 import numpy as np
 import random
 from datetime import datetime
