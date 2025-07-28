@@ -1,0 +1,30 @@
+Command: MobiVirus_Simulator.py -events 500 -msprime -r
+-r: Provide the ability to recombinate genomes, if 2 infections happen during a certain time period.
+-events: The simulation stops when the given number of events (movements+infections) happpens.
+-msprime: Begin the simulation with genomes created by msprime. Introduce the super strain mutation at the "ss_form" event.
+
+Initial Parameters:
+Parameter that defines if there will be super strains in the simulation (super_strain): True
+Number of individuals (n): 1000
+Length of genome (l): 10000
+Initial number of infected individuals (ii): 20
+Lower bound for the spacial axis (bound_l): 0.0
+Upper bound for the spacial axis (bound_h): 6.0
+Mutation rate for each genome position (r_m): 1e-06
+Number of important genome positions (n_i): 3
+Area of the important positions in the viral genome that define the super strain (region_pos): middle
+Infection rate (ri): 1.0 (ns), 2.0 (ss)
+Movement rate (rm): 0.08 (infected), 0.1 (healthy)
+Infection distance (inf_dist): 0.5 (ns), 0.5 (ss)
+Probability of infection (prob_inf): 0.8 (ns), 0.8 (ss)
+Recombination rate (r_rec): 1e-05
+Recovery time (rec_t): 1.0 (ns), 1.0 (ss)
+Immunity time (imm_t): 0.05 (ns), 0.05 (ss)
+Relative infected mobility (rim): 0.5 (ns), 0.5 (ss)
+Generations to get a sample (sample_times): 100
+Event that the super strain mutation is introduced for the 1st time: 0
+Period of events when the super strain is introduced (if previously there are no individuals with a super strain): 200
+msprime parameter: Parameter defining whether to simulate with population demography or not (use_demography): False
+msprime parameter: Present-day population size (initial_pop): 10000000
+msprime parameter: Past population size (past_pop): 100
+msprime parameter: Time (in generations) at which population growth stops and becomes constant (t_gen): 50
