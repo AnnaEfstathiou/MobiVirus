@@ -22,7 +22,7 @@ The MobiVirus Simulator works with the use of 3 files:
 2. `mobifunctions.py`: Python script containing the functions used in the simulation.
 3. `parameters.ini`: INI file containing the initial conditions of the simulation.
 
-All files must be placed in the same directory for the simulation to run correctly. The chosen directory must, also, be added in the INI file.
+All files must be placed in the same directory for the simulation to run correctly. The chosen directory must also be added to the INI file.
 
 All the required packages are mentioned in the `requirements.txt` file.
 
