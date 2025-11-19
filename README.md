@@ -1,7 +1,5 @@
 # MobiVirus Simulator
 
-![MobiVirus Logo](MobiVirus_Logo.png)
-
 ## Table of contents
 
 - [Abstract](#Abstract)
