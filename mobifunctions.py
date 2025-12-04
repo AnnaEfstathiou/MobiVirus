@@ -36,43 +36,67 @@ def log_command(directory, command, flags):
 
     # Create a log file in the results directory
     log_file_path = os.path.join(directory, 'command_log.txt')
-
+    
+    msprime_flag=False
+    # Assign a variable true if msprime flag was used
+    for flag, explanation in flags.items():
+        if flag == '-msprime':
+            msprime_flag=True
+    
     # Open the log file and append the command and flags information
     with open(log_file_path, 'a') as log_file:
-        log_file.write(f"Command: {command}\n")
+        log_file.write(f"\nCommand: {command}\n")
         for flag, explanation in flags.items():
             log_file.write(f"{flag}: {explanation}\n")
 
+        if config.getboolean('Type_of_strains', 'super_strain')==True:
+            log_file.write("\nThe simulation contains 2 strain types: normal and super strains.\n")
+        else:
+            log_file.write("\nThe simulation contains 1 strain type: normal strains.\n")
+
         # Checking why the simulation stopped
         if not any(flag in flags for flag in ['-ratio', '-per_inf', '-per_ss', '-per_ns', '-max_inf', '-max_mv', '-all_inf', '-time', '-events']):
-            log_file.write("\nThe simulation stopped because everyone is healthy.\n")
+            log_file.write("\nThe simulation stopped because everyone was healthy at the end.\n")
         
-        # Append the initial parameters from the config
-        log_file.write("\nInitial Parameters:\n")
-        log_file.write(f"Parameter that defines if there will be super strains in the simulation (super_strain): {config.getboolean('Type_of_strains', 'super_strain')}\n")
+        # Append the parameters from the config
+        log_file.write("\nInitial Parameters\n")
         log_file.write(f"Number of individuals (n): {config.getint('Initial_Parameters', 'n')}\n")
-        log_file.write(f"Length of genome (l): {config.getint('Initial_Parameters', 'l')}\n")
         log_file.write(f"Initial number of infected individuals (ii): {config.getint('Initial_Parameters', 'ii')}\n")
+        log_file.write(f"Length of genome (l): {config.getint('Initial_Parameters', 'l')}\n")
         log_file.write(f"Lower bound for the spatial axis (bound_l): {config.getfloat('Initial_Parameters', 'bound_l')}\n")
         log_file.write(f"Upper bound for the spatial axis (bound_h): {config.getfloat('Initial_Parameters', 'bound_h')}\n")
-        log_file.write(f"Mutation rate for each genome position (r_m): {config.getfloat('Initial_Parameters', 'r_m')}\n")
-        log_file.write(f"Number of important genome positions (n_i): {config.getint('Initial_Parameters', 'n_i')}\n")
-        log_file.write(f"Area of the important positions in the viral genome that define the super strain (region_pos): {config.get('Initial_Parameters', 'region_pos')}\n")
-        log_file.write(f"Infection rate (ri): {config.getfloat('Initial_Parameters', 'ri_n')} (ns), {config.getfloat('Initial_Parameters', 'ri_s')} (ss)\n")
         log_file.write(f"Movement rate (rm): {config.getfloat('Initial_Parameters', 'rm_i')} (infected), {config.getfloat('Initial_Parameters', 'rm_h')} (healthy)\n")
-        log_file.write(f"Infection distance (inf_dist): {config.getfloat('Initial_Parameters', 'inf_dist_ns')} (ns), {config.getfloat('Initial_Parameters', 'inf_dist_ss')} (ss)\n")
-        log_file.write(f"Probability of infection (prob_inf): {config.getfloat('Initial_Parameters', 'prob_inf_ns')} (ns), {config.getfloat('Initial_Parameters', 'prob_inf_ss')} (ss)\n")
+        log_file.write(f"Mutation rate for each genome position (r_m): {config.getfloat('Initial_Parameters', 'r_m')}\n")
         log_file.write(f"Recombination rate (r_rec): {config.getfloat('Initial_Parameters', 'r_rec')}\n")
-        log_file.write(f"Recovery time (rec_t): {config.getfloat('Initial_Parameters', 'rec_t_ns')} (ns), {config.getfloat('Initial_Parameters', 'rec_t_ss')} (ss)\n")
-        log_file.write(f"Immunity time (imm_t): {config.getfloat('Initial_Parameters', 'imm_t_ns')} (ns), {config.getfloat('Initial_Parameters', 'imm_t_ss')} (ss)\n")
-        log_file.write(f"Relative infected mobility (rim): {config.getfloat('Initial_Parameters', 'rim_ns')} (ns), {config.getfloat('Initial_Parameters', 'rim_ss')} (ss)\n")
         log_file.write(f"Generations to get a sample (sample_times): {config.getint('Initial_Parameters', 'sample_times')}\n")        
-        log_file.write(f"Event that the super strain mutation is introduced for the 1st time: {config.getint('Super_strain_Parameters', 'ss_formation')}\n")   
-        log_file.write(f"Period of events when the super strain is introduced (if previously there are no individuals with a super strain): {config.getint('Super_strain_Parameters', 'ss_events')}\n")       
-        log_file.write(f"msprime parameter: Parameter defining whether to simulate with population demography or not (use_demography): {config.getboolean('msprime_Parameters', 'use_demography')}\n") 
-        log_file.write(f"msprime parameter: Present-day population size (initial_pop): {config.getint('msprime_Parameters', 'initial_pop')}\n")    
-        log_file.write(f"msprime parameter: Past population size (past_pop): {config.getint('msprime_Parameters', 'past_pop')}\n") 
-        log_file.write(f"msprime parameter: Time (in generations) at which population growth stops and becomes constant (t_gen): {config.getint('msprime_Parameters', 't_gen')}\n")
+
+        log_file.write("\nNormal strain Parameters\n")
+        log_file.write(f"Infection rate (ri_n): {config.getfloat('Normal_strain_Parameters', 'ri_n')}\n")
+        log_file.write(f"Infection distance (inf_dist_ns): {config.getfloat('Normal_strain_Parameters', 'inf_dist_ns')}\n")
+        log_file.write(f"Probability of infection (prob_inf_ns): {config.getfloat('Normal_strain_Parameters', 'prob_inf_ns')}\n")
+        log_file.write(f"Recovery time (rec_t_ns): {config.getfloat('Normal_strain_Parameters', 'rec_t_ns')}\n")
+        log_file.write(f"Immunity time (imm_t_ns): {config.getfloat('Normal_strain_Parameters', 'imm_t_ns')}\n")
+        log_file.write(f"Relative infected mobility (rim_ns): {config.getfloat('Normal_strain_Parameters', 'rim_ns')}\n")
+        
+        if config.getboolean('Type_of_strains', 'super_strain')==True:
+            log_file.write("\nSuper strain Parameters\n")
+            log_file.write(f"Number of important genome positions (n_i): {config.getint('Super_strain_Parameters', 'n_i')}\n")
+            log_file.write(f"Area of the important positions in the viral genome that define the super strain (region_pos): {config.get('Super_strain_Parameters', 'region_pos')}\n")
+            log_file.write(f"Infection rate (ri_s): {config.getfloat('Super_strain_Parameters', 'ri_s')}\n")
+            log_file.write(f"Infection distance (inf_dist_ss): {config.getfloat('Super_strain_Parameters', 'inf_dist_ss')}\n")
+            log_file.write(f"Probability of infection (prob_inf_ss): {config.getfloat('Super_strain_Parameters', 'prob_inf_ss')}\n")
+            log_file.write(f"Recovery time (rec_t_ss): {config.getfloat('Super_strain_Parameters', 'rec_t_ss')}\n")
+            log_file.write(f"Immunity time (imm_t_ss): {config.getfloat('Super_strain_Parameters', 'imm_t_ss')}\n")
+            log_file.write(f"Relative infected mobility (rim_ss): {config.getfloat('Super_strain_Parameters', 'rim_ss')}\n")    
+            log_file.write(f"Event that the super strain mutation is introduced for the 1st time: {config.getint('Super_strain_Parameters', 'ss_formation')}\n")   
+            log_file.write(f"Period of events when the super strain is introduced (if previously there are no individuals with a super strain): {config.getint('Super_strain_Parameters', 'ss_events')}\n")       
+       
+        if msprime_flag==True:
+            log_file.write("\nmsprime Parameters\n")
+            log_file.write(f"msprime parameter: Parameter defining whether to simulate with population demography or not (use_demography): {config.getboolean('msprime_Parameters', 'use_demography')}\n") 
+            log_file.write(f"msprime parameter: Present-day population size (initial_pop): {config.getint('msprime_Parameters', 'initial_pop')}\n")    
+            log_file.write(f"msprime parameter: Past population size (past_pop): {config.getint('msprime_Parameters', 'past_pop')}\n") 
+            log_file.write(f"msprime parameter: Time (in generations) at which population growth stops and becomes constant (t_gen): {config.getint('msprime_Parameters', 't_gen')}\n")
 
 """
 ==================================
@@ -506,7 +530,7 @@ Output - Results Functions
 
 ''' DATA '''
 
-def sample_data(samples_directory, genomes_directory, g, tt, coords_t, all_inf, sample_times):
+def sample_data(samples_directory, genomes_directory, g, tt, coords_t, sample_times):
 
     if tt==0 or tt%sample_times==0:
                 
@@ -515,10 +539,10 @@ def sample_data(samples_directory, genomes_directory, g, tt, coords_t, all_inf, 
         coords_t = pd.DataFrame(data=coords_t, columns=["x","y", "Infection label", "Rate of movement", "Rate of infection", "Mutation", "Susceptibility"])
         coords_t.to_csv(samples_directory+'/coords_'+str(tt)+'.csv', header=True, index=False)
 
-        all_inf = all_inf[1:, :] # Remove the first row of zeros using numpy slicing
-        all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time', 'Event'])
-        all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Event']] = all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Event']].astype(int) # Convert some columns to integer while keeping 'Time' as float
-        all_inf.to_csv(samples_directory+'/all_inf_'+str(tt)+'.csv', header=True, index=False)
+        # all_inf = all_inf[1:, :] # Remove the first row of zeros using numpy slicing
+        # all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time', 'Event'])
+        # all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Event']] = all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Event']].astype(int) # Convert some columns to integer while keeping 'Time' as float
+        # all_inf.to_csv(samples_directory+'/all_inf_'+str(tt)+'.csv', header=True, index=False)
 
 
 def save_data(samples_directory, genomes_directory, coords_2, coords_t, g, all_inf, unin, hah, t_un, event_type, tt):

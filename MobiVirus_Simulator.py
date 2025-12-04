@@ -65,37 +65,40 @@ PARAMETER INITIALIZATION
 Read directory from the Initial_Parameters section
 --------------------------------------------------
 """
+# Directory for running the simulation
 directory = config.get('Directory', 'directory').strip('"')  # Directory where the scripts exist (.ini file & .py script with functions)
-
+# Type of strains
 super_strain = config.getboolean('Type_of_strains', 'super_strain') # Boolean flag: True for two strains (super and normal), False for one (normal only)
-
+# Initial Parameters
 n = config.getint('Initial_Parameters', 'n')                        # Number of individuals in the simulation
+ii = config.getint('Initial_Parameters', 'ii')                      # Number of infected individuals
 l = config.getint('Initial_Parameters', 'l')                        # Length of genome
 bound_l = config.getfloat('Initial_Parameters', 'bound_l')          # Lower bound for the plot
 bound_h = config.getfloat('Initial_Parameters', 'bound_h')          # Upper bound for the plot
-ii = config.getint('Initial_Parameters', 'ii')                      # Number of infected individuals
-r_m = config.getfloat('Initial_Parameters', 'r_m')                  # Mutation rate for each position in genome
-n_i = config.getint('Initial_Parameters', 'n_i')                    # Important genome positions for the ss mutation; If there are no super strains, n_i = 0
-region_pos = config.get('Initial_Parameters', 'region_pos')         # Area of the important positions in the viral genome that define the super strain
-ri_n = config.getfloat('Initial_Parameters', 'ri_n')                # Rate of infection from normal strain 
-ri_s = config.getfloat('Initial_Parameters', 'ri_s')                # Rate of infection from super strain 
 rm_i = config.getfloat('Initial_Parameters', 'rm_i')                # Rate of movement for infected ind.
 rm_h = config.getfloat('Initial_Parameters', 'rm_h')                # Rate of movement for healthy ind.
-inf_dist_ns = config.getfloat('Initial_Parameters', 'inf_dist_ns')  # Infection distance (normal strain)
-inf_dist_ss = config.getfloat('Initial_Parameters', 'inf_dist_ss')  # Infection distance (normal strain)
-prob_inf_ns = config.getfloat('Initial_Parameters', 'prob_inf_ns')  # Probability that the infector infects an individual in their infection distance (normal strain)
-prob_inf_ss = config.getfloat('Initial_Parameters', 'prob_inf_ss')  # Probability that the infector infects an individual in their infection distance (super strain)
+r_m = config.getfloat('Initial_Parameters', 'r_m')                  # Mutation rate for each position in genome
 r_rec = config.getfloat('Initial_Parameters', 'r_rec')              # Rate of recombination
-rec_t_ns = config.getfloat('Initial_Parameters', 'rec_t_ns')        # Recovery time in simulation time (normal strain)
-rec_t_ss = config.getfloat('Initial_Parameters', 'rec_t_ss')        # Recovery time in simulation time (super strain)
-imm_t_ns = config.getfloat('Initial_Parameters', 'imm_t_ns')        # Immunity time in simulation time (normal strain)
-imm_t_ss = config.getfloat('Initial_Parameters', 'imm_t_ss')        # Immunity time in simulation time (super strain)
-rim_ns = config.getfloat('Initial_Parameters', 'rim_ns')            # Relative infection mobility (normal strain)
-rim_ss = config.getfloat('Initial_Parameters', 'rim_ss')            # Relative infection mobility (super strain)
 sample_times = config.getint('Initial_Parameters', 'sample_times')  # Generations where we take samples of our simulation's output
-ss_form = config.getint('Super_strain_Parameters', 'ss_formation')  # Event that the super strain mutation is introduced for the 1st time
-ss_events = config.getint('Super_strain_Parameters', 'ss_events')   # Period of events when the super strain is introduced (if previously there are no individuals with a super strain)
-
+# Normal strain Parameters
+ri_n = config.getfloat('Normal_strain_Parameters', 'ri_n')                # Rate of infection from normal strain
+inf_dist_ns = config.getfloat('Normal_strain_Parameters', 'inf_dist_ns')  # Infection distance (normal strain)
+prob_inf_ns = config.getfloat('Normal_strain_Parameters', 'prob_inf_ns')  # Probability that the infector infects an individual in their infection distance (normal strain)
+rec_t_ns = config.getfloat('Normal_strain_Parameters', 'rec_t_ns')        # Recovery time in simulation time (normal strain)
+imm_t_ns = config.getfloat('Normal_strain_Parameters', 'imm_t_ns')        # Immunity time in simulation time (normal strain)
+rim_ns = config.getfloat('Normal_strain_Parameters', 'rim_ns')            # Relative infection mobility (normal strain)
+# Super strain Parameters
+n_i = config.getint('Super_strain_Parameters', 'n_i')                    # Important genome positions for the ss mutation; If there are no super strains, n_i = 0
+region_pos = config.get('Super_strain_Parameters', 'region_pos')         # Area of the important positions in the viral genome that define the super strain
+ri_s = config.getfloat('Super_strain_Parameters', 'ri_s')                # Rate of infection from super strain 
+inf_dist_ss = config.getfloat('Super_strain_Parameters', 'inf_dist_ss')  # Infection distance (normal strain)
+prob_inf_ss = config.getfloat('Super_strain_Parameters', 'prob_inf_ss')  # Probability that the infector infects an individual in their infection distance (super strain)
+rec_t_ss = config.getfloat('Super_strain_Parameters', 'rec_t_ss')        # Recovery time in simulation time (super strain)
+imm_t_ss = config.getfloat('Super_strain_Parameters', 'imm_t_ss')        # Immunity time in simulation time (super strain)
+rim_ss = config.getfloat('Super_strain_Parameters', 'rim_ss')            # Relative infection mobility (super strain)
+ss_form = config.getint('Super_strain_Parameters', 'ss_formation')       # Event that the super strain mutation is introduced for the 1st time
+ss_events = config.getint('Super_strain_Parameters', 'ss_events')        # Period of events when the super strain is introduced (if previously there are no individuals with a super strain)
+# msprime Parameters
 use_demography = config.getboolean('msprime_Parameters', 'use_demography') # Parameter defining whether to simulate with population demography (exponential growth) or not
 initial_pop = config.getint('msprime_Parameters', 'initial_pop')           # Present-day population size
 past_pop = config.getint('msprime_Parameters', 'past_pop')                 # Past population size (population t generation ago)
@@ -263,11 +266,12 @@ flag_explanations = {
     '-g0': 'Save the initial genomes of the population in a CSV.',
     '-ratio': 'The simulation stops when the given ratio of super Strain individuals / normal Strain individuals becomes real.',
     '-sample_inf': 'Ignore sample times from the INI file and sample every time an infection happens.',
-    '-manual': 'Begin the simulation with all-0 genomes. Introduce the super strain mutation at the "ss_form" event.',
-    '-msprime': 'Begin the simulation with genomes created by msprime. Introduce the super strain mutation at the "ss_form" event.'
+    '-manual': 'Begin the simulation with all-0 genomes.',
+    '-msprime': 'Begin the simulation with genomes created by msprime.'
     }
 used_flags = {flag: explanation for flag, explanation in flag_explanations.items() if flag in command} # Filter the used flags and their explanations
 log_command(results_directory, command, used_flags)                                                    # Log the command and flags
+
 
 #%% Data table initialization
 """
@@ -818,28 +822,28 @@ while sum(coords_t[:,2])!= 0:
                 print("Nobody got newly infected but this individual's genome got recombined:", ", ".join(map(str, recombined_g)))
                 if args.sample_infection: # Sample when an infection happens
                     ## Save a sample of data from the simulation, according to the conditions of the sample_data() function##
-                    sample_data(samples, genomes, g, tt, coords_t, all_inf, tt)
+                    sample_data(samples, genomes, g, tt, coords_t, tt)
         else:
             if not recombined_g or not args.recombination:
                 print("This/These individuals got newly infected: " + ", ".join(map(str, [int(x) for x in hah[-int(ia-ib):,1]]))) # array hah[-int(ia-ib):,1]: contains the newly infected individuals 
                 if args.sample_infection: # Sample when an infection happens
                     ## Save a sample of data from the simulation, according to the conditions of the sample_data() function##
-                    sample_data(samples, genomes, g, tt, coords_t, all_inf, tt)
+                    sample_data(samples, genomes, g, tt, coords_t, tt)
             else:
                 print("This/These individuals got newly infected: " + ", ".join(map(str, [int(x) for x in hah[-int(ia-ib):,1]]))) # array hah[-int(ia-ib):,1]: contains the newly infected individuals 
                 print("This/These individuals' genome got recombined: ", ", ".join(map(str, recombined_g)))
                 if args.sample_infection: # Sample when an infection happens
                     ## Save a sample of data from the simulation, according to the conditions of the sample_data() function##
-                    sample_data(samples, genomes, g, tt, coords_t, all_inf, tt)
+                    sample_data(samples, genomes, g, tt, coords_t, tt)
         
         ## Collect the data for the number of Total infected, Super spreaders, Normal spreaders, Infection times for each event and total events (up to that point) ##
         all_inf = np.concatenate([all_inf, np.column_stack(np.array((sum(coords_t[:,2] != 0), sum(coords_t[:,5]==2), sum(coords_t[:,5]==1), float(t_s), int(tt)), dtype=float))], axis=0)    
-
+        
     #%% Save data - Info per event
 
     ## Save a sample of data from the simulation, according to the conditions of the sample_data() function##
     if not args.sample_infection:
-        sample_data(samples, genomes, g, tt, coords_t, all_inf, sample_times)
+        sample_data(samples, genomes, g, tt, coords_t, sample_times)
     else:
         pass
     ## Time to run the simulation loop ##
@@ -854,4 +858,4 @@ save_data(samples, genomes, coords_2, coords_t, g, all_inf, recovered_ind, hah, 
 end=time.time()-initial
 
 print(f"\nEvents: {tt}")
-print("Total simulation time (minutes):", end/60)   
+print("Total simulation time (minutes):", end/60)
