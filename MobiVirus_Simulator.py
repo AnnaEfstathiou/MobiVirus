@@ -121,8 +121,9 @@ parser.add_argument('-max_inf', '--max_infections', type=str, help='The simulati
 parser.add_argument('-max_mv', '--max_movements', type=str, help='The simulation stops when the given number of movements happens.')
 parser.add_argument('-time', '--end_time', type=str, help='The simulation stops at the given simulation time.')
 parser.add_argument('-events', '--end_events', type=str, help='The simulation stops when the given number of events (movements+infections) happpens.')
+parser.add_argument('-fixation', '--fixation_event', nargs=2, type=float, help="During the simulation, there will be a sample when the normal and super strains will have reached the assigned percentages.\n" 
+                                                                               "1st value corresponds to normal and 2nd to super strains.")
 ## Action parsers ##
-# group = parser.add_mutually_exclusive_group(required=True)
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument('-manual', '--manual_genomes', action="store_true", help='Begin the simulation with all-0 genomes. Introduce the super strain mutation at the "ss_form" event.')
 group.add_argument('-msprime', '--msprime_genomes', action="store_true", help='Begin the simulation with genomes created by msprime. Introduce the super strain mutation at the "ss_form" event.')
@@ -141,83 +142,163 @@ Validate string arguments
 
 if args.ratio_super_vs_normal:
     ratio_super_vs_normal = float(args.ratio_super_vs_normal)
-    if not 0 <= ratio_super_vs_normal <= 1:
-        raise ValueError("The ratio of number of Super Strain individuals/number of Normal Strain individuals must be between 0 and 1!")
+    try:
+        if not 0 <= ratio_super_vs_normal <= 1:
+            raise ValueError("The ratio of number of Super Strain individuals/number of Normal Strain individuals must be between 0 and 1!")
+    except ValueError as e:
+        print(e)   
+        sys.exit(1)  
 else:
     ratio_super_vs_normal = None
 
 if args.percentage_infected:
     percentage_infected = float(args.percentage_infected)
-    if not 0 <= percentage_infected <= 1:
-        raise ValueError("The percentage of infected individuals in the population must be between 0 and 1!")
+    try:
+        if not 0 <= percentage_infected <= 1:
+            raise ValueError("The percentage of infected individuals in the population must be between 0 and 1!")
+    except ValueError as e:
+        print(e)   
+        sys.exit(1)    
 else:
     percentage_infected = None
 
 if args.percentage_super_strain:
+    try:
+        if not (super_strain == True and n_i > 0):
+            raise ValueError("To stop the simulation when super strains have reached the given percentage in the population, super strains must exist!\n"
+                            "For super strain to exist parameter 'super_strain = true' and 'n_i > 0' in the INI file.")
+    except ValueError as e:
+        print(e)   
+        sys.exit(1)
     percentage_super_strain = float(args.percentage_super_strain)
-    if not 0 <= percentage_super_strain <= 1:
-        raise ValueError("The percentage of super spreaders in the population must be between 0 and 1!")
+    try:
+        if not 0 <= percentage_super_strain <= 1:
+            raise ValueError("The percentage of super spreaders in the population must be between 0 and 1!")
+    except ValueError as e:
+        print(e)   
+        sys.exit(1)
 else:
     percentage_super_strain = None
 
 if args.percentage_normal_strain:
     percentage_normal_strain = float(args.percentage_normal_strain)
-    if not 0 <= percentage_normal_strain <= 1:
-        raise ValueError("The percentage of normal spreaders in the population must be between 0 and 1!")
+    try:
+        if not 0 <= percentage_normal_strain <= 1:
+            raise ValueError("The percentage of normal spreaders in the population must be between 0 and 1!")
+    except ValueError as e:
+        print(e)   
+        sys.exit(1)  
 else:
     percentage_normal_strain = None
 
 if args.max_infections:
     max_infections = int(args.max_infections)
-    if not max_infections >= 1:
-        raise ValueError("The number of maximum infections must be a positive integer!")
+    try:
+        if not max_infections >= 1:
+            raise ValueError("The number of maximum infections must be a positive integer!")
+    except ValueError as e:
+        print(e)   
+        sys.exit(1)  
 else:
     max_infections = None
 
 if args.max_movements:
     max_movements = int(args.max_movements)
-    if not max_movements >= 1:
-        raise ValueError("The number of maximum movements must be a positive integer!")
+    try:
+        if not max_movements >= 1:
+            raise ValueError("The number of maximum movements must be a positive integer!")
+    except ValueError as e:
+        print(e)   
+        sys.exit(1)  
 else:
     max_movements = None
 
 if args.end_time:
     end_time = float(args.end_time)
-    if end_time <= 0:
-        raise ValueError("The simulation time cannot be negative.")
+    try:
+        if end_time <= 0:
+            raise ValueError("The simulation time cannot be negative.")
+    except ValueError as e:
+        print(e)   
+        sys.exit(1)  
 else:
     end_time = None
 
 if args.end_events:
     end_events = int(args.end_events)
-    if not end_events >= 1:
-        raise ValueError("The number of maximum events (movements+infections) must be a positive integer!")
+    try:
+        if not end_events >= 1:
+            raise ValueError("The number of maximum events (movements+infections) must be a positive integer!")
+    except ValueError as e:
+        print(e)   
+        sys.exit(1)  
 else:
     end_events = None
 
+if args.fixation_event:
+    try:
+        if not (super_strain == True and n_i > 0):
+            raise ValueError("To sample when normal and super strains have reached the assigned percentages, super strains must be allowed to exist!\n"
+                             "For super strain to exist parameter 'super_strain = true' and 'n_i > 0' in the INI file.")
+    except ValueError as e:
+        print(e)   
+        sys.exit(1)  
+    ns_per, ss_per = args.fixation_event
+    try:
+        if not (0 <= ns_per <= 1) or not (0 <= ss_per <= 1):
+            raise ValueError("The percentage of normal and super strains in the population must be between 0 and 1!\n"
+                             "Note that the 1st percentage is about normal strains and the 2nd about super strains.")
+    except ValueError as e:
+        print(e)   
+        sys.exit(1)
+    check_var = 0
+    
 """
 -------------------------------------
 Validate arguments from the .INI file
 -------------------------------------
 """
+try:
+    if (super_strain == False and n_i > 0) or (super_strain == True and n_i == 0):
+        raise ValueError("For super strain to exist parameter 'super_strain = true' and 'n_i > 0', otherwise 'super_strain = false' and 'n_i = 0' in the INI file.")
+except ValueError as e:
+    print(e)   
+    sys.exit(1)
 
-if (super_strain == False and n_i > 0) or (super_strain == True and n_i == 0):
-    raise ValueError("For super strain to exist parameter 'super_strain = true' and 'n_i > 0', otherwise 'super_strain = false' and 'n_i = 0'")
+try:
+    if region_pos not in {'start', 'middle', 'end'}:
+        raise ValueError(f"Invalid region_pos: '{region_pos}'. Must be one of {'start', 'middle', 'end'}.")
+except ValueError as e:
+    print(e)   
+    sys.exit(1)
 
-if region_pos not in {'start', 'middle', 'end'}:
-    raise ValueError(f"Invalid region_pos: '{region_pos}'. Must be one of {'start', 'middle', 'end'}.")
+try:
+    if ss_form < 0 or ss_events < 0:
+        raise ValueError("The events regarding the formation of the super strain mutation must be positive integers!")
+except ValueError as e:
+    print(e)   
+    sys.exit(1)
 
-if ss_form < 0 or ss_events < 0:
-    raise ValueError("The events regarding the formation of the super strain mutation must be positive integers!")
+try:
+    if n_i > l:
+        raise ValueError("The number of important genome positions (n_i) in the INI file must be postitive intiger, smaller than the genome length!")
+except ValueError as e:
+    print(e)   
+    sys.exit(1)
 
-if n_i > l:
-    raise ValueError("The number of important genome positions (n_i) in the INI file must be postitive intiger, smaller than the genome length!")
+try:
+    if ii > n:
+        raise ValueError("The initial number of infected individuals (ii) can't be bigger than the number of individuals (n) in the simulation")
+except ValueError as e:
+    print(e)   
+    sys.exit(1)
 
-if ii > n:
-    raise ValueError("The initial number of infected individuals (ii) can't be bigger than the number of individuals (n) in the simulation")
-
-if not 0 <= prob_inf_ns <= 1 and not 0 <= prob_inf_ss <= 1:
-    raise ValueError("The probability that the infector infects an individual in their infection distance must be between 0 and 1!")
+try:
+    if not 0 <= prob_inf_ns <= 1 and not 0 <= prob_inf_ss <= 1:
+        raise ValueError("The probability that the infector infects an individual in their infection distance must be between 0 and 1!")
+except ValueError as e:
+    print(e)   
+    sys.exit(1)
 
 #%% Results directory
 """
@@ -840,6 +921,12 @@ while sum(coords_t[:,2])!= 0:
         all_inf = np.concatenate([all_inf, np.column_stack(np.array((sum(coords_t[:,2] != 0), sum(coords_t[:,5]==2), sum(coords_t[:,5]==1), float(t_s), int(tt)), dtype=float))], axis=0)    
         
     #%% Save data - Info per event
+
+    ## Sampling when/if normal strains are equal or less than ns_per (percentage) and super strains equal or more than ss_per (percentage) ##
+    if args.fixation_event:
+        if (len(coords_t[coords_t[:,5]==1]) <= int(ns_per*n)) and (len(coords_t[coords_t[:,5]==2]) >= int(ss_per*n)) and check_var==0: 
+            sample_data(samples, genomes, g, tt, coords_t, tt)
+            check_var = 1 # Update check_var to ensure sampling happens only once
 
     ## Save a sample of data from the simulation, according to the conditions of the sample_data() function##
     if not args.sample_infection:
