@@ -1,5 +1,5 @@
 
-Command: MobiVirus_Simulator.py -events 100 -r -msprime
+Command: MobiVirus_Simulator.py -msprime -events 10 -r
 -r: Provide the ability to recombinate genomes, if 2 infections happen during a certain time period.
 -events: The simulation stops when the given number of events (movements+infections) happpens.
 -msprime: Begin the simulation with genomes created by msprime.
@@ -7,15 +7,15 @@ Command: MobiVirus_Simulator.py -events 100 -r -msprime
 The simulation contains 2 strain types: normal and super strains.
 
 Initial Parameters
-Number of individuals (n): 1000
+Number of individuals (n): 20
 Initial number of infected individuals (ii): 20
-Length of genome (l): 30000
+Length of genome (l): 100
 Lower bound for the spatial axis (bound_l): 0.0
 Upper bound for the spatial axis (bound_h): 6.0
 Movement rate (rm): 0.08 (infected), 0.1 (healthy)
-Mutation rate for each genome position (r_m): 2e-07
+Mutation rate for each genome position (r_m): 5e-06
 Recombination rate (r_rec): 2e-06
-Generations to get a sample (sample_times): 10
+Generations to get a sample (sample_times): 1
 
 Normal strain Parameters
 Infection rate (ri_n): 1.0

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python3 MobiVirus_Simulator.py -events 100 -r -msprime
+python3 MobiVirus_Simulator.py -msprime -events 10 -r
