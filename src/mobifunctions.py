@@ -350,7 +350,7 @@ def movement(coords, bound_l, bound_h, c, rim):
     ## Individuals are not allowed to move outside the box (or space)                                                                                                                                             ##
 
     # coords = the full coordinate table in order to get the standard deviations
-    # bound_l = lower bound of the spacial axes
+    # bound_l =  lower bound of the spacial axes
     # bound_h = higher bound of the spacial axes
     # c = the individual that will move
     # rim = relative infected mobility. The parameter that differentiates between the mobility of a healthy individual and an infected one
@@ -532,45 +532,52 @@ Output - Results Functions
 
 def sample_data(samples_directory, genomes_directory, g, tt, coords_t, sample_times):
 
-    if tt==0 or tt%sample_times==0:
-                
-        g.to_csv(genomes_directory+'/genomes_'+str(tt)+'.csv',header=False, index=False)
-        
-        coords_t = pd.DataFrame(data=coords_t, columns=["x","y", "Infection label", "Rate of movement", "Rate of infection", "Mutation", "Susceptibility"])
-        coords_t.to_csv(samples_directory+'/coords_'+str(tt)+'.csv', header=True, index=False)
+    if tt!=0 and tt%sample_times==0:
 
-        # all_inf = all_inf[1:, :] # Remove the first row of zeros using numpy slicing
-        # all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time', 'Event'])
-        # all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Event']] = all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Event']].astype(int) # Convert some columns to integer while keeping 'Time' as float
-        # all_inf.to_csv(samples_directory+'/all_inf_'+str(tt)+'.csv', header=True, index=False)
+        g = g.dropna(how='all')
+        g = g.astype(int).astype(str).agg(''.join, axis=1)         
+        g.to_csv(genomes_directory+'/genomes_'+str(tt)+'.txt',header=False, index=False)
+        
+        coords_t = pd.DataFrame(data=coords_t, columns=["x", "y", "Infection label", "Movement Rate", "Infection Rate", "Mutation", "Susceptibility"])
+        coords_t[["Infection label", "Mutation", "Susceptibility"]] = coords_t[["Infection label", "Mutation", "Susceptibility"]].astype(int)
+        coords_t.to_csv(samples_directory+'/coords_'+str(tt)+'.csv', header=True, index=True)
 
 
 def save_data(samples_directory, genomes_directory, coords_2, coords_t, g, all_inf, unin, hah, t_un, event_type, tt):
     
-    g.to_csv(genomes_directory+'/genomes_'+str(tt)+'.csv',header=False, index=False)
-    # g.to_csv(genomes_directory+'/genomes_'+'final'+'.csv',header=False, index=False)
+    g = g.dropna(how='all')
+    g = g.astype(int).astype(str).agg(''.join, axis=1)      
+    g.to_csv(genomes_directory+'/genomes_'+str(tt)+'.txt',header=False, index=False)
     
     unin = np.concatenate([np.column_stack(np.array((unin, t_un), dtype=float))], axis=0)
     unin = pd.DataFrame(data=unin, columns=['Recovered individual', 'Recovery Time'])
+    unin[['Recovered individual']] = unin[['Recovered individual']].astype(int)
     unin.to_csv(samples_directory+'/recovery.csv', header=True, index=False)
     
     hah = hah[1:, :] # Remove the first row of zeros using numpy slicing
     hah = pd.DataFrame(data=hah, columns=['Infecting', 'Infected', 'Infection Time', 'Simulation Time', 'Infection Rate'])
+    hah[['Infecting', 'Infected', 'Infection Time']] = hah[['Infecting', 'Infected', 'Infection Time']].astype(int)
     hah.to_csv(samples_directory+'/infections.csv', header=True, index=False)
     
-    coords_t = pd.DataFrame(data=coords_t, columns=["x","y", "Infection label", "Rate of movement", "Rate of infection", "Mutation", "Susceptibility"])
-    coords_t.to_csv(samples_directory+'/coords_'+str(tt)+'.csv', header=True, index=False)
-    # coords_t.to_csv(samples_directory+'/coords_final.csv', header=True, index=False)
+    coords_t = pd.DataFrame(data=coords_t, columns=["x", "y", "Infection label", "Movement Rate", "Infection Rate", "Mutation", "Susceptibility"])
+    coords_t[["Infection label", "Mutation", "Susceptibility"]] = coords_t[["Infection label", "Mutation", "Susceptibility"]].astype(int)
+    coords_t.to_csv(samples_directory+'/coords_'+str(tt)+'.csv', header=True, index=True)
     
-    coords_2 = pd.DataFrame(data=coords_2, columns=["x","y", "Infection label", "Rate of movement", "Rate of infection", "Mutation", "Susceptibility"])
-    coords_2.to_csv(samples_directory+'/initial_coords.csv', header=True, index=False)
-
     all_inf = all_inf[1:, :] # Remove the first row of zeros using numpy slicing
     all_inf = pd.DataFrame(data=all_inf, columns=['Total infected', 'Super spreaders', 'Normal spreaders', 'Time', 'Event'])
-    all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Event']] = all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Event']].astype(int) # Convert some columns to integer while keeping 'Time' as float
-    all_inf.to_csv(samples_directory+'/all_inf'+'.csv', header=True, index=False)
-    # all_inf.to_csv(samples_directory+'/all_inf_'+'final'+'.csv', header=True, index=False)
+    all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Event']] = all_inf[['Total infected', 'Super spreaders', 'Normal spreaders', 'Event']].astype(int) 
+    all_inf.to_csv(samples_directory+'/all_inf.csv', header=True, index=False)
 
     event_type = event_type[1:, :] # Remove the first row of zeros using numpy slicing
     event_type = pd.DataFrame(data=event_type, columns=['Event', 'Simulation Time', 'Event Type','Individual'])
     event_type.to_csv(samples_directory+'/event_type.csv', header=True, index=False)
+
+def sample_initial_data(samples_directory, genomes_directory, g, coords_2):
+
+    g = g.dropna(how='all')
+    g = g.astype(int).astype(str).agg(''.join, axis=1)         
+    g.to_csv(genomes_directory+'/genomes_0.txt',header=False, index=False)
+        
+    coords_2 = pd.DataFrame(data=coords_2, columns=["x", "y", "Infection label", "Movement Rate", "Infection Rate", "Mutation", "Susceptibility"])
+    coords_2[["Infection label", "Mutation", "Susceptibility"]] = coords_2[["Infection label", "Mutation", "Susceptibility"]].astype(int)
+    coords_2.to_csv(samples_directory+'/coords_0.csv', header=True, index=True)

@@ -31,7 +31,7 @@ IMPORTING THE NECESSARY PYTHON FUNCTIONS
 """
 
 from mobifunctions import log_command, coords_function, infection_label, msprime_genomes, ss_msprime_genomes, ss_mutation_position, mutation, rec_probi, recombine_genomes, movement, initial_distances, new_distances, ind_probi
-from mobifunctions import sample_data, save_data
+from mobifunctions import sample_data, save_data, sample_initial_data
 
 #%% Parameters initialization (INI file)
 """ 
@@ -122,7 +122,9 @@ parser.add_argument('-max_mv', '--max_movements', type=str, help='The simulation
 parser.add_argument('-time', '--end_time', type=str, help='The simulation stops at the given simulation time.')
 parser.add_argument('-events', '--end_events', type=str, help='The simulation stops when the given number of events (movements+infections) happpens.')
 parser.add_argument('-fixation', '--fixation_event', nargs=2, type=float, help="During the simulation, there will be a sample when the normal and super strains will have reached the assigned percentages.\n" 
-                                                                               "1st value corresponds to normal and 2nd to super strains.")
+                                                                             "1st value corresponds to normal and 2nd to super strains.")
+parser.add_argument('-run_id', '--directory_run_id', type=int, default=0, help="Optional run identifier appended to the results directory name.\n"
+                                                                                "Useful for parallel runs or multiple simulations started within the same timestamp to avoid directory name collisions.")  
 ## Action parsers ##
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument('-manual', '--manual_genomes', action="store_true", help='Begin the simulation with all-0 genomes. Introduce the super strain mutation at the "ss_form" event.')
@@ -131,7 +133,7 @@ parser.add_argument('-all_inf', '--all_infected_once', action="store_true", help
 parser.add_argument('-r', '--recombination', action="store_true", help='Provide the ability to recombinate genomes, if 2 infections happen.')
 parser.add_argument('-sample_inf', '--sample_infection', action="store_true", help='Ignore sample times from the INI file and sample every time an infection happens.')
 parser.add_argument('-vis_data', '--visualize_data', action="store_true", help='Visualize the data table as a dataframe in the console.')
-parser.add_argument('-g0', '--initial_genomes', action="store_true", help='Save the initial genomes of the population in a CSV.')
+parser.add_argument('-d', '--initial_data', action="store_true", help='Save the initial genomes and info of the population in a CSV.')
 args = parser.parse_args()
 
 """
@@ -252,6 +254,17 @@ if args.fixation_event:
         print(e)   
         sys.exit(1)
     check_var = 0
+
+if args.directory_run_id:
+    run_id = int(args.directory_run_id)
+    try:
+        if not run_id >= 0:
+            raise ValueError("Run identifier must be a positive integer!")
+    except ValueError as e:
+        print(e)   
+        sys.exit(1)  
+else:
+    run_id = None
     
 """
 -------------------------------------
@@ -266,6 +279,48 @@ except ValueError as e:
     sys.exit(1)
 
 try:
+    if (n <= 0) or (l <= 0):
+        raise ValueError("Number of individuals and genome size must be positive integers.")
+except ValueError as e:
+    print(e)   
+    sys.exit(1)
+
+try:
+    if (rm_i <= 0) or (rm_h <= 0):
+        raise ValueError("Movement rates must be positive integers.")
+except ValueError as e:
+    print(e)   
+    sys.exit(1)
+
+try:
+    if not (0 <= r_m <= 1) or not (0 <= r_rec <= 1):
+        raise ValueError("Mutation and recombination rates must be between 0 and 1.")
+except ValueError as e:
+    print(e)   
+    sys.exit(1)
+
+try:
+    if (ri_n <= 0) or (ri_s <= 0):
+        raise ValueError("Infection rates must be positive numbers.")
+except ValueError as e:
+    print(e)   
+    sys.exit(1)
+
+try:
+    if (inf_dist_ns < 0) or (rec_t_ns < 0) or (imm_t_ns < 0) or (rim_ns < 0) or (inf_dist_ss < 0) or (rec_t_ss < 0) or (imm_t_ss < 0) or (rim_ss < 0):
+        raise ValueError("Normal and Super parameters rates must be positive numbers.")
+except ValueError as e:
+    print(e)   
+    sys.exit(1)
+
+try:
+    if bound_l >= bound_h:
+        raise ValueError("bound_l must be less than bound_h.")
+except ValueError as e:
+    print(e)   
+    sys.exit(1)
+
+try:
     if region_pos not in {'start', 'middle', 'end'}:
         raise ValueError(f"Invalid region_pos: '{region_pos}'. Must be one of {'start', 'middle', 'end'}.")
 except ValueError as e:
@@ -273,29 +328,50 @@ except ValueError as e:
     sys.exit(1)
 
 try:
-    if ss_form < 0 or ss_events < 0:
-        raise ValueError("The events regarding the formation of the super strain mutation must be positive integers!")
+    if (ss_form < 0) or (ss_events < 0):
+        raise ValueError("The events regarding the formation of the super strain mutation must be positive integers.")
 except ValueError as e:
     print(e)   
     sys.exit(1)
 
 try:
-    if n_i > l:
-        raise ValueError("The number of important genome positions (n_i) in the INI file must be postitive intiger, smaller than the genome length!")
+    if (n_i < 0) or (n_i > l):
+        raise ValueError("The number of important genome positions (n_i) in the INI file must be postitive intiger, smaller than the genome length.")
 except ValueError as e:
     print(e)   
     sys.exit(1)
 
 try:
-    if ii > n:
-        raise ValueError("The initial number of infected individuals (ii) can't be bigger than the number of individuals (n) in the simulation")
+    if (ii < 0) or (ii > n):
+        raise ValueError("The initial number of infected individuals (ii) can't be bigger than the number of individuals (n) in the simulation.")
 except ValueError as e:
     print(e)   
     sys.exit(1)
 
 try:
-    if not 0 <= prob_inf_ns <= 1 and not 0 <= prob_inf_ss <= 1:
-        raise ValueError("The probability that the infector infects an individual in their infection distance must be between 0 and 1!")
+    if not (0 <= prob_inf_ns <= 1) or not (0 <= prob_inf_ss <= 1):
+        raise ValueError("The probability that the infector infects an individual in their infection distance must be between 0 and 1.")
+except ValueError as e:
+    print(e)   
+    sys.exit(1)
+
+try:
+    if (sample_times <= 0):
+        raise ValueError("Period of events to get a sample must be a positive integer.")
+except ValueError as e:
+    print(e)   
+    sys.exit(1)
+
+try:
+    if (initial_pop < 0) or (past_pop < 0) or (t_gen < 0):
+        raise ValueError("msprime parameters must be positive numbers.")
+except ValueError as e:
+    print(e)   
+    sys.exit(1)
+
+try:
+    if not isinstance(use_demography, bool) or not isinstance(super_strain, bool):
+        raise ValueError("use_demography and super_strain must be boolean (True/False).")
 except ValueError as e:
     print(e)   
     sys.exit(1)
@@ -311,17 +387,18 @@ RESULTS' DIRECTORY INITIALIZATION
 
 ## Append current timestamp to directorie's name ##
 timestamp = datetime.now().strftime("%d_%m_%Y_%H_%M")
-results_directory = directory + f'simulation_{timestamp}/'
+if args.directory_run_id:
+    results_directory = directory + f'simulation_{timestamp}_{run_id}/'
+else:
+    results_directory = directory + f'simulation_{timestamp}/'
 ## Create the names for the subdirectories ##
 samples = results_directory + 'samples'  # Directory to store genomes per sampled generation (CSV format) 
 genomes =  results_directory + 'genomes' # Directory to store general information about infections and movements per sampled generation (CSV format)  
 
-if not os.path.exists(results_directory):
-    os.mkdir(results_directory)
-    os.mkdir(samples)
-    os.mkdir(genomes)
-else:
-    print(f"The directory {results_directory} already exists")
+# If the directory already exists → raises an error (FileExistsError)
+os.makedirs(results_directory, exist_ok=False) 
+os.makedirs(samples, exist_ok=False)
+os.makedirs(genomes, exist_ok=False)
 
 #%% Command output
 """
@@ -344,7 +421,7 @@ flag_explanations = {
     '-time': 'The simulation stops at the given simulation time.',
     '-events': 'The simulation stops when the given number of events (movements+infections) happpens.',
     '-vis_data': 'Visualize the data table as a dataframe in the console.',
-    '-g0': 'Save the initial genomes of the population in a CSV.',
+    '-d': 'Save the initial genomes and info of the population in a CSV.',
     '-ratio': 'The simulation stops when the given ratio of super Strain individuals / normal Strain individuals becomes real.',
     '-sample_inf': 'Ignore sample times from the INI file and sample every time an infection happens.',
     '-manual': 'Begin the simulation with all-0 genomes.',
@@ -366,10 +443,10 @@ The columns in Coords_(2 or t)
 ------------------------------
 # 0 = x coords
 # 1 = y coords
-# 2 = label (not infected = 0, one infection = 1, two infections (recombination) = 2)
+# 2 = infection label (not infected = 0, one infection = 1, two infections (recombination) = 2)
 # 3 = movement rate
 # 4 = infection rate
-# 5 = mutation label (normal strain = 1, super strain = 2)
+# 5 = mutation label (normal strain = 1, super strain = 2, healthy = 0)
 # 6 = susceptibility (susceptible to the virus = 1, not susceptible to the virus = 0)
 ------------------------------
 """
@@ -412,8 +489,8 @@ coords_2 = np.concatenate([coords_2, np.column_stack(probm).T, np.column_stack(p
 coords_t = coords_2.copy() # Create a copy of the data table, to use during the simulation
 
 # OPTIONAL: Save the initial genomes of the sample in a csv
-if args.initial_genomes:
-    g.to_csv(samples+'/initial_genomes.csv', header=False, index=False) 
+if args.initial_data:
+    sample_initial_data(samples, genomes, g, coords_2)
 
 # OPTIONAL: Print the data table as a dataframe (for visualization in the console)
 if args.visualize_data:
@@ -827,7 +904,7 @@ while sum(coords_t[:,2])!= 0:
                         ## Explicitly continue to the next iteration (next individual) ##
                         continue  
                     
-                    #%% Genetic     ation
+                    #%% Genetic recombination
                     ## Find those who:  1. Are infected once                                        ## 
                     ##                  2. Are susceptible to the virus                             ##
                     ##                  3. The random number s4 is smaller or equal to their ipi[j] ##
@@ -921,7 +998,6 @@ while sum(coords_t[:,2])!= 0:
         all_inf = np.concatenate([all_inf, np.column_stack(np.array((sum(coords_t[:,2] != 0), sum(coords_t[:,5]==2), sum(coords_t[:,5]==1), float(t_s), int(tt)), dtype=float))], axis=0)    
         
     #%% Save data - Info per event
-
     ## Sampling when/if normal strains are equal or less than ns_per (percentage) and super strains equal or more than ss_per (percentage) ##
     if args.fixation_event:
         if (len(coords_t[coords_t[:,5]==1]) <= int(ns_per*n)) and (len(coords_t[coords_t[:,5]==2]) >= int(ss_per*n)) and check_var==0: 
