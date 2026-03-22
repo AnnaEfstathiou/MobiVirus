@@ -9,8 +9,8 @@
 | `n`            | int     | Number of individuals in the simulation                               | `n > 0`            |
 | `ii`           | int     | Initial number of infected individuals                                | `0 <= ii <= n`     |
 | `l`            | int     | Length of genome                                                      | `l > 0`            |
-| `bound_l`      | float   | Lower bound for spatial axis                                          | No constraints     |
-| `bound_h`      | float   | Upper bound for spatial axis                                          | No constraints     |
+| `bound_l`      | float   | Lower bound for spatial axis                                          | `bound_l >= bound_h` |
+| `bound_h`      | float   | Upper bound for spatial axis                                          | `bound_l >= bound_h` |
 | `rm_i`         | float   | Movement rate of infected individuals                                 | `rm_i >= 0`        |
 | `rm_h`         | float   | Movement rate of healthy individuals                                  | `rm_h >= 0`        |
 | `r_m`          | float   | Mutation rate per site                                                | `0 <= r_m <= 1`    |
@@ -51,7 +51,8 @@
 | `--max_movements`               | int   | Stops simulation after given number of movements                           | `value >= 1`      |
 | `--end_time`                    | float | Stops simulation at given simulation time                                  | `value > 0`       |
 | `--end_events`                  | int   | Stops simulation after given number of events                              | `value >= 1`      |
-| `--fixation_event`              | float | Sample when the normal and super strains will have reached the assigned percentages. 1st value: normal & 2nd value: super strains.| `0 <= value <= 1`      |
+| `--fixation_event`              | float | Sample when the normal and super strains will have reached the assigned percentages. 1st value: normal & 2nd value: super strains.| `0 <= value <= 1` |
+| `--directory_run_id`            | int   | Optional run identifier appended to the results directory name.            | `value >= 0`      |
 
 #### Action Parsers (Boolean Flags)
 
@@ -61,9 +62,9 @@
 | `--manual_genomes`    | bool | Starts simulation with all-0 genomes, introducing super strain at `ss_form` event if `super_strain = true` |
 | `--msprime_genomes`   | bool | Starts simulation with genomes created by `msprime`, introducing super strain at `ss_form` event if `super_strain = true` using the msprime parameters |
 | `--recombination`     | bool | Enables genome recombination if two infections occur                         |
-| `--sample_infection`  | bool | Ignores `.INI` `sample_times` and samples every infection event               |
+| `--sample_infection`  | bool | Ignores `.INI sample_times` and samples every infection event               |
 | `--visualize_data`    | bool | Displays data table as a dataframe in console                                |
-| `--initial_genomes`   | bool | Saves the initial genomes of the population to a CSV format in the sample directory  |
+| `--initial_data`      | bool | Saves the initial genomes and info of the population |
 
 
 > If the user does not specify any of the parsed arguments that stop the simulation under certain conditions, it will stop, by default, when all individuals become healthy. However, this can be problematic, as many parameter combinations may prevent this outcome, causing the simulation to run indefinitely!
@@ -71,28 +72,29 @@
 # Simulation’s Output Data
 
 The results are stored in one directory, which is given in the INI file.  
-Directory name: *simulation_timestamp* (e.g., *simulation_13_03_2026_21_33*)
+Directory name: *simulation_timestamp* (e.g., *simulation_13_03_2026_21_33*) <br />
+OR <br />
+Directory name: *simulation_timestamp_run_id* (e.g., *-run_id 1 --> simulation_13_03_2026_21_33_1*)  
 
 In addition to generating files containing simulation data, a **log file** (command_log.txt) is created to record all parameters and the exact command used.  
 This ensures that users can track the conditions under which the results were produced and easily reproduce the simulation with the same parameters later.
 
 ## Sampled Data
-Generated every `sample_times` events & at the end of simulation.
+Generated every `sample_times` events & at the end of the simulation.
 
 | File | Format | Description | Info (columns) |
 | ---- | ------ | ----------- | --------------- |
-| `genomes_sample_times.csv` <br /> (e.g., `genomes_100.csv`) | CSV | Viral genome sequences | - Dimensions: `(n x l)`<br>- `n`: number of individuals<br>- `l`: genome length<br>- Binary genomes: 0 = ancestral state, 1 = mutation<br>- Healthy individuals appear as "NaN" |
-| `coords_sample_times.csv` <br /> (e.g., `coords_100.csv`) | CSV | Spatial coordinates and infection-related properties of all individuals | - `x`, `y`: spatial coordinates<br>- `Infection label`: 0 = healthy, 1 = infected, 2 = recombination-infected (if allowed)<br>- `Rate of movement`: `rm_i` if infected, `rm_h` if healthy<br>- `Rate of infection`: `ri_n` if normal, `ri_s` if super, 0 if healthy<br>- `Mutation`: 0 = healthy, 1 = normal, 2 = super<br>- `Susceptibility`: 0 = non-susceptible, 1 = susceptible<br>- Rows correspond to individuals |
+| `genomes_sample_times.txt` <br /> (e.g., `genomes_100.txt`) | txt | Viral genome sequences | - Dimensions: `(inf_n x l)`<br>- `inf_n`: number of infected individuals<br>- `l`: genome length<br>- Binary genomes: 0 = ancestral state, 1 = mutation |
+| `coords_sample_times.csv` <br /> (e.g., `coords_100.csv`) | CSV | Spatial coordinates and infection-related properties of all individuals | - Individuals' index<br>- `x`, `y`: spatial coordinates<br>- `Infection label`: 0 = healthy, 1 = infected, 2 = recombination-infected (if allowed)<br>- `Rate of movement`: `rm_i` if infected, `rm_h` if healthy<br>- `Rate of infection`: `ri_n` if normal, `ri_s` if super, 0 if healthy<br>- `Mutation`: 0 = healthy, 1 = normal, 2 = super<br>- `Susceptibility`: 0 = non-susceptible, 1 = susceptible<br>- Rows correspond to individuals |
 
 ## Final Data
-Generated at the end of simulation.
+Generated at the end of the simulation.
 
 | File | Format | Description | Info (columns) |
 | ---- | ------ | ----------- | --------------- |
 | `all_inf.csv` | CSV | Number of infected individuals during the simulation | - `Total infected`: Sum of super and normal spreaders<br>- `Super spreaders`: Sum of individuals carriying a super strain<br>- `Normal spreaders`: Sum of individuals carriying a normal strain<br>- `Time`: Corresponding simulation time<br>- `Event`: Corresponding event number |
 | `recovery.csv` | CSV | List of recovered individuals and their recovery times | - `Recovered individual`: Index of the corresponding individual<br>- `Recovery Time`: Simulation time when recovery happened |
-| `infections.csv` | CSV | Log of all infection events | - `Infecting`: Index of the infector<br>- `Infected`: Index of the infected<br>- `Infection Time`: 1st infection = 1.0, 2nd via recombination = 2.0<br>- `Simulation Time`: Simulation time of infection<br>- `Infection Rate`: `ri_n` if normal, `ri_s` if super spreader |
-| `initial_coords.csv` | CSV | Initial spatial coordinates and infection-related properties of all individuals before simulation starts | - `x`, `y`: Spatial coordinates<br>- `Infection label`: 0 = healthy, 1 = infected, 2 = recombination-infected (if allowed)<br>- `Rate of movement`: `rm_i` if infected, `rm_h` if healthy<br>- `Rate of infection`: `ri_n` if normal, `ri_s` if super, 0 if healthy<br>- `Mutation`: 0 = healthy, 1 = normal, 2 = super<br>- `Susceptibility`: 0 = non-susceptible, 1 = susceptible<br>- Rows correspond to individuals |
+| `infections.csv` | CSV | Log of all infection events | - `Infecting`: Index of the infector<br>- `Infected`: Index of the infected<br>- `Infection Time`: 1st infection = 1, 2nd via recombination = 2<br>- `Simulation Time`: Simulation time of infection<br>- `Infection Rate`: `ri_n` if normal, `ri_s` if super spreader |
 | `event_type.csv` | CSV | Log of all simulation events | - `Event`: Event number/index (0 to final event)<br>- `Simulation Time`: Time of event<br>- `Event Type`: “Movement” or “Infection”<br>- `Individual`: Index of the moving individual (if movement) or index of infector (if infection) |
 
 # Code Execution – Examples
@@ -104,6 +106,8 @@ The MobiVirus Simulator requires three files in the same directory:
 
 Programming Language: Python  
 All required packages are listed in `requirements.txt`.
+
+In cases of parallel runs or multiple simulations started within the same timestamp use `-run_id` flag to avoid directory name collisions.
 
 **Examples**
 
@@ -130,3 +134,16 @@ A simulation that starts with viral genomes created by msprime, allows viral rec
 ```python
 python3 MobiVirus_Simulator.py -msprime -r -max_inf 500 -fixation 0 0.9
 ```
+
+***Parallel execution example***
+
+To run multiple simulations in parallel and avoid directory name collisions, you can use `-run_id` together with GNU `parallel`:
+
+```bash
+seq 1 1000 | parallel -j 16 "python3 MobiVirus_Simulator.py -msprime -g0 -events 50000 -fixation 0 0.9 -r -run_id {} > run_{}.log"
+```
+This will:
+1. Run up to 16 simulations in parallel (`-j 16`)
+2. Assign each run a unique `run_id` (`{}` from `seq`)
+3. Save logs separately (run_1.log, run_2.log, etc.)
+4. Prevent output directory collisions by differentiating runs using `-run_id`
