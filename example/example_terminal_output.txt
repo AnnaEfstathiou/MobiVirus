@@ -1,48 +1,425 @@
 ----------------------------------
-Event:0, Simulation Time:0.23014911084140396
+Event:0, Simulation Time:0.019549793514567232
+This/These individuals got newly infected: 5, 56, 69, 109, 120, 181, 241, 245, 279, 320, 685, 686, 690, 745, 750, 759, 824, 929
+Totally infected:38 (ns:20,ss:18)
+----------------------------------
+Event:1, Simulation Time:0.023216681540646232
+Movement of:526
+Totally infected:38 (ns:20,ss:18)
+----------------------------------
+Event:2, Simulation Time:0.029988380596835677
+Movement of:508
+Totally infected:38 (ns:20,ss:18)
+----------------------------------
+Event:3, Simulation Time:0.054699089491106564
+This/These individuals got newly infected: 245, 314, 396, 511, 546, 826, 853, 967
+This/These individuals' genome got recombined:  245
+Totally infected:47 (ns:20,ss:27)
+----------------------------------
+Event:4, Simulation Time:0.061410461738135705
+Movement of:318
+Totally infected:47 (ns:20,ss:27)
+----------------------------------
+Event:5, Simulation Time:0.062007881209137125
+Movement of:734
+Totally infected:47 (ns:20,ss:27)
+----------------------------------
+Event:6, Simulation Time:0.07852112401470154
+This/These individuals got newly infected: 32, 134, 172, 185, 229, 299, 317, 325, 326, 376, 414, 423, 433, 472, 534, 555, 573, 597, 600, 612, 616, 641, 647, 661, 802, 885
+Totally infected:73 (ns:46,ss:27)
+----------------------------------
+Event:7, Simulation Time:0.07887044265471534
+Movement of:164
+Totally infected:73 (ns:46,ss:27)
+----------------------------------
+Event:8, Simulation Time:0.08106772446816378
+Movement of:336
+Totally infected:73 (ns:46,ss:27)
+----------------------------------
+Event:9, Simulation Time:0.08213944545082096
+Movement of:456
+Totally infected:73 (ns:46,ss:27)
+----------------------------------
+Event:10, Simulation Time:0.08263254588446799
+Movement of:581
+Totally infected:73 (ns:46,ss:27)
+----------------------------------
+Event:11, Simulation Time:0.08800436660182485
+This/These individuals got newly infected: 26, 183, 226, 274, 293, 411, 432, 565, 660, 679, 852
+Totally infected:84 (ns:57,ss:27)
+----------------------------------
+Event:12, Simulation Time:0.09310534829635995
+Movement of:722
+Totally infected:84 (ns:57,ss:27)
+----------------------------------
+Event:13, Simulation Time:0.095647285072482
+This/These individuals got newly infected: 385, 399, 456
+Totally infected:87 (ns:60,ss:27)
+----------------------------------
+Event:14, Simulation Time:0.09587948588527463
+This/These individuals got newly infected: 65, 170, 225, 367, 506, 593, 627, 724, 752, 796, 834, 839, 904, 951
+Totally infected:101 (ns:74,ss:27)
+----------------------------------
+Event:15, Simulation Time:0.09663196482561025
+This/These individuals got newly infected: 45, 73, 215, 435, 626
+Totally infected:106 (ns:74,ss:32)
+----------------------------------
+Event:16, Simulation Time:0.09727989310707885
+This/These individuals got newly infected: 1, 64, 102, 164, 276, 453, 521, 595, 898, 979
+Totally infected:116 (ns:74,ss:42)
+----------------------------------
+Event:17, Simulation Time:0.10496798473847971
+This/These individuals got newly infected: 131, 137, 151, 380, 417, 445, 460, 579, 721, 754, 778, 868, 931
+This/These individuals' genome got recombined:  1
+Totally infected:130 (ns:88,ss:42)
+----------------------------------
+Event:18, Simulation Time:0.1099528905873345
+Movement of:863
+Totally infected:130 (ns:88,ss:42)
+----------------------------------
+Event:19, Simulation Time:0.11141750605596476
+Movement of:891
+Totally infected:130 (ns:88,ss:42)
+----------------------------------
+Event:20, Simulation Time:0.11584003184764469
+Movement of:763
+Totally infected:130 (ns:88,ss:42)
+----------------------------------
+Event:21, Simulation Time:0.12140995466595235
+This/These individuals got newly infected: 134, 259, 316, 662, 671, 673, 927, 953
+This/These individuals' genome got recombined:  134
+Totally infected:139 (ns:97,ss:42)
+----------------------------------
+Event:22, Simulation Time:0.12607350875106074
+This/These individuals got newly infected: 753
+Totally infected:140 (ns:97,ss:43)
+----------------------------------
+Event:23, Simulation Time:0.12932089305960826
+Movement of:510
+Totally infected:140 (ns:97,ss:43)
+----------------------------------
+Event:24, Simulation Time:0.13372807602606007
+Movement of:208
+Totally infected:140 (ns:97,ss:43)
+----------------------------------
+Event:25, Simulation Time:0.13533917088348654
+Nobody got newly infected but this individual's genome got recombined: 164
+Totally infected:140 (ns:97,ss:43)
+----------------------------------
+Event:26, Simulation Time:0.13674479771490075
+Nobody got newly infected but this individual's genome got recombined: 317, 600
+Totally infected:141 (ns:98,ss:43)
+----------------------------------
+Event:27, Simulation Time:0.14271105320402103
+Movement of:739
+Totally infected:141 (ns:98,ss:43)
+----------------------------------
+Event:28, Simulation Time:0.14321930425534654
+This/These individuals got newly infected: 821
+This/These individuals' genome got recombined:  546
+Totally infected:143 (ns:98,ss:45)
+----------------------------------
+Event:29, Simulation Time:0.15143075816014967
+Movement of:690
+Totally infected:143 (ns:98,ss:45)
+----------------------------------
+Event:30, Simulation Time:0.15363161117071056
+Movement of:296
+Totally infected:143 (ns:98,ss:45)
+----------------------------------
+Event:31, Simulation Time:0.15421425065143352
+This/These individuals got newly infected: 133, 135, 784, 929
+This/These individuals' genome got recombined:  56, 929
+Totally infected:149 (ns:105,ss:44)
+----------------------------------
+Event:32, Simulation Time:0.15519928370084882
+Movement of:979
+Totally infected:149 (ns:105,ss:44)
+----------------------------------
+Event:33, Simulation Time:0.1604101893482756
+Nobody got newly infected but this individual's genome got recombined: 69, 745
+Totally infected:149 (ns:105,ss:44)
+----------------------------------
+Event:34, Simulation Time:0.16644706377501603
+Movement of:518
+Totally infected:149 (ns:105,ss:44)
+----------------------------------
+Event:35, Simulation Time:0.16894461451910894
+This/These individuals got newly infected: 11, 152, 234, 289, 342, 554, 598, 703, 912, 948
+Totally infected:159 (ns:115,ss:44)
+----------------------------------
+Event:36, Simulation Time:0.17109954803728883
+This/These individuals got newly infected: 705
+Totally infected:160 (ns:116,ss:44)
+----------------------------------
+Event:37, Simulation Time:0.17187562705995216
+This/These individuals got newly infected: 9, 39, 100, 160, 161, 178, 212, 358, 373, 377, 382, 389, 621, 623, 689, 696, 700, 719, 730, 774, 789, 790, 855, 900, 937
+Totally infected:185 (ns:141,ss:44)
+----------------------------------
+Event:38, Simulation Time:0.1731002650000383
+This/These individuals got newly infected: 21
+Totally infected:186 (ns:142,ss:44)
+----------------------------------
+Event:39, Simulation Time:0.1735557835816611
+This/These individuals got newly infected: 701, 711, 719, 733, 836, 843
+This/These individuals' genome got recombined:  719
+Totally infected:193 (ns:149,ss:44)
+----------------------------------
+Event:40, Simulation Time:0.17694788959029872
+Nobody got newly infected but this individual's genome got recombined: 83, 276, 511
+Totally infected:194 (ns:149,ss:45)
+----------------------------------
+Event:41, Simulation Time:0.18264662462873535
+This/These individuals got newly infected: 296
+Totally infected:195 (ns:149,ss:46)
+----------------------------------
+Event:42, Simulation Time:0.18774460795539066
+This/These individuals got newly infected: 227, 291, 581
+Totally infected:198 (ns:152,ss:46)
+----------------------------------
+Event:43, Simulation Time:0.19651950282337308
+Nobody got newly infected but this individual's genome got recombined: 274
+Totally infected:199 (ns:153,ss:46)
+----------------------------------
+Event:44, Simulation Time:0.1993891200527909
+Movement of:186
+Totally infected:199 (ns:153,ss:46)
+----------------------------------
+Event:45, Simulation Time:0.20308872313587623
+This/These individuals got newly infected: 94, 147, 364, 533, 547, 564, 629, 638, 645, 704, 805, 877, 905
+Totally infected:212 (ns:166,ss:46)
+----------------------------------
+Event:46, Simulation Time:0.20771411215284827
+Nobody got newly infected but this individual's genome got recombined: 679
+Totally infected:212 (ns:166,ss:46)
+----------------------------------
+Event:47, Simulation Time:0.20937185240718434
+This/These individuals got newly infected: 943
+This/These individuals' genome got recombined:  39, 161
+Totally infected:215 (ns:169,ss:46)
+----------------------------------
+Event:48, Simulation Time:0.21076246587009487
+Movement of:981
+Totally infected:215 (ns:169,ss:46)
+----------------------------------
+Event:49, Simulation Time:0.22052672437762744
+This/These individuals got newly infected: 82, 92, 97, 297, 447, 471, 767, 957, 959, 978
+Totally infected:225 (ns:179,ss:46)
+----------------------------------
+Event:50, Simulation Time:0.22147472012395725
+This/These individuals got newly infected: 214, 222, 359, 427, 441, 578, 642, 702, 763, 860
+Totally infected:235 (ns:189,ss:46)
+----------------------------------
+Event:51, Simulation Time:0.22362812121887518
+This/These individuals got newly infected: 664, 718, 759, 997
+This/These individuals' genome got recombined:  759
+Totally infected:240 (ns:189,ss:51)
+----------------------------------
+Event:52, Simulation Time:0.22997967801529012
+This/These individuals got newly infected: 232, 233, 254, 263, 319, 437, 457, 484, 503, 568, 608, 795, 922
+Totally infected:253 (ns:202,ss:51)
+----------------------------------
+Event:53, Simulation Time:0.2351449643222762
+This/These individuals got newly infected: 419, 426, 562, 768, 843
+This/These individuals' genome got recombined:  843
+Totally infected:259 (ns:208,ss:51)
+----------------------------------
+Event:54, Simulation Time:0.23579042362970948
 Nobody got infected.
-Totally infected:20 (ns:20,ss:0)
+Totally infected:259 (ns:208,ss:51)
 ----------------------------------
-Event:1, Simulation Time:0.2645069363211995
+Event:55, Simulation Time:0.23673314476576335
 Nobody got infected.
-Totally infected:20 (ns:20,ss:0)
+Totally infected:259 (ns:208,ss:51)
 ----------------------------------
-Event:2, Simulation Time:0.29250166030526814
+Event:56, Simulation Time:0.23690470774145703
+Nobody got newly infected but this individual's genome got recombined: 183
+Totally infected:259 (ns:208,ss:51)
+----------------------------------
+Event:57, Simulation Time:0.24155393688890495
+Movement of:516
+Totally infected:259 (ns:208,ss:51)
+----------------------------------
+Event:58, Simulation Time:0.24327198219895646
 Nobody got infected.
-Totally infected:20 (ns:20,ss:0)
+Totally infected:259 (ns:208,ss:51)
 ----------------------------------
-Event:3, Simulation Time:0.4002871628997905
+Event:59, Simulation Time:0.24513492828988856
+Nobody got newly infected but this individual's genome got recombined: 593
+Totally infected:259 (ns:208,ss:51)
+----------------------------------
+Event:60, Simulation Time:0.2532885304868379
+This/These individuals got newly infected: 754
+This/These individuals' genome got recombined:  238, 754
+Totally infected:262 (ns:208,ss:54)
+----------------------------------
+Event:61, Simulation Time:0.25459645826454513
+Movement of:485
+Totally infected:262 (ns:208,ss:54)
+----------------------------------
+Event:62, Simulation Time:0.25573246289870055
+Nobody got newly infected but this individual's genome got recombined: 642
+Totally infected:263 (ns:209,ss:54)
+----------------------------------
+Event:63, Simulation Time:0.2597292007188505
 Nobody got infected.
-Totally infected:20 (ns:20,ss:0)
+Totally infected:263 (ns:209,ss:54)
 ----------------------------------
-Event:4, Simulation Time:0.427657968459836
-Movement of:4
-Totally infected:20 (ns:20,ss:0)
+Event:64, Simulation Time:0.2627223110640133
+This/These individuals got newly infected: 12, 112, 347, 491, 613
+Totally infected:268 (ns:214,ss:54)
 ----------------------------------
-Event:5, Simulation Time:0.6417465583885709
+Event:65, Simulation Time:0.26325294450623815
+Movement of:642
+Totally infected:268 (ns:214,ss:54)
+----------------------------------
+Event:66, Simulation Time:0.2662310170956837
+This/These individuals got newly infected: 812, 887
+This/These individuals' genome got recombined:  612
+Totally infected:271 (ns:217,ss:54)
+----------------------------------
+Event:67, Simulation Time:0.266346643234486
+This/These individuals got newly infected: 87, 333, 405, 480, 498, 657, 864
+This/These individuals' genome got recombined:  45
+Totally infected:279 (ns:225,ss:54)
+----------------------------------
+Event:68, Simulation Time:0.2692288076161632
 Nobody got infected.
-Totally infected:20 (ns:20,ss:0)
+Totally infected:279 (ns:225,ss:54)
 ----------------------------------
-Event:6, Simulation Time:0.7708024626654887
+Event:69, Simulation Time:0.27184765427614394
+This/These individuals got newly infected: 301, 331, 438, 534, 819, 936, 960, 971
+This/These individuals' genome got recombined:  534
+Totally infected:288 (ns:234,ss:54)
+----------------------------------
+Event:70, Simulation Time:0.27199579622357
+Movement of:292
+Totally infected:288 (ns:234,ss:54)
+----------------------------------
+Event:71, Simulation Time:0.2741889249100322
 Nobody got infected.
-Totally infected:20 (ns:20,ss:0)
+Totally infected:288 (ns:234,ss:54)
 ----------------------------------
-Event:7, Simulation Time:0.7962913311231652
+Event:72, Simulation Time:0.27968353238730115
+Nobody got newly infected but this individual's genome got recombined: 641
+Totally infected:288 (ns:234,ss:54)
+----------------------------------
+Event:73, Simulation Time:0.2808349376510056
+Movement of:241
+Totally infected:288 (ns:234,ss:54)
+----------------------------------
+Event:74, Simulation Time:0.283240252686525
+Nobody got newly infected but this individual's genome got recombined: 435, 685, 753
+Totally infected:288 (ns:234,ss:54)
+----------------------------------
+Event:75, Simulation Time:0.2848190197834528
+This/These individuals got newly infected: 49, 101, 184, 191, 628, 866
+Totally infected:294 (ns:240,ss:54)
+----------------------------------
+Event:76, Simulation Time:0.2882619431026483
+Nobody got newly infected but this individual's genome got recombined: 85, 673
+Totally infected:296 (ns:242,ss:54)
+----------------------------------
+Event:77, Simulation Time:0.2885330812979909
 Nobody got infected.
-Totally infected:20 (ns:20,ss:0)
+Totally infected:296 (ns:242,ss:54)
 ----------------------------------
-Event:8, Simulation Time:0.8878505353114887
+Event:78, Simulation Time:0.2915390867529692
+This/These individuals got newly infected: 221, 518, 747
+Totally infected:299 (ns:245,ss:54)
+----------------------------------
+Event:79, Simulation Time:0.29257333491331744
+This/These individuals got newly infected: 875
+Totally infected:300 (ns:245,ss:55)
+----------------------------------
+Event:80, Simulation Time:0.29449834414075216
+Nobody got newly infected but this individual's genome got recombined: 595
+Totally infected:300 (ns:245,ss:55)
+----------------------------------
+Event:81, Simulation Time:0.296451564504109
+Nobody got newly infected but this individual's genome got recombined: 215, 664
+Totally infected:300 (ns:245,ss:55)
+----------------------------------
+Event:82, Simulation Time:0.2969209267511786
+This/These individuals got newly infected: 37, 74, 86, 352, 422, 725, 939, 974
+Totally infected:308 (ns:253,ss:55)
+----------------------------------
+Event:83, Simulation Time:0.2977231777487988
+Nobody got newly infected but this individual's genome got recombined: 660
+Totally infected:308 (ns:253,ss:55)
+----------------------------------
+Event:84, Simulation Time:0.30255506574436203
+This/These individuals got newly infected: 46, 163, 176, 459, 523, 665
+Totally infected:314 (ns:259,ss:55)
+----------------------------------
+Event:85, Simulation Time:0.30290174957002647
+Nobody got newly infected but this individual's genome got recombined: 750
+Totally infected:315 (ns:259,ss:56)
+----------------------------------
+Event:86, Simulation Time:0.30335745516276225
 Nobody got infected.
-Totally infected:20 (ns:20,ss:0)
+Totally infected:315 (ns:259,ss:56)
 ----------------------------------
-Event:9, Simulation Time:0.8893201779363105
-Movement of:6
-Totally infected:20 (ns:20,ss:0)
+Event:87, Simulation Time:0.30365583571935023
+Nobody got newly infected but this individual's genome got recombined: 151
+Totally infected:315 (ns:259,ss:56)
 ----------------------------------
-Event:10, Simulation Time:1.0029003486299273
+Event:88, Simulation Time:0.305056225563053
+Nobody got newly infected but this individual's genome got recombined: 325, 376
+Totally infected:317 (ns:261,ss:56)
+----------------------------------
+Event:89, Simulation Time:0.3053075523272948
 Nobody got infected.
-Totally infected:20 (ns:20,ss:0)
-Recovered individuals (normal spreaders): 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+Totally infected:317 (ns:261,ss:56)
+----------------------------------
+Event:90, Simulation Time:0.30783569903915275
+Nobody got newly infected but this individual's genome got recombined: 498
+Totally infected:318 (ns:260,ss:58)
+----------------------------------
+Event:91, Simulation Time:0.3090713870408628
+Nobody got infected.
+Totally infected:318 (ns:260,ss:58)
+----------------------------------
+Event:92, Simulation Time:0.3132938993284384
+Movement of:557
+Totally infected:318 (ns:260,ss:58)
+----------------------------------
+Event:93, Simulation Time:0.3168498401009969
+This/These individuals got newly infected: 506, 567, 578, 614
+This/These individuals' genome got recombined:  92, 506, 578
+Totally infected:325 (ns:267,ss:58)
+----------------------------------
+Event:94, Simulation Time:0.31762778289193067
+Nobody got infected.
+Totally infected:325 (ns:267,ss:58)
+----------------------------------
+Event:95, Simulation Time:0.3195306509946575
+Nobody got infected.
+Totally infected:325 (ns:267,ss:58)
+----------------------------------
+Event:96, Simulation Time:0.3198373903365788
+This/These individuals got newly infected: 823, 944, 956, 968
+This/These individuals' genome got recombined:  222
+Totally infected:330 (ns:272,ss:58)
+----------------------------------
+Event:97, Simulation Time:0.3210205806378908
+Nobody got infected.
+Totally infected:330 (ns:272,ss:58)
+----------------------------------
+Event:98, Simulation Time:0.3258813885930283
+This/These individuals got newly infected: 138, 353, 394, 522, 615
+Totally infected:335 (ns:277,ss:58)
+----------------------------------
+Event:99, Simulation Time:0.33560934190189906
+This/These individuals got newly infected: 379, 535, 645, 837, 840
+This/These individuals' genome got recombined:  645
+Totally infected:341 (ns:283,ss:58)
+----------------------------------
+Event:100, Simulation Time:0.33606012942106667
+This/These individuals got newly infected: 52, 205, 270, 390, 543, 566, 569, 681, 691, 910
+Totally infected:351 (ns:293,ss:58)
 
-Events: 10
-Total simulation time (minutes): 0.00558697779973348
+The simulation ended because 100 (movements+infections) happened during the simulation.
+
+Events: 100
+Total simulation time (minutes): 0.914868160088857
