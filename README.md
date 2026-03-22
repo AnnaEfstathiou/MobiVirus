@@ -93,8 +93,6 @@ When the simulation ends, a final dataset is produced containing all of the abov
 - **Viral Strain Summary**: population size of each viral strain throughout the simulation
 - **Event Breakdown**: event types throughout the simulation
 
-All the files are in a CSV format.
-
 ## Author
 
 Lead developer: Efstathiou Anna <br />
